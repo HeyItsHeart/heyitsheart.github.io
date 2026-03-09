@@ -1,0 +1,709 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Game Vault</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700&family=DM+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+body{background:#080511;min-height:100vh;font-family:'DM Sans',sans-serif;color:#e9d5ff;}
+::-webkit-scrollbar{width:5px;}::-webkit-scrollbar-track{background:#080511;}::-webkit-scrollbar-thumb{background:#3b1f6b;border-radius:3px;}
+.hdr{position:sticky;top:0;z-index:50;background:rgba(8,5,17,0.96);backdrop-filter:blur(20px);border-bottom:1px solid rgba(167,139,250,0.1);padding:13px 24px 11px;}
+.hdr-inner{max-width:1300px;margin:0 auto;display:flex;flex-direction:column;gap:10px;}
+.hdr-top{display:flex;justify-content:space-between;align-items:center;gap:12px;}
+.logo{font-family:'Playfair Display',serif;font-size:21px;font-weight:900;background:linear-gradient(90deg,#c4b5fd,#a78bfa,#8b5cf6);-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+.logo-sub{font-size:10px;color:#4c1d95;margin-top:1px;}
+.hdr-btns{display:flex;gap:7px;flex-wrap:wrap;align-items:center;}
+.btn-p{background:linear-gradient(135deg,#7c3aed,#9333ea);border:none;border-radius:9px;padding:8px 16px;color:#fff;cursor:pointer;font-weight:700;font-size:13px;font-family:inherit;box-shadow:0 4px 14px rgba(124,58,237,0.4);transition:transform 0.12s,box-shadow 0.12s;white-space:nowrap;}
+.btn-p:hover{transform:translateY(-1px);box-shadow:0 6px 20px rgba(124,58,237,0.55);}
+.btn-s{background:rgba(255,255,255,0.04);border:1px solid rgba(167,139,250,0.18);border-radius:9px;padding:8px 13px;color:#9f7aea;cursor:pointer;font-weight:600;font-size:12px;font-family:inherit;transition:background 0.12s,color 0.12s;white-space:nowrap;}
+.btn-s:hover{background:rgba(124,58,237,0.15);color:#c4b5fd;}
+.toolbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;}
+.srch-wrap{position:relative;flex:1;min-width:160px;}
+.srch-ico{position:absolute;left:10px;top:50%;transform:translateY(-50%);font-size:12px;color:#4c1d95;pointer-events:none;}
+#search{width:100%;padding:8px 10px 8px 30px;background:rgba(255,255,255,0.04);border:1px solid rgba(167,139,250,0.13);border-radius:9px;color:#e9d5ff;font-size:13px;font-family:inherit;outline:none;transition:border-color 0.12s;}
+#search:focus{border-color:#7c3aed;}
+#search::placeholder{color:#3b1f6b;}
+.tsel{background:rgba(255,255,255,0.04);border:1px solid rgba(167,139,250,0.13);border-radius:9px;padding:8px 10px;color:#9f7aea;font-size:12px;font-family:inherit;outline:none;cursor:pointer;}
+.tsel option{background:#0f0720;color:#e9d5ff;}
+#main{max-width:1300px;margin:0 auto;padding:18px 24px 80px;}
+.stats{display:flex;gap:0;margin-bottom:20px;background:rgba(255,255,255,0.02);border:1px solid rgba(167,139,250,0.08);border-radius:12px;overflow:hidden;}
+.stat{flex:1;padding:11px 14px;border-right:1px solid rgba(167,139,250,0.07);}
+.stat:last-child{border-right:none;}
+.sv{font-size:19px;font-weight:800;color:#c4b5fd;line-height:1;}
+.sv.g{color:#34d399;}.sv.a{color:#fbbf24;}.sv.b{color:#60a5fa;}
+.sl{font-size:9px;color:#4c1d95;text-transform:uppercase;letter-spacing:0.1em;margin-top:3px;}
+.bulk-bar{background:rgba(124,58,237,0.1);border:1px solid rgba(167,139,250,0.18);border-radius:10px;padding:9px 14px;margin-bottom:14px;display:none;align-items:center;gap:10px;}
+.bulk-bar.show{display:flex;}
+.bulk-text{flex:1;font-size:13px;color:#c4b5fd;font-weight:600;}
+.btn-bdel{background:rgba(248,113,113,0.1);border:1px solid rgba(248,113,113,0.22);border-radius:7px;padding:5px 14px;color:#f87171;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;}
+.btn-bcancel{background:none;border:none;color:#4c1d95;font-size:12px;cursor:pointer;font-family:inherit;}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:14px;}
+.card{border-radius:14px;overflow:hidden;border:1px solid rgba(167,139,250,0.1);background:#0d0720;cursor:pointer;transition:border-color 0.18s,transform 0.18s,box-shadow 0.18s;animation:fadeUp 0.28s ease both;position:relative;user-select:none;}
+.card:hover{border-color:rgba(167,139,250,0.35);transform:translateY(-4px);box-shadow:0 16px 48px rgba(124,58,237,0.22);}
+.card.selected{border-color:rgba(124,58,237,0.5);}
+.card-cover{width:100%;aspect-ratio:3/4;position:relative;overflow:hidden;background:#0a0514;}
+.card-cover img{width:100%;height:100%;object-fit:cover;display:block;transition:transform 0.35s ease;}
+.card:hover .card-cover img{transform:scale(1.05);}
+.card-cover-fallback{width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:52px;}
+.card-cover-overlay{position:absolute;inset:0;background:linear-gradient(to bottom,transparent 45%,rgba(5,2,14,0.97) 100%);}
+.card-checkbox{position:absolute;top:9px;left:9px;z-index:5;width:17px;height:17px;border-radius:5px;border:2px solid rgba(255,255,255,0.3);background:rgba(5,2,14,0.7);cursor:pointer;appearance:none;-webkit-appearance:none;transition:background 0.1s,border-color 0.1s;}
+.card-checkbox:checked{background:#7c3aed;border-color:#7c3aed;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 10 8' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 4l3 3 5-6' stroke='white' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");background-size:10px;background-position:center;background-repeat:no-repeat;}
+.card-status{position:absolute;top:9px;right:9px;z-index:5;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;border-radius:5px;padding:2px 7px;}
+.s-want{background:rgba(96,165,250,0.15);color:#60a5fa;border:1px solid rgba(96,165,250,0.25);}
+.s-playing{background:rgba(52,211,153,0.15);color:#34d399;border:1px solid rgba(52,211,153,0.25);}
+.s-played{background:rgba(167,139,250,0.15);color:#a78bfa;border:1px solid rgba(167,139,250,0.25);}
+.s-selling{background:rgba(251,191,36,0.15);color:#fbbf24;border:1px solid rgba(251,191,36,0.25);}
+.card-sold-badge{position:absolute;bottom:42px;right:9px;z-index:5;font-family:'IBM Plex Mono',monospace;font-size:9px;background:rgba(52,211,153,0.15);border:1px solid rgba(52,211,153,0.3);color:#34d399;border-radius:5px;padding:2px 6px;}
+.card-body{padding:10px 11px 11px;}
+.card-title{font-family:'Playfair Display',serif;font-size:14px;font-weight:700;color:#f0e8ff;line-height:1.25;margin-bottom:4px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
+.card-meta{font-size:10px;color:#4c1d95;font-family:'IBM Plex Mono',monospace;}
+
+/* ── DETAIL PANEL ── */
+.dp-overlay{position:fixed;inset:0;z-index:200;background:rgba(4,2,10,0.85);backdrop-filter:blur(16px);display:flex;align-items:center;justify-content:center;padding:20px;opacity:0;pointer-events:none;transition:opacity 0.2s ease;}
+.dp-overlay.open{opacity:1;pointer-events:all;}
+.dp-panel{background:linear-gradient(145deg,#120826,#090318);border:1px solid rgba(167,139,250,0.18);border-radius:22px;width:100%;max-width:880px;max-height:90vh;display:flex;overflow:hidden;box-shadow:0 40px 100px rgba(124,58,237,0.35),0 0 0 1px rgba(167,139,250,0.06);transform:scale(0.94) translateY(16px);transition:transform 0.28s cubic-bezier(0.34,1.56,0.64,1);}
+.dp-overlay.open .dp-panel{transform:scale(1) translateY(0);}
+.dp-left{width:290px;flex-shrink:0;position:relative;overflow:hidden;background:#060210;}
+.dp-left img{width:100%;height:100%;object-fit:cover;display:block;}
+.dp-left-fallback{width:100%;height:100%;min-height:420px;display:flex;align-items:center;justify-content:center;font-size:80px;}
+.dp-left-gradient{position:absolute;inset:0;background:linear-gradient(to right,transparent 55%,#120826 100%),linear-gradient(to top,rgba(6,2,16,0.9) 0%,transparent 40%);}
+.dp-left-info{position:absolute;bottom:0;left:0;right:0;padding:22px 20px;}
+.dp-status-badge{display:inline-block;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;border-radius:5px;padding:3px 9px;margin-bottom:10px;}
+.dp-price{font-family:'IBM Plex Mono',monospace;font-size:28px;font-weight:700;color:#34d399;line-height:1;}
+.dp-price-label{font-size:10px;color:rgba(52,211,153,0.55);margin-top:3px;font-family:'IBM Plex Mono',monospace;}
+.dp-sold-info{margin-top:10px;font-family:'IBM Plex Mono',monospace;font-size:11px;color:#34d399;opacity:0.75;}
+.dp-right{flex:1;overflow-y:auto;padding:28px 26px 22px;display:flex;flex-direction:column;gap:18px;min-width:0;}
+.dp-right::-webkit-scrollbar{width:4px;}
+.dp-right::-webkit-scrollbar-thumb{background:#2d1554;border-radius:2px;}
+.dp-top-row{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;}
+.dp-title{font-family:'Playfair Display',serif;font-size:24px;font-weight:900;color:#f5eeff;line-height:1.2;flex:1;}
+.dp-close{background:rgba(255,255,255,0.05);border:1px solid rgba(167,139,250,0.15);border-radius:50%;width:34px;height:34px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:#6b4c9f;font-size:15px;flex-shrink:0;transition:background 0.12s,color 0.12s;}
+.dp-close:hover{background:rgba(248,113,113,0.12);color:#f87171;border-color:rgba(248,113,113,0.25);}
+.dp-tags{display:flex;gap:5px;flex-wrap:wrap;}
+.dp-tag{font-size:10px;background:rgba(124,58,237,0.12);border:1px solid rgba(167,139,250,0.16);border-radius:20px;padding:3px 10px;color:#9f7aea;}
+.dp-notes{font-size:13px;color:#8b6fbf;font-style:italic;line-height:1.65;border-left:2px solid rgba(124,58,237,0.35);padding-left:13px;}
+.dp-sec-label{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:0.13em;color:#3b1f6b;margin-bottom:9px;}
+.dp-links{display:flex;flex-direction:column;gap:6px;}
+.dp-link-row{display:flex;align-items:center;gap:8px;background:rgba(255,255,255,0.025);border:1px solid rgba(167,139,250,0.09);border-radius:10px;padding:8px 11px;transition:border-color 0.12s;}
+.dp-link-row:hover{border-color:rgba(167,139,250,0.2);}
+.dp-lf{width:18px;height:18px;border-radius:4px;flex-shrink:0;background:rgba(124,58,237,0.15);display:flex;align-items:center;justify-content:center;font-size:10px;overflow:hidden;}
+.dp-lf img{width:14px;height:14px;object-fit:contain;}
+.dp-ll{font-size:12px;font-weight:700;color:#c4b5fd;flex-shrink:0;min-width:65px;max-width:100px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.dp-lu{flex:1;font-size:11px;color:#3b1f6b;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-family:'IBM Plex Mono',monospace;}
+.dp-lpr{font-size:11px;font-weight:700;color:#34d399;background:rgba(52,211,153,0.08);border:1px solid rgba(52,211,153,0.15);border-radius:5px;padding:2px 8px;flex-shrink:0;}
+.dp-lpr.free{color:#3b1f6b;background:none;border-color:rgba(167,139,250,0.08);}
+.dp-lsc{font-size:10px;font-weight:700;color:#34d399;flex-shrink:0;font-family:'IBM Plex Mono',monospace;white-space:nowrap;}
+.dp-lopen{background:rgba(124,58,237,0.18);border:1px solid rgba(167,139,250,0.18);border-radius:7px;padding:4px 10px;color:#c4b5fd;font-size:11px;font-weight:700;text-decoration:none;flex-shrink:0;transition:background 0.1s;white-space:nowrap;}
+.dp-lopen:hover{background:rgba(124,58,237,0.35);}
+.dp-lcopy{background:none;border:none;color:#3b1f6b;font-size:12px;cursor:pointer;padding:3px 4px;flex-shrink:0;transition:color 0.1s;}
+.dp-lcopy:hover{color:#9f7aea;}
+.dp-lsell{background:rgba(52,211,153,0.08);border:1px solid rgba(52,211,153,0.18);border-radius:6px;padding:4px 9px;color:#34d399;font-size:10px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap;flex-shrink:0;transition:background 0.1s;}
+.dp-lsell:hover{background:rgba(52,211,153,0.2);}
+.dp-ldel{background:none;border:none;color:#2d1554;font-size:12px;cursor:pointer;padding:3px 4px;flex-shrink:0;transition:color 0.1s;}
+.dp-ldel:hover{color:#f87171;}
+.dp-qarow{display:flex;gap:6px;margin-top:6px;}
+.dp-qai{background:rgba(255,255,255,0.04);border:1px solid rgba(167,139,250,0.1);border-radius:8px;padding:7px 10px;color:#e9d5ff;font-size:12px;font-family:inherit;outline:none;transition:border-color 0.12s;}
+.dp-qai:focus{border-color:#7c3aed;}
+.dp-qai::placeholder{color:#2d1554;}
+.dp-ql{width:78px;flex-shrink:0;}
+.dp-qu{flex:1;}
+.dp-qp{width:62px;flex-shrink:0;}
+.dp-qadd{background:rgba(124,58,237,0.18);border:1px solid rgba(167,139,250,0.15);border-radius:8px;padding:7px 12px;color:#c4b5fd;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap;flex-shrink:0;transition:background 0.1s;}
+.dp-qadd:hover{background:rgba(124,58,237,0.32);}
+.dp-actions{display:flex;gap:8px;padding-top:8px;border-top:1px solid rgba(167,139,250,0.08);}
+.dp-btn{flex:1;padding:9px 0;border-radius:9px;font-size:12px;font-weight:700;font-family:inherit;cursor:pointer;border:1px solid rgba(167,139,250,0.13);background:rgba(255,255,255,0.03);color:#7c5cbf;transition:background 0.1s,color 0.1s;}
+.dp-btn:hover{background:rgba(124,58,237,0.15);color:#c4b5fd;}
+.dp-btn.red:hover{background:rgba(248,113,113,0.1);color:#f87171;border-color:rgba(248,113,113,0.2);}
+.dp-btn.pri{background:linear-gradient(135deg,#7c3aed,#9333ea);border:none;color:#fff;}
+.dp-btn.pri:hover{opacity:0.88;}
+
+/* ── MODALS ── */
+.overlay{position:fixed;inset:0;background:rgba(5,2,14,0.9);backdrop-filter:blur(10px);z-index:300;display:none;align-items:center;justify-content:center;padding:16px;}
+.overlay.open{display:flex;}
+.modal{background:linear-gradient(145deg,#130a28,#0a0514);border:1px solid rgba(167,139,250,0.2);border-radius:18px;width:100%;max-width:560px;max-height:94vh;overflow-y:auto;box-shadow:0 24px 72px rgba(124,58,237,0.25);animation:modalIn 0.2s cubic-bezier(0.34,1.56,0.64,1);padding:22px;}
+.mhdr{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;}
+.mtitle{font-family:'Playfair Display',serif;font-size:19px;color:#c4b5fd;}
+.btn-mclose{background:none;border:none;color:#4c1d95;cursor:pointer;font-size:18px;padding:0;line-height:1;}
+.flabel{font-size:10px;font-weight:700;color:#9f7aea;letter-spacing:0.09em;text-transform:uppercase;display:block;margin-bottom:5px;}
+.finput{width:100%;background:rgba(255,255,255,0.04);border:1px solid rgba(167,139,250,0.15);border-radius:9px;padding:9px 12px;color:#e9d5ff;font-size:13px;font-family:inherit;outline:none;transition:border-color 0.12s;}
+.finput:focus{border-color:#7c3aed;}
+.finput::placeholder{color:#2d1554;}
+textarea.finput{resize:vertical;min-height:58px;}
+.fg{margin-bottom:13px;}
+.cover-preview{width:100%;max-height:180px;border-radius:9px;overflow:hidden;background:rgba(255,255,255,0.02);border:1px solid rgba(167,139,250,0.1);display:flex;align-items:center;justify-content:center;color:#2d1554;font-size:12px;margin-top:7px;}
+.cover-preview img{width:100%;max-height:180px;object-fit:cover;display:block;}
+.color-row{display:flex;gap:6px;flex-wrap:wrap;}
+.cdot{width:22px;height:22px;border-radius:50%;border:2px solid transparent;cursor:pointer;transition:transform 0.1s;flex-shrink:0;}
+.cdot:hover{transform:scale(1.2);}
+.cdot.sel{border-color:#fff;}
+.spills{display:flex;gap:6px;flex-wrap:wrap;}
+.spill{padding:5px 12px;border-radius:20px;font-size:11px;font-weight:700;cursor:pointer;border:1px solid transparent;transition:all 0.1s;}
+.spill.want{border-color:rgba(96,165,250,0.3);color:#60a5fa;background:rgba(96,165,250,0.07);}
+.spill.playing{border-color:rgba(52,211,153,0.3);color:#34d399;background:rgba(52,211,153,0.07);}
+.spill.played{border-color:rgba(167,139,250,0.3);color:#a78bfa;background:rgba(167,139,250,0.07);}
+.spill.selling{border-color:rgba(251,191,36,0.3);color:#fbbf24;background:rgba(251,191,36,0.07);}
+.spill.sel{box-shadow:0 0 0 2px #fff;}
+.le{border:1px solid rgba(167,139,250,0.1);border-radius:10px;overflow:hidden;margin-bottom:13px;}
+.le-row{display:flex;border-bottom:1px solid rgba(167,139,250,0.07);}
+.le-row:last-child{border-bottom:none;}
+.le-lbl{width:110px;flex-shrink:0;background:rgba(255,255,255,0.02);border:none;border-right:1px solid rgba(167,139,250,0.08);padding:8px 10px;color:#c4b5fd;font-size:11px;font-weight:600;font-family:inherit;outline:none;}
+.le-lbl::placeholder{color:#2d1554;font-weight:400;}
+.le-url{flex:1;background:transparent;border:none;padding:8px 10px;color:#e9d5ff;font-size:11px;font-family:inherit;outline:none;}
+.le-url::placeholder{color:#2d1554;}
+.le-price{width:65px;flex-shrink:0;background:transparent;border:none;border-left:1px solid rgba(167,139,250,0.08);padding:8px 8px;color:#34d399;font-size:11px;font-weight:600;font-family:inherit;outline:none;}
+.le-price::placeholder{color:#1a3a2a;font-weight:400;}
+.le-del{background:none;border:none;border-left:1px solid rgba(167,139,250,0.07);padding:0 10px;color:#2d1554;cursor:pointer;font-size:11px;transition:color 0.1s,background 0.1s;}
+.le-del:hover{color:#f87171;background:rgba(248,113,113,0.06);}
+.btn-alr{width:100%;background:rgba(124,58,237,0.06);border:none;border-top:1px solid rgba(167,139,250,0.08);padding:8px;color:#4c1d95;font-size:11px;font-weight:600;font-family:inherit;cursor:pointer;transition:background 0.1s,color 0.1s;border-radius:0 0 10px 10px;}
+.btn-alr:hover{background:rgba(124,58,237,0.14);color:#c4b5fd;}
+.mactions{display:flex;gap:8px;margin-top:6px;}
+.btn-mcancel{flex:1;padding:10px;background:rgba(255,255,255,0.04);border:1px solid rgba(167,139,250,0.15);border-radius:9px;color:#9f7aea;cursor:pointer;font-size:13px;font-family:inherit;}
+.btn-msave{flex:2;padding:10px;background:linear-gradient(135deg,#7c3aed,#9333ea);border:none;border-radius:9px;color:#fff;cursor:pointer;font-size:13px;font-weight:700;font-family:inherit;}
+.btn-msave:hover{opacity:0.9;}
+.idrop{border:2px dashed rgba(167,139,250,0.2);border-radius:12px;padding:24px 20px;text-align:center;cursor:pointer;transition:border-color 0.12s,background 0.12s;margin-bottom:13px;}
+.idrop:hover,.idrop.dragover{border-color:#9f7aea;background:rgba(124,58,237,0.06);}
+.idrop-icon{font-size:30px;margin-bottom:7px;}
+.idrop p{font-size:12px;color:#4c1d95;line-height:1.6;}
+.idrop strong{color:#9f7aea;}
+#importFileInput{display:none;}
+.ipreview{background:rgba(255,255,255,0.02);border:1px solid rgba(167,139,250,0.1);border-radius:10px;padding:11px;margin-bottom:11px;display:none;}
+.ipreview h4{font-size:11px;color:#c4b5fd;margin-bottom:5px;}
+.ipreview-list{display:flex;flex-direction:column;gap:3px;max-height:140px;overflow-y:auto;}
+.ipreview-item{font-size:11px;color:#9f7aea;display:flex;align-items:center;gap:6px;}
+.ipreview-item .pd{width:5px;height:5px;border-radius:50%;background:#7c3aed;flex-shrink:0;}
+.ipreview-item .plinks{color:#4c1d95;font-size:10px;}
+.imode{display:flex;gap:8px;margin-bottom:11px;}
+.imode-btn{flex:1;padding:7px;border-radius:9px;border:1px solid rgba(167,139,250,0.15);background:rgba(255,255,255,0.03);color:#4c1d95;font-size:11px;font-weight:600;font-family:inherit;cursor:pointer;transition:all 0.1s;text-align:center;}
+.imode-btn.active{background:rgba(124,58,237,0.18);border-color:rgba(167,139,250,0.3);color:#c4b5fd;}
+.ifmt{background:rgba(255,255,255,0.02);border:1px solid rgba(167,139,250,0.08);border-radius:10px;padding:9px 11px;margin-bottom:11px;}
+.ifmt summary{font-size:11px;color:#4c1d95;cursor:pointer;user-select:none;}
+.ifmt pre{margin-top:7px;font-size:9px;color:#5a3f8a;font-family:monospace;line-height:1.6;white-space:pre-wrap;}
+.empty{text-align:center;padding:70px 20px;grid-column:1/-1;}
+.empty-icon{font-size:50px;margin-bottom:14px;}
+.empty h3{font-family:'Playfair Display',serif;font-size:20px;color:#4c1d95;margin-bottom:6px;}
+.empty p{font-size:13px;color:#2d1554;}
+#toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%) translateY(18px);background:#130a28;border:1px solid rgba(167,139,250,0.25);border-radius:10px;padding:9px 18px;font-size:12px;color:#c4b5fd;opacity:0;transition:opacity 0.18s,transform 0.18s;z-index:500;pointer-events:none;white-space:nowrap;}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+@keyframes fadeUp{from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:translateY(0);}}
+@keyframes modalIn{from{opacity:0;transform:scale(0.93) translateY(8px);}to{opacity:1;transform:scale(1) translateY(0);}}
+@media(max-width:620px){
+  .dp-panel{flex-direction:column;max-height:95vh;}
+  .dp-left{width:100%;height:200px;flex-shrink:0;}
+  .dp-left img{height:200px;}
+  .dp-left-fallback{min-height:200px;font-size:56px;}
+  .dp-left-gradient{background:linear-gradient(to bottom,transparent 40%,#120826 100%);}
+  .dp-title{font-size:20px;}
+}
+</style>
+</head>
+<body>
+
+<div class="hdr">
+  <div class="hdr-inner">
+    <div class="hdr-top">
+      <div><div class="logo">🎮 Game Vault</div><div class="logo-sub">Your personal game link database</div></div>
+      <div class="hdr-btns">
+        <button class="btn-s" id="btnExport">Export JSON</button>
+        <button class="btn-s" id="btnImport">Import JSON</button>
+        <button class="btn-p" id="btnAdd">+ Add Game</button>
+      </div>
+    </div>
+    <div class="toolbar">
+      <div class="srch-wrap"><span class="srch-ico">🔍</span><input id="search" placeholder="Search games, tags, notes, links..."></div>
+      <select class="tsel" id="filterStatus">
+        <option value="">All statuses</option>
+        <option value="want">Want</option>
+        <option value="playing">Playing</option>
+        <option value="played">Played</option>
+        <option value="selling">Selling</option>
+      </select>
+      <select class="tsel" id="sortBy">
+        <option value="added">Recently Added</option>
+        <option value="az">A → Z</option>
+        <option value="za">Z → A</option>
+        <option value="price-high">Price: High → Low</option>
+        <option value="links">Most Links</option>
+        <option value="sold">Most Sold</option>
+      </select>
+    </div>
+  </div>
+</div>
+
+<div id="main"></div>
+<div id="toast"></div>
+
+<!-- DETAIL PANEL -->
+<div class="dp-overlay" id="dpOverlay">
+  <div class="dp-panel">
+    <div class="dp-left" id="dpLeft"></div>
+    <div class="dp-right" id="dpRight"></div>
+  </div>
+</div>
+
+<!-- ADD/EDIT MODAL -->
+<div class="overlay" id="gameModal">
+  <div class="modal">
+    <div class="mhdr"><div class="mtitle" id="modalTitle">New Game</div><button class="btn-mclose" id="btnCloseModal">✕</button></div>
+    <div class="fg"><label class="flabel">Game Title</label><input class="finput" id="fTitle" placeholder="e.g. Elden Ring"></div>
+    <div class="fg">
+      <label class="flabel">Cover Art URL</label>
+      <input class="finput" id="fCover" placeholder="Paste an image URL...">
+      <div class="cover-preview" id="coverPreview"><span>No image</span></div>
+    </div>
+    <div class="fg"><label class="flabel">Status</label><div class="spills" id="statusPicker"><div class="spill want" data-status="want">Want</div><div class="spill playing" data-status="playing">Playing</div><div class="spill played" data-status="played">Played</div><div class="spill selling" data-status="selling">Selling</div></div></div>
+    <div class="fg"><label class="flabel">Tags (comma separated)</label><input class="finput" id="fTags" placeholder="e.g. RPG, Action, Indie"></div>
+    <div class="fg"><label class="flabel">Notes / Description</label><textarea class="finput" id="fNotes" placeholder="Notes about this game or its links..."></textarea></div>
+    <div class="fg"><label class="flabel">Card Color (fallback when no cover)</label><div class="color-row" id="colorPicker"></div></div>
+    <div class="fg">
+      <label class="flabel">Links — label / url / price</label>
+      <div class="le"><div id="leList"></div><button class="btn-alr" id="btnALR">+ Add another link</button></div>
+    </div>
+    <div class="mactions"><button class="btn-mcancel" id="btnCancelModal">Cancel</button><button class="btn-msave" id="btnSaveGame">Add Game</button></div>
+  </div>
+</div>
+
+<!-- IMPORT MODAL -->
+<div class="overlay" id="importModal">
+  <div class="modal">
+    <div class="mhdr"><div class="mtitle">Import Games</div><button class="btn-mclose" id="btnCloseImport">✕</button></div>
+    <div class="idrop" id="importDrop"><div class="idrop-icon">📂</div><p><strong>Drop a JSON file here</strong><br>or click to browse</p><input type="file" id="importFileInput" accept=".json,application/json"></div>
+    <div class="ipreview" id="importPreview"><h4 id="importPreviewTitle"></h4><div class="ipreview-list" id="importPreviewList"></div></div>
+    <div class="imode" id="importMode" style="display:none"><button class="imode-btn active" data-mode="merge">Merge</button><button class="imode-btn" data-mode="replace">Replace all</button></div>
+    <details class="ifmt"><summary>Expected JSON format</summary><pre>[{"title":"Elden Ring","cover":"https://img.jpg","color":"#7c3aed","status":"selling","tags":["RPG"],"notes":"...","links":[{"label":"Steam","url":"https://...","price":"4.99","soldCount":0}]}]</pre></details>
+    <div class="mactions"><button class="btn-mcancel" id="btnCancelImport">Cancel</button><button class="btn-msave" id="btnDoImport" disabled>Import</button></div>
+  </div>
+</div>
+
+<script>
+(function(){
+  var GK='gv8';
+  var COLORS=['#7c3aed','#9333ea','#db2777','#2563eb','#0891b2','#16a34a','#dc2626','#d97706','#4338ca','#0f766e','#be185d','#b45309'];
+  var EMOJIS=['🎮','⚔️','🏰','🚀','🧙','🐉','🌌','🔫','🎯','🌊'];
+  var games=[],editingId=null,formColor=COLORS[0],formStatus='',formLinks=[],selectedIds=new Set(),importData=null,importMode='merge',detailId=null;
+
+  function load(){try{var d=localStorage.getItem(GK);if(d)games=JSON.parse(d);}catch(e){}render();}
+  function save(){try{localStorage.setItem(GK,JSON.stringify(games));}catch(e){}}
+  function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+  function dom(url){try{return new URL(url).hostname;}catch(e){return null;}}
+  function rc(){return COLORS[Math.floor(Math.random()*COLORS.length)];}
+  function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2);}
+  var tt;
+  function toast(m){var el=document.getElementById('toast');el.textContent=m;el.classList.add('show');clearTimeout(tt);tt=setTimeout(function(){el.classList.remove('show');},2400);}
+  function maxP(g){return Math.max.apply(null,[0].concat((g.links||[]).map(function(l){return parseFloat(l.price)||0;})));}
+  function totalSold(g){return(g.links||[]).reduce(function(s,l){return s+(l.soldCount||0);},0);}
+  function totalRev(g){return(g.links||[]).reduce(function(s,l){return s+((l.soldCount||0)*(parseFloat(l.price)||0));},0);}
+
+  function getFiltered(){
+    var q=(document.getElementById('search').value||'').toLowerCase().trim();
+    var st=document.getElementById('filterStatus').value;
+    var so=document.getElementById('sortBy').value;
+    var list=games.slice();
+    if(q)list=list.filter(function(g){return g.title.toLowerCase().includes(q)||(g.notes||'').toLowerCase().includes(q)||(g.tags||[]).some(function(t){return t.toLowerCase().includes(q);})||(g.links||[]).some(function(l){return(l.label||'').toLowerCase().includes(q)||(l.url||'').toLowerCase().includes(q);});});
+    if(st)list=list.filter(function(g){return g.status===st;});
+    if(so==='az')list.sort(function(a,b){return a.title.localeCompare(b.title);});
+    else if(so==='za')list.sort(function(a,b){return b.title.localeCompare(a.title);});
+    else if(so==='links')list.sort(function(a,b){return(b.links||[]).length-(a.links||[]).length;});
+    else if(so==='price-high')list.sort(function(a,b){return maxP(b)-maxP(a);});
+    else if(so==='sold')list.sort(function(a,b){return totalSold(b)-totalSold(a);});
+    else list=list.slice().reverse();
+    return list;
+  }
+
+  function render(){
+    var list=getFiltered();
+    var tL=games.reduce(function(s,g){return s+(g.links||[]).length;},0);
+    var tR=games.reduce(function(s,g){return s+totalRev(g);},0);
+    var tS=games.reduce(function(s,g){return s+totalSold(g);},0);
+    var selling=games.filter(function(g){return g.status==='selling';}).length;
+    document.getElementById('main').innerHTML=
+      '<div class="stats">'+
+        '<div class="stat"><div class="sv">'+games.length+'</div><div class="sl">Games</div></div>'+
+        '<div class="stat"><div class="sv b">'+tL+'</div><div class="sl">Links</div></div>'+
+        '<div class="stat"><div class="sv a">'+selling+'</div><div class="sl">For Sale</div></div>'+
+        '<div class="stat"><div class="sv g">'+tS+'</div><div class="sl">Sales</div></div>'+
+        '<div class="stat"><div class="sv g">$'+tR.toFixed(2)+'</div><div class="sl">Revenue</div></div>'+
+      '</div>'+
+      '<div class="bulk-bar'+(selectedIds.size?' show':'')+'" id="bulkBar">'+
+        '<div class="bulk-text">'+selectedIds.size+' selected</div>'+
+        '<button class="btn-bdel" id="btnBulkDel">Delete</button>'+
+        '<button class="btn-bcancel" id="btnBulkCancel">Cancel</button>'+
+      '</div>'+
+      '<div class="grid" id="grid"></div>';
+
+    var grid=document.getElementById('grid');
+    if(!list.length){
+      grid.innerHTML='<div class="empty"><div class="empty-icon">🎮</div><h3>'+(games.length===0?'Vault is empty':'No results')+'</h3><p>'+(games.length===0?'Hit + Add Game to get started.':'Try a different search or filter.')+'</p></div>';
+    } else {
+      grid.innerHTML=list.map(function(g,i){
+        var links=g.links||[],isSel=selectedIds.has(g.id);
+        var emoji=EMOJIS[i%EMOJIS.length];
+        var statusHtml=g.status?'<div class="card-status s-'+g.status+'">'+g.status+'</div>':'';
+        var tsc=totalSold(g),rev=totalRev(g);
+        var coverInner=g.cover
+          ?'<img src="'+esc(g.cover)+'" alt="" onerror="this.style.display=\'none\'">'
+          :'<div class="card-cover-fallback" style="background:linear-gradient(160deg,'+(g.color||'#2d1554')+'33,#0a0514)">'+emoji+'</div>';
+        return '<div class="card'+(isSel?' selected':'')+'" style="animation-delay:'+Math.min(i*0.03,0.4)+'s" data-gid="'+g.id+'">'+
+          '<input type="checkbox" class="card-checkbox" data-gid="'+g.id+'" '+(isSel?'checked':'')+'>'+
+          '<div class="card-cover">'+coverInner+'<div class="card-cover-overlay"></div></div>'+
+          statusHtml+
+          (tsc>0?'<div class="card-sold-badge">×'+tsc+' sold</div>':'')+
+          '<div class="card-body">'+
+            '<div class="card-title" title="'+esc(g.title)+'">'+esc(g.title)+'</div>'+
+            '<div class="card-meta">'+links.length+' link'+(links.length!==1?'s':'')+(rev>0?' · $'+rev.toFixed(2):'')+'</div>'+
+          '</div>'+
+        '</div>';
+      }).join('');
+
+      grid.querySelectorAll('.card-checkbox').forEach(function(cb){
+        cb.addEventListener('change',function(e){
+          e.stopPropagation();
+          if(this.checked)selectedIds.add(this.dataset.gid);
+          else selectedIds.delete(this.dataset.gid);
+          render();
+        });
+      });
+      grid.querySelectorAll('.card').forEach(function(card){
+        card.addEventListener('click',function(e){
+          if(e.target.classList.contains('card-checkbox'))return;
+          openDetail(this.dataset.gid);
+        });
+      });
+    }
+    var bd=document.getElementById('btnBulkDel'),bc=document.getElementById('btnBulkCancel');
+    if(bd)bd.addEventListener('click',bulkDel);
+    if(bc)bc.addEventListener('click',function(){selectedIds.clear();render();});
+
+    // refresh panel if open
+    if(detailId&&document.getElementById('dpOverlay').classList.contains('open')){
+      var gx=games.find(function(x){return x.id===detailId;});
+      if(gx)buildDetail(gx); else closeDetail();
+    }
+  }
+
+  /* ── DETAIL PANEL ── */
+  function openDetail(gid){
+    var g=games.find(function(x){return x.id===gid;});if(!g)return;
+    detailId=gid;
+    buildDetail(g);
+    document.getElementById('dpOverlay').classList.add('open');
+  }
+
+  function buildDetail(g){
+    var links=g.links||[];
+    var idx=games.indexOf(g);
+    var emoji=EMOJIS[(idx>=0?idx:0)%EMOJIS.length];
+    var bp=maxP(g),tsc=totalSold(g),rev=totalRev(g);
+    var col=g.color||'#2d1554';
+
+    // LEFT
+    var lh='';
+    if(g.cover){
+      lh+='<img src="'+esc(g.cover)+'" alt="" onerror="this.style.display=\'none\';document.getElementById(\'dpFallback\').style.display=\'flex\'">';
+      lh+='<div id="dpFallback" class="dp-left-fallback" style="display:none;background:linear-gradient(160deg,'+col+'44,#060210)">'+emoji+'</div>';
+    } else {
+      lh+='<div class="dp-left-fallback" style="background:linear-gradient(160deg,'+col+'44,#060210)">'+emoji+'</div>';
+    }
+    lh+='<div class="dp-left-gradient"></div>';
+    lh+='<div class="dp-left-info">';
+    if(g.status)lh+='<div class="dp-status-badge s-'+g.status+'">'+g.status+'</div>';
+    if(bp>0){lh+='<div class="dp-price">$'+bp.toFixed(2)+'</div><div class="dp-price-label">top listed price</div>';}
+    if(tsc>0)lh+='<div class="dp-sold-info">×'+tsc+' sold &nbsp;·&nbsp; $'+rev.toFixed(2)+' earned</div>';
+    lh+='</div>';
+    document.getElementById('dpLeft').innerHTML=lh;
+
+    // RIGHT
+    var tagsHtml=(g.tags||[]).length?'<div class="dp-tags">'+g.tags.map(function(t){return'<span class="dp-tag">'+esc(t)+'</span>';}).join('')+'</div>':'';
+    var notesHtml=g.notes?'<div class="dp-notes">'+esc(g.notes)+'</div>':'';
+    var noLinks='<div style="font-size:12px;color:#3b1f6b;font-style:italic;padding:4px 0;">No links yet — add one below.</div>';
+    var linksHtml=links.length?links.map(function(l,li){
+      var d=dom(l.url),sc=l.soldCount||0;
+      return '<div class="dp-link-row">'+
+        '<div class="dp-lf">'+(d?'<img src="https://www.google.com/s2/favicons?domain='+d+'&sz=32" alt="" onerror="this.parentElement.textContent=\'🔗\'">':'🔗')+'</div>'+
+        '<div class="dp-ll" title="'+esc(l.label)+'">'+esc(l.label)+'</div>'+
+        '<div class="dp-lu" title="'+esc(l.url)+'">'+esc(l.url)+'</div>'+
+        (l.price?'<div class="dp-lpr">$'+esc(l.price)+'</div>':'<div class="dp-lpr free">free</div>')+
+        (sc>0?'<div class="dp-lsc">×'+sc+'</div>':'')+
+        '<a class="dp-lopen" href="'+esc(l.url)+'" target="_blank" rel="noopener">Open ↗</a>'+
+        '<button class="dp-lcopy" data-url="'+esc(l.url)+'" title="Copy">📋</button>'+
+        '<button class="dp-lsell" data-gid="'+g.id+'" data-li="'+li+'">+ Sold</button>'+
+        '<button class="dp-ldel" data-gid="'+g.id+'" data-li="'+li+'">✕</button>'+
+      '</div>';
+    }).join(''):noLinks;
+
+    var rh=
+      '<div class="dp-top-row">'+
+        '<div class="dp-title">'+esc(g.title)+'</div>'+
+        '<button class="dp-close" id="dpClose">✕</button>'+
+      '</div>'+
+      (tagsHtml)+
+      (notesHtml)+
+      '<div>'+
+        '<div class="dp-sec-label">Links</div>'+
+        '<div class="dp-links">'+linksHtml+'</div>'+
+        '<div class="dp-qarow" style="margin-top:10px;">'+
+          '<input class="dp-qai dp-ql" id="dpQl" placeholder="Label">'+
+          '<input class="dp-qai dp-qu" id="dpQu" placeholder="https://" data-gid="'+g.id+'">'+
+          '<input class="dp-qai dp-qp" id="dpQp" placeholder="$price">'+
+          '<button class="dp-qadd" id="dpQadd">+ Link</button>'+
+        '</div>'+
+      '</div>'+
+      '<div class="dp-actions">'+
+        '<button class="dp-btn pri" id="dpEdit">Edit Game</button>'+
+        '<button class="dp-btn" id="dpDup">Duplicate</button>'+
+        '<button class="dp-btn red" id="dpDel">Delete</button>'+
+      '</div>';
+
+    document.getElementById('dpRight').innerHTML=rh;
+
+    document.getElementById('dpClose').onclick=closeDetail;
+    document.getElementById('dpEdit').onclick=function(){closeDetail();openEdit(g.id);};
+    document.getElementById('dpDup').onclick=function(){dupGame(g.id);};
+    document.getElementById('dpDel').onclick=function(){delGame(g.id);};
+    document.getElementById('dpQadd').onclick=function(){dpQadd(g.id);};
+    document.getElementById('dpQu').addEventListener('keydown',function(e){if(e.key==='Enter')dpQadd(g.id);});
+
+    document.querySelectorAll('.dp-lcopy').forEach(function(b){
+      b.onclick=function(e){e.stopPropagation();navigator.clipboard.writeText(this.dataset.url).then(function(){toast('URL copied!');}).catch(function(){toast('Copy failed');});};
+    });
+    document.querySelectorAll('.dp-lsell').forEach(function(b){
+      b.onclick=function(e){e.stopPropagation();recordSale(this.dataset.gid,parseInt(this.dataset.li));};
+    });
+    document.querySelectorAll('.dp-ldel').forEach(function(b){
+      b.onclick=function(e){e.stopPropagation();delLink(this.dataset.gid,parseInt(this.dataset.li));};
+    });
+  }
+
+  function closeDetail(){document.getElementById('dpOverlay').classList.remove('open');detailId=null;}
+
+  function dpQadd(gid){
+    var lEl=document.getElementById('dpQl'),uEl=document.getElementById('dpQu'),pEl=document.getElementById('dpQp');
+    var url=uEl.value.trim(),label=lEl.value.trim(),price=pEl.value.trim().replace(/^\$/,'');
+    if(!url){uEl.focus();return;}
+    if(!/^https?:\/\//i.test(url))url='https://'+url;
+    if(!label){try{label=new URL(url).hostname.replace('www.','');}catch(e){label='Link';}}
+    var g=games.find(function(x){return x.id===gid;});if(!g)return;
+    if(!g.links)g.links=[];
+    g.links.push({label:label,url:url,price:price,soldCount:0});
+    lEl.value='';uEl.value='';pEl.value='';
+    save();render();toast('Link added');
+  }
+
+  function recordSale(gid,idx){
+    var g=games.find(function(x){return x.id===gid;});if(!g||!g.links[idx])return;
+    g.links[idx].soldCount=(g.links[idx].soldCount||0)+1;
+    var p=parseFloat(g.links[idx].price)||0;
+    toast('Sale #'+g.links[idx].soldCount+' recorded! +$'+p.toFixed(2));
+    save();render();
+  }
+  function delLink(gid,idx){
+    if(!confirm('Delete this link?'))return;
+    var g=games.find(function(x){return x.id===gid;});if(!g)return;
+    g.links.splice(idx,1);save();render();
+  }
+  function delGame(id){
+    if(!confirm('Delete this game?'))return;
+    games=games.filter(function(g){return g.id!==id;});
+    selectedIds.delete(id);closeDetail();save();render();
+  }
+  function dupGame(id){
+    var g=games.find(function(x){return x.id===id;});if(!g)return;
+    var copy=Object.assign({},g,{id:uid(),title:g.title+' (copy)',links:(g.links||[]).map(function(l){return Object.assign({},l,{soldCount:0});})});
+    games.push(copy);save();render();toast('Duplicated');openDetail(copy.id);
+  }
+  function bulkDel(){
+    if(!selectedIds.size)return;
+    if(!confirm('Delete '+selectedIds.size+' game'+(selectedIds.size!==1?'s':'')+'?'))return;
+    games=games.filter(function(g){return!selectedIds.has(g.id);});selectedIds.clear();save();render();
+  }
+
+  /* ── ADD/EDIT MODAL ── */
+  function syncLE(){
+    document.querySelectorAll('.le-row').forEach(function(row,i){
+      if(!formLinks[i])formLinks[i]={label:'',url:'',price:'',soldCount:0};
+      formLinks[i].label=row.querySelector('.le-lbl').value;
+      formLinks[i].url=row.querySelector('.le-url').value;
+      formLinks[i].price=row.querySelector('.le-price').value.replace(/^\$/,'');
+    });
+  }
+  function buildLE(){
+    var list=document.getElementById('leList');
+    list.innerHTML=formLinks.map(function(l,i){
+      return '<div class="le-row" data-idx="'+i+'">'+
+        '<input class="le-lbl" placeholder="Label" value="'+esc(l.label)+'">'+
+        '<input class="le-url" placeholder="https://..." value="'+esc(l.url)+'">'+
+        '<input class="le-price" placeholder="$price" value="'+esc(l.price||'')+'">'+
+        '<button class="le-del" data-idx="'+i+'">✕</button></div>';
+    }).join('');
+    list.querySelectorAll('.le-del').forEach(function(btn){
+      btn.addEventListener('click',function(){
+        syncLE();formLinks.splice(parseInt(this.dataset.idx),1);
+        if(!formLinks.length)formLinks.push({label:'',url:'',price:''});buildLE();
+      });
+    });
+  }
+  document.getElementById('btnALR').addEventListener('click',function(){
+    syncLE();formLinks.push({label:'',url:'',price:''});buildLE();
+    var rows=document.querySelectorAll('.le-row');if(rows.length)rows[rows.length-1].querySelector('.le-url').focus();
+  });
+  function buildPicker(){
+    document.getElementById('colorPicker').innerHTML=COLORS.map(function(c){
+      return '<div class="cdot'+(c===formColor?' sel':'')+'" style="background:'+c+'" data-color="'+c+'"></div>';
+    }).join('');
+    document.querySelectorAll('.cdot').forEach(function(d){d.addEventListener('click',function(){formColor=this.dataset.color;buildPicker();});});
+  }
+  function buildSPicker(){
+    document.querySelectorAll('.spill').forEach(function(p){
+      p.classList.toggle('sel',p.dataset.status===formStatus);
+      p.onclick=function(){formStatus=formStatus===this.dataset.status?'':this.dataset.status;buildSPicker();};
+    });
+  }
+  document.getElementById('fCover').addEventListener('input',function(){
+    var url=this.value.trim(),prev=document.getElementById('coverPreview');
+    if(url){prev.innerHTML='<img src="'+esc(url)+'" alt="" onerror="this.parentElement.innerHTML=\'<span style=color:#f87171>Image failed to load</span>\'" style="width:100%;max-height:180px;object-fit:cover;display:block;">';}
+    else{prev.innerHTML='<span>No image</span>';}
+  });
+  function openAdd(){
+    editingId=null;formColor=COLORS[0];formStatus='';formLinks=[{label:'',url:'',price:''}];
+    document.getElementById('modalTitle').textContent='New Game';
+    document.getElementById('btnSaveGame').textContent='Add Game';
+    document.getElementById('fTitle').value='';
+    document.getElementById('fCover').value='';
+    document.getElementById('coverPreview').innerHTML='<span>No image</span>';
+    document.getElementById('fTags').value='';
+    document.getElementById('fNotes').value='';
+    buildPicker();buildSPicker();buildLE();
+    document.getElementById('gameModal').classList.add('open');
+    setTimeout(function(){document.getElementById('fTitle').focus();},50);
+  }
+  function openEdit(id){
+    var g=games.find(function(x){return x.id===id;});if(!g)return;
+    editingId=id;formColor=g.color||COLORS[0];formStatus=g.status||'';
+    formLinks=(g.links||[]).length?g.links.map(function(l){return{label:l.label||'',url:l.url||'',price:l.price||'',soldCount:l.soldCount||0};}): [{label:'',url:'',price:''}];
+    document.getElementById('modalTitle').textContent='Edit Game';
+    document.getElementById('btnSaveGame').textContent='Save Changes';
+    document.getElementById('fTitle').value=g.title;
+    var cover=g.cover||'';
+    document.getElementById('fCover').value=cover;
+    var prev=document.getElementById('coverPreview');
+    if(cover){prev.innerHTML='<img src="'+esc(cover)+'" alt="" style="width:100%;max-height:180px;object-fit:cover;display:block;">';}
+    else{prev.innerHTML='<span>No image</span>';}
+    document.getElementById('fTags').value=(g.tags||[]).join(', ');
+    document.getElementById('fNotes').value=g.notes||'';
+    buildPicker();buildSPicker();buildLE();
+    document.getElementById('gameModal').classList.add('open');
+    setTimeout(function(){document.getElementById('fTitle').focus();},50);
+  }
+  function closeModal(){document.getElementById('gameModal').classList.remove('open');}
+  function saveGame(){
+    var title=document.getElementById('fTitle').value.trim();
+    if(!title){document.getElementById('fTitle').focus();return;}
+    if(!editingId){var dup=games.find(function(g){return g.title.toLowerCase()===title.toLowerCase();});if(dup&&!confirm('"'+title+'" already exists. Add anyway?'))return;}
+    var cover=document.getElementById('fCover').value.trim();
+    var tags=document.getElementById('fTags').value.split(',').map(function(t){return t.trim();}).filter(Boolean);
+    var notes=document.getElementById('fNotes').value.trim();
+    syncLE();
+    var links=formLinks.filter(function(l){return l.url.trim();});
+    links.forEach(function(l){
+      if(!/^https?:\/\//i.test(l.url))l.url='https://'+l.url;
+      if(!l.label.trim()){try{l.label=new URL(l.url).hostname.replace('www.','');}catch(e){l.label='Link';}}
+      l.price=l.price?l.price.replace(/^\$/,''):'';
+    });
+    if(editingId){
+      var g=games.find(function(x){return x.id===editingId;});
+      if(g)Object.assign(g,{title:title,cover:cover,color:formColor,status:formStatus,tags:tags,notes:notes,links:links});
+    } else {
+      var ng={id:uid(),title:title,cover:cover,color:formColor,status:formStatus,tags:tags,notes:notes,links:links};
+      games.push(ng);
+    }
+    save();closeModal();render();toast(editingId?'Game updated':'Game added');
+  }
+
+  /* ── EXPORT/IMPORT ── */
+  document.getElementById('btnExport').addEventListener('click',function(){
+    var data=JSON.stringify(games.map(function(g){
+      return{title:g.title,cover:g.cover||'',color:g.color,status:g.status||'',tags:g.tags||[],notes:g.notes||'',
+             links:(g.links||[]).map(function(l){return{label:l.label,url:l.url,price:l.price||'',soldCount:l.soldCount||0};})};
+    }),null,2);
+    var a=document.createElement('a');a.href=URL.createObjectURL(new Blob([data],{type:'application/json'}));a.download='game-vault.json';a.click();URL.revokeObjectURL(a.href);toast('Exported!');
+  });
+  document.getElementById('btnImport').addEventListener('click',openImport);
+  function openImport(){
+    importData=null;
+    document.getElementById('importPreview').style.display='none';
+    document.getElementById('importMode').style.display='none';
+    document.getElementById('btnDoImport').disabled=true;
+    document.getElementById('importFileInput').value='';
+    document.getElementById('importModal').classList.add('open');
+  }
+  function closeImport(){document.getElementById('importModal').classList.remove('open');}
+  var drop=document.getElementById('importDrop');
+  drop.addEventListener('click',function(){document.getElementById('importFileInput').click();});
+  drop.addEventListener('dragover',function(e){e.preventDefault();drop.classList.add('dragover');});
+  drop.addEventListener('dragleave',function(){drop.classList.remove('dragover');});
+  drop.addEventListener('drop',function(e){e.preventDefault();drop.classList.remove('dragover');var f=e.dataTransfer.files[0];if(f)handleImport(f);});
+  document.getElementById('importFileInput').addEventListener('change',function(){if(this.files[0])handleImport(this.files[0]);});
+  function handleImport(file){
+    var r=new FileReader();
+    r.onload=function(e){
+      try{
+        var p=JSON.parse(e.target.result);
+        if(!Array.isArray(p))throw new Error('Expected a JSON array');
+        var v=p.filter(function(x){return x&&typeof x.title==='string';});
+        if(!v.length)throw new Error('No valid games found');
+        importData=v;
+        document.getElementById('importPreviewTitle').textContent='Found '+v.length+' game'+(v.length!==1?'s':'')+':';
+        document.getElementById('importPreviewList').innerHTML=v.slice(0,30).map(function(g){
+          return '<div class="ipreview-item"><div class="pd"></div><span>'+esc(g.title)+'</span><span class="plinks">'+(g.links||[]).length+' link'+((g.links||[]).length!==1?'s':'')+'</span></div>';
+        }).join('')+(v.length>30?'<div style="font-size:10px;color:#2d1554;margin-top:3px">and '+(v.length-30)+' more</div>':'');
+        document.getElementById('importPreview').style.display='block';
+        document.getElementById('importMode').style.display='flex';
+        document.getElementById('btnDoImport').disabled=false;
+      }catch(err){alert('Invalid JSON: '+err.message);}
+    };
+    r.readAsText(file);
+  }
+  document.querySelectorAll('.imode-btn').forEach(function(btn){
+    btn.addEventListener('click',function(){
+      importMode=this.dataset.mode;
+      document.querySelectorAll('.imode-btn').forEach(function(b){b.classList.remove('active');});
+      this.classList.add('active');
+    });
+  });
+  document.getElementById('btnDoImport').addEventListener('click',function(){
+    if(!importData)return;
+    var inc=importData.map(function(g){
+      return{id:uid(),title:g.title,cover:g.cover||'',color:g.color||rc(),status:g.status||'',tags:g.tags||[],notes:g.notes||'',
+             links:(g.links||[]).map(function(l){return{label:l.label||'',url:l.url||'',price:l.price||'',soldCount:l.soldCount||0};})};
+    });
+    if(importMode==='replace'){games=inc;}
+    else{inc.forEach(function(ng){var ex=games.find(function(x){return x.title.toLowerCase()===ng.title.toLowerCase();});if(ex){(ng.links||[]).forEach(function(nl){if(!ex.links.some(function(el){return el.url===nl.url;}))ex.links.push(nl);});}else{games.push(ng);}});}
+    save();closeImport();render();toast('Imported '+inc.length+' game'+(inc.length!==1?'s':''));
+  });
+
+  /* ── WIRING ── */
+  document.getElementById('btnAdd').addEventListener('click',openAdd);
+  document.getElementById('btnCloseModal').addEventListener('click',closeModal);
+  document.getElementById('btnCancelModal').addEventListener('click',closeModal);
+  document.getElementById('btnSaveGame').addEventListener('click',saveGame);
+  document.getElementById('fTitle').addEventListener('keydown',function(e){if(e.key==='Enter')saveGame();});
+  document.getElementById('search').addEventListener('input',render);
+  document.getElementById('filterStatus').addEventListener('change',render);
+  document.getElementById('sortBy').addEventListener('change',render);
+  document.getElementById('gameModal').addEventListener('click',function(e){if(e.target===this)closeModal();});
+  document.getElementById('btnCloseImport').addEventListener('click',closeImport);
+  document.getElementById('btnCancelImport').addEventListener('click',closeImport);
+  document.getElementById('importModal').addEventListener('click',function(e){if(e.target===this)closeImport();});
+  document.getElementById('dpOverlay').addEventListener('click',function(e){if(e.target===this)closeDetail();});
+  document.addEventListener('keydown',function(e){
+    if(e.target.tagName==='INPUT'||e.target.tagName==='TEXTAREA')return;
+    if(e.key==='Escape'){closeModal();closeImport();closeDetail();}
+    if(e.key==='n'||e.key==='N')openAdd();
+  });
+
+  load();
+})();
+</script>
+</body>
+</html>
