@@ -148,6 +148,16 @@ body{background:#080511;min-height:100vh;font-family:'DM Sans',sans-serif;color:
 .dp-btn.red:hover{background:rgba(248,113,113,0.1);color:#f87171;border-color:rgba(248,113,113,0.2);}
 .dp-btn.pri{background:linear-gradient(135deg,#7c3aed,#9333ea);border:none;color:#fff;}
 .dp-btn.pri:hover{opacity:0.88;}
+.dp-btn.share{border-color:rgba(96,165,250,0.2);color:#60a5fa;}
+.dp-btn.share:hover{background:rgba(96,165,250,0.1);color:#93c5fd;border-color:rgba(96,165,250,0.35);}
+/* SHARE MODAL */
+.share-preview{background:rgba(0,0,0,0.3);border:1px solid rgba(167,139,250,0.15);border-radius:12px;padding:16px;margin-bottom:14px;font-family:'IBM Plex Mono',monospace;font-size:11px;color:#9f7aea;line-height:1.7;white-space:pre-wrap;word-break:break-word;max-height:340px;overflow-y:auto;user-select:all;cursor:text;}
+.share-preview::-webkit-scrollbar{width:3px;}
+.share-preview::-webkit-scrollbar-thumb{background:#3b1f6b;}
+.share-copied{font-size:11px;color:#34d399;text-align:center;margin-top:-8px;margin-bottom:10px;height:18px;transition:opacity 0.3s;}
+.share-format-row{display:flex;gap:6px;margin-bottom:12px;}
+.sfmt-btn{flex:1;padding:6px 0;border-radius:8px;border:1px solid rgba(167,139,250,0.15);background:rgba(255,255,255,0.03);color:#4c1d95;font-size:11px;font-weight:600;font-family:inherit;cursor:pointer;transition:all 0.1s;text-align:center;}
+.sfmt-btn.active{background:rgba(124,58,237,0.18);border-color:rgba(167,139,250,0.3);color:#c4b5fd;}
 /* MODALS */
 .overlay{position:fixed;inset:0;background:rgba(5,2,14,0.9);backdrop-filter:blur(10px);z-index:300;display:none;align-items:center;justify-content:center;padding:16px;}
 .overlay.open{display:flex;}
@@ -363,6 +373,24 @@ textarea.finput{resize:vertical;min-height:58px;}
     <div class="imode" id="importMode" style="display:none"><button class="imode-btn active" data-mode="merge">Merge</button><button class="imode-btn" data-mode="replace">Replace all</button></div>
     <details class="ifmt"><summary>Expected JSON format</summary><pre>[{"title":"Elden Ring","cover":"https://img.jpg","color":"#7c3aed","status":"selling","tags":["RPG"],"notes":"...","links":[{"label":"Steam","url":"https://...","price":"4.99","note":"","soldCount":0,"priceHistory":[]}]}]</pre></details>
     <div class="mactions"><button class="btn-mcancel" id="btnCancelImport">Cancel</button><button class="btn-msave" id="btnDoImport" disabled>Import</button></div>
+  </div>
+</div>
+
+<!-- SHARE MODAL -->
+<div class="overlay" id="shareModal">
+  <div class="modal" style="max-width:520px;">
+    <div class="mhdr"><div class="mtitle">⬆ Share Game</div><button class="btn-mclose" id="btnCloseShare">✕</button></div>
+    <div class="share-format-row">
+      <button class="sfmt-btn active" data-fmt="discord">Discord</button>
+      <button class="sfmt-btn" data-fmt="plain">Plain text</button>
+      <button class="sfmt-btn" data-fmt="markdown">Markdown</button>
+    </div>
+    <div class="share-preview" id="sharePreview"></div>
+    <div class="share-copied" id="shareCopied"></div>
+    <div class="mactions">
+      <button class="btn-mcancel" id="btnCancelShare">Close</button>
+      <button class="btn-msave" id="btnCopyShare">📋 Copy to Clipboard</button>
+    </div>
   </div>
 </div>
 
@@ -670,6 +698,7 @@ textarea.finput{resize:vertical;min-height:58px;}
       '</div>'+
       '<div class="dp-actions">'+
         '<button class="dp-btn pri" id="dpEdit">Edit Game</button>'+
+        '<button class="dp-btn share" id="dpShare">⬆ Share</button>'+
         '<button class="dp-btn" id="dpDup">Duplicate</button>'+
         '<button class="dp-btn red" id="dpDel">Delete</button>'+
       '</div>';
@@ -678,6 +707,7 @@ textarea.finput{resize:vertical;min-height:58px;}
     /* Wire panel events */
     document.getElementById('dpClose').onclick=closeDetail;
     document.getElementById('dpEdit').onclick=function(){closeDetail();openEdit(g.id);};
+    document.getElementById('dpShare').onclick=function(){openShare(g.id);};
     document.getElementById('dpDup').onclick=function(){dupGame(g.id);};
     document.getElementById('dpDel').onclick=function(){delGame(g.id);};
     document.getElementById('dpQadd').onclick=function(){dpQadd(g.id);};
@@ -995,6 +1025,100 @@ textarea.finput{resize:vertical;min-height:58px;}
   document.getElementById('btnCloseChangelogOk').addEventListener('click',function(){document.getElementById('changelogModal').classList.remove('open');});
   document.getElementById('changelogModal').addEventListener('click',function(e){if(e.target===this)this.classList.remove('open');});
 
+  /* ── SHARE ── */
+  var shareGameId=null, shareFmt='discord';
+
+  function buildShareText(g, fmt) {
+    var links = g.links || [];
+    var tags = (g.tags || []).join(', ');
+    var notes = g.notes || '';
+    var hasLinks = links.filter(function(l){return l.url;}).length > 0;
+
+    if (fmt === 'discord') {
+      var out = '🎮 **' + g.title + '**\n';
+      if (tags) out += '🏷 ' + tags + '\n';
+      if (notes) out += '📝 ' + notes + '\n';
+      if (hasLinks) {
+        out += '\n**Links**\n';
+        links.filter(function(l){return l.url;}).forEach(function(l) {
+          var price = l.price ? ' — $' + l.price : '';
+          var label = l.label || l.url;
+          out += '• **' + label + '**' + price + '\n  ' + l.url + '\n';
+        });
+      }
+      return out.trim();
+    }
+
+    if (fmt === 'plain') {
+      var out = g.title + '\n' + '─'.repeat(Math.min(g.title.length, 40)) + '\n';
+      if (tags) out += 'Tags: ' + tags + '\n';
+      if (notes) out += 'Notes: ' + notes + '\n';
+      if (hasLinks) {
+        out += '\nLinks:\n';
+        links.filter(function(l){return l.url;}).forEach(function(l) {
+          var price = l.price ? ' ($' + l.price + ')' : '';
+          var label = l.label || 'Link';
+          out += '  ' + label + price + '\n  ' + l.url + '\n';
+        });
+      }
+      return out.trim();
+    }
+
+    if (fmt === 'markdown') {
+      var out = '## ' + g.title + '\n\n';
+      if (tags) out += '**Tags:** ' + tags + '\n\n';
+      if (notes) out += '> ' + notes + '\n\n';
+      if (hasLinks) {
+        out += '### Links\n\n';
+        links.filter(function(l){return l.url;}).forEach(function(l) {
+          var price = l.price ? ' — **$' + l.price + '**' : '';
+          var label = l.label || l.url;
+          out += '- [' + label + '](' + l.url + ')' + price + '\n';
+        });
+      }
+      return out.trim();
+    }
+
+    return '';
+  }
+
+  function openShare(gid) {
+    shareGameId = gid;
+    shareFmt = 'discord';
+    document.querySelectorAll('.sfmt-btn').forEach(function(b) {
+      b.classList.toggle('active', b.dataset.fmt === shareFmt);
+    });
+    var g = games.find(function(x){return x.id === gid;});
+    if (!g) return;
+    document.getElementById('sharePreview').textContent = buildShareText(g, shareFmt);
+    document.getElementById('shareCopied').textContent = '';
+    document.getElementById('shareModal').classList.add('open');
+  }
+
+  function closeShare() { document.getElementById('shareModal').classList.remove('open'); shareGameId = null; }
+
+  document.querySelectorAll('.sfmt-btn').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      shareFmt = this.dataset.fmt;
+      document.querySelectorAll('.sfmt-btn').forEach(function(b){b.classList.remove('active');});
+      this.classList.add('active');
+      var g = shareGameId && games.find(function(x){return x.id === shareGameId;});
+      if (g) document.getElementById('sharePreview').textContent = buildShareText(g, shareFmt);
+    });
+  });
+
+  document.getElementById('btnCopyShare').addEventListener('click', function() {
+    var text = document.getElementById('sharePreview').textContent;
+    navigator.clipboard.writeText(text).then(function() {
+      var el = document.getElementById('shareCopied');
+      el.textContent = '✓ Copied to clipboard!';
+      setTimeout(function(){el.textContent='';}, 2500);
+    }).catch(function() { toast('Copy failed — select the text manually'); });
+  });
+  document.getElementById('btnCloseShare').addEventListener('click', closeShare);
+  document.getElementById('btnCancelShare').addEventListener('click', closeShare);
+  document.getElementById('shareModal').addEventListener('click', function(e){if(e.target===this)closeShare();});
+
   /* ── EXPORT/IMPORT ── */
   document.getElementById('btnExport').addEventListener('click',function(){
     var data=JSON.stringify(games.map(function(g){
@@ -1069,7 +1193,7 @@ textarea.finput{resize:vertical;min-height:58px;}
   document.getElementById('dpOverlay').addEventListener('click',function(e){if(e.target===this)closeDetail();});
   document.addEventListener('keydown',function(e){
     if(e.target.tagName==='INPUT'||e.target.tagName==='TEXTAREA')return;
-    if(e.key==='Escape'){closeModal();closeImport();closeDetail();closeSettings();}
+    if(e.key==='Escape'){closeModal();closeImport();closeDetail();closeSettings();closeShare();}
     if(e.key==='n'||e.key==='N')openAdd();
   });
 
