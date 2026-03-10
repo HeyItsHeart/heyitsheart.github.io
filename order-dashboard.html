@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Game Vault — Orders Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700&family=DM+Sans:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --bg:#080511;--bg2:#0d0720;--bg3:#120826;
+  --purple:#7c3aed;--purple2:#9333ea;--accent:#c4b5fd;
+  --muted:#4c1d95;--dimmed:#2d1554;--green:#34d399;--yellow:#fbbf24;--red:#f87171;
+  --text:#e9d5ff;--border:rgba(167,139,250,0.12);--border2:rgba(167,139,250,0.22);
+}
+body{background:var(--bg);min-height:100vh;font-family:'DM Sans',sans-serif;color:var(--text);}
+body::after{content:'';position:fixed;top:-200px;left:-200px;width:600px;height:600px;background:radial-gradient(circle,rgba(124,58,237,0.08) 0%,transparent 70%);pointer-events:none;z-index:0;}
+::-webkit-scrollbar{width:5px;}::-webkit-scrollbar-track{background:var(--bg);}::-webkit-scrollbar-thumb{background:#3b1f6b;border-radius:3px;}
+
+/* HEADER */
+.hdr{position:sticky;top:0;z-index:100;background:rgba(8,5,17,0.97);backdrop-filter:blur(24px);border-bottom:1px solid var(--border);padding:14px 28px;}
+.hdr-inner{max-width:1200px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;}
+.logo{font-family:'Playfair Display',serif;font-weight:900;font-size:19px;background:linear-gradient(90deg,#c4b5fd,#a78bfa,#8b5cf6);-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+.logo-sub{font-size:10px;color:var(--muted);font-family:'IBM Plex Mono',monospace;margin-top:1px;}
+.hdr-right{display:flex;gap:8px;align-items:center;flex-wrap:wrap;}
+.btn-s{background:rgba(255,255,255,0.04);border:1px solid var(--border2);border-radius:9px;padding:7px 14px;color:#9f7aea;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;transition:background 0.12s,color 0.12s;white-space:nowrap;}
+.btn-s:hover{background:rgba(124,58,237,0.15);color:var(--accent);}
+.btn-danger{background:rgba(248,113,113,0.08);border:1px solid rgba(248,113,113,0.2);color:#f87171;}
+.btn-danger:hover{background:rgba(248,113,113,0.18);color:#f87171;}
+
+/* STATS BAR */
+.stats-bar{max-width:1200px;margin:24px auto 0;padding:0 28px;display:flex;gap:12px;flex-wrap:wrap;}
+.stat-pill{background:rgba(255,255,255,0.02);border:1px solid var(--border);border-radius:12px;padding:12px 18px;display:flex;flex-direction:column;gap:2px;min-width:120px;}
+.sp-val{font-family:'IBM Plex Mono',monospace;font-size:22px;font-weight:700;color:var(--accent);}
+.sp-val.green{color:var(--green);}
+.sp-val.yellow{color:var(--yellow);}
+.sp-lbl{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.1em;}
+
+/* MAIN */
+.main{max-width:1200px;margin:0 auto;padding:24px 28px 80px;display:grid;grid-template-columns:1fr 440px;gap:24px;align-items:start;}
+@media(max-width:900px){.main{grid-template-columns:1fr;}.detail-panel{order:-1;}}
+
+/* FILTER BAR */
+.filter-row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;}
+.filter-row input,.filter-row select{padding:8px 12px;background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:9px;color:var(--text);font-size:12px;font-family:'DM Sans',sans-serif;outline:none;}
+.filter-row input{flex:1;min-width:140px;}
+.filter-row input:focus,.filter-row select:focus{border-color:var(--purple);}
+.filter-row input::placeholder{color:var(--dimmed);}
+.filter-row select{color:#9f7aea;cursor:pointer;}
+.filter-row select option{background:#0f0720;}
+
+/* ORDERS LIST */
+.orders-list{display:flex;flex-direction:column;gap:8px;}
+.order-card{background:rgba(255,255,255,0.02);border:1px solid var(--border);border-radius:13px;padding:14px 16px;cursor:pointer;transition:border-color 0.15s,background 0.15s;position:relative;animation:fadeUp 0.25s ease both;}
+.order-card:hover{border-color:var(--border2);background:rgba(124,58,237,0.05);}
+.order-card.active{border-color:rgba(167,139,250,0.4);background:rgba(124,58,237,0.09);}
+.oc-top{display:flex;align-items:center;gap:10px;margin-bottom:6px;}
+.oc-id{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--dimmed);flex-shrink:0;}
+.oc-name{font-size:14px;font-weight:700;color:var(--accent);flex:1;}
+.oc-total{font-family:'IBM Plex Mono',monospace;font-size:13px;font-weight:700;color:var(--green);}
+.oc-status{font-size:9px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;border-radius:5px;padding:2px 8px;flex-shrink:0;}
+.st-pending{background:rgba(251,191,36,0.12);color:var(--yellow);border:1px solid rgba(251,191,36,0.22);}
+.st-confirmed{background:rgba(52,211,153,0.12);color:var(--green);border:1px solid rgba(52,211,153,0.22);}
+.st-sent{background:rgba(96,165,250,0.12);color:#60a5fa;border:1px solid rgba(96,165,250,0.22);}
+.st-cancelled{background:rgba(248,113,113,0.1);color:var(--red);border:1px solid rgba(248,113,113,0.18);}
+.oc-bottom{display:flex;align-items:center;gap:8px;}
+.oc-email{font-size:11px;color:var(--muted);font-family:'IBM Plex Mono',monospace;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.oc-date{font-size:10px;color:var(--dimmed);font-family:'IBM Plex Mono',monospace;flex-shrink:0;}
+.oc-items-preview{font-size:11px;color:var(--dimmed);margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.empty-orders{text-align:center;padding:60px 20px;color:var(--dimmed);}
+.empty-orders-icon{font-size:40px;margin-bottom:12px;}
+.empty-orders h3{font-family:'Playfair Display',serif;font-size:18px;color:var(--muted);margin-bottom:6px;}
+.empty-orders p{font-size:13px;line-height:1.6;}
+
+/* DETAIL PANEL */
+.detail-panel{position:sticky;top:82px;}
+.detail-box{background:linear-gradient(145deg,var(--bg3),var(--bg2));border:1px solid var(--border);border-radius:18px;overflow:hidden;}
+.detail-empty{padding:40px 24px;text-align:center;color:var(--dimmed);font-size:13px;line-height:1.7;}
+.detail-hdr{padding:16px 20px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;}
+.detail-hdr-name{font-family:'Playfair Display',serif;font-size:16px;font-weight:700;color:#f0e8ff;flex:1;}
+.detail-hdr-id{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--dimmed);}
+.detail-body{padding:16px 20px;}
+.detail-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;}
+.dr-label{font-size:11px;color:var(--muted);font-family:'IBM Plex Mono',monospace;text-transform:uppercase;letter-spacing:0.08em;}
+.dr-val{font-size:13px;font-weight:600;color:var(--accent);}
+.detail-items{margin:12px 0;display:flex;flex-direction:column;gap:5px;}
+.di-row{display:flex;align-items:center;gap:8px;background:rgba(255,255,255,0.02);border:1px solid var(--border);border-radius:8px;padding:7px 10px;}
+.di-name{flex:1;font-size:12px;color:var(--accent);font-weight:500;}
+.di-price{font-size:12px;color:var(--green);font-family:'IBM Plex Mono',monospace;font-weight:600;}
+.di-type{font-size:9px;color:var(--dimmed);font-family:'IBM Plex Mono',monospace;}
+.detail-notes{background:rgba(124,58,237,0.06);border:1px solid rgba(167,139,250,0.1);border-radius:8px;padding:9px 12px;font-size:12px;color:#6b4c9f;font-style:italic;line-height:1.6;margin:10px 0;}
+.detail-total{display:flex;justify-content:space-between;align-items:center;padding:12px 0 4px;border-top:1px solid var(--border);margin-top:6px;}
+.dt-label{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:0.08em;font-family:'IBM Plex Mono',monospace;}
+.dt-amount{font-family:'IBM Plex Mono',monospace;font-size:22px;font-weight:700;color:var(--green);}
+.status-picker{display:flex;gap:6px;flex-wrap:wrap;margin:12px 0;}
+.sp-btn{padding:5px 12px;border-radius:7px;border:1px solid var(--border);background:transparent;color:var(--dimmed);font-size:11px;font-weight:600;cursor:pointer;font-family:inherit;transition:all 0.12s;}
+.sp-btn[data-s="pending"]:hover,.sp-btn[data-s="pending"].active{background:rgba(251,191,36,0.12);border-color:rgba(251,191,36,0.3);color:var(--yellow);}
+.sp-btn[data-s="confirmed"]:hover,.sp-btn[data-s="confirmed"].active{background:rgba(52,211,153,0.12);border-color:rgba(52,211,153,0.3);color:var(--green);}
+.sp-btn[data-s="sent"]:hover,.sp-btn[data-s="sent"].active{background:rgba(96,165,250,0.12);border-color:rgba(96,165,250,0.3);color:#60a5fa;}
+.sp-btn[data-s="cancelled"]:hover,.sp-btn[data-s="cancelled"].active{background:rgba(248,113,113,0.1);border-color:rgba(248,113,113,0.25);color:var(--red);}
+.detail-actions{display:flex;gap:7px;padding:0 20px 18px;flex-wrap:wrap;}
+.da-btn{flex:1;padding:9px 10px;border-radius:9px;border:1px solid var(--border2);background:rgba(255,255,255,0.03);color:#9f7aea;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;transition:all 0.12s;text-align:center;white-space:nowrap;}
+.da-btn:hover{background:rgba(124,58,237,0.15);color:var(--accent);}
+.da-btn.primary{background:linear-gradient(135deg,var(--purple),var(--purple2));border:none;color:#fff;}
+.da-btn.primary:hover{opacity:0.9;}
+.da-btn.red{border-color:rgba(248,113,113,0.2);color:var(--red);}
+.da-btn.red:hover{background:rgba(248,113,113,0.1);color:var(--red);}
+
+/* EMAIL MODAL */
+.overlay{display:none;position:fixed;inset:0;z-index:200;background:rgba(4,2,10,0.88);backdrop-filter:blur(16px);align-items:center;justify-content:center;padding:20px;}
+.overlay.open{display:flex;}
+.email-modal{background:linear-gradient(145deg,#120826,#090318);border:1px solid var(--border2);border-radius:20px;width:100%;max-width:640px;max-height:90vh;overflow:hidden;display:flex;flex-direction:column;animation:modalIn 0.28s cubic-bezier(0.34,1.56,0.64,1) both;}
+@keyframes modalIn{from{opacity:0;transform:scale(0.93) translateY(10px);}to{opacity:1;transform:scale(1) translateY(0);}}
+.em-hdr{padding:18px 22px 15px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;}
+.em-title{font-family:'Playfair Display',serif;font-size:16px;font-weight:700;color:#f0e8ff;flex:1;}
+.em-close{background:none;border:none;color:var(--dimmed);cursor:pointer;font-size:16px;padding:2px 6px;transition:color 0.1s;}
+.em-close:hover{color:var(--accent);}
+.em-body{padding:18px 22px;overflow-y:auto;flex:1;}
+.em-body::-webkit-scrollbar{width:3px;}
+.em-body::-webkit-scrollbar-thumb{background:var(--dimmed);}
+.em-field{margin-bottom:14px;}
+.em-field label{display:block;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:var(--muted);margin-bottom:5px;font-family:'IBM Plex Mono',monospace;}
+.em-input{width:100%;padding:9px 12px;background:rgba(255,255,255,0.03);border:1px solid rgba(167,139,250,0.12);border-radius:9px;color:var(--text);font-size:13px;font-family:'DM Sans',sans-serif;outline:none;transition:border-color 0.15s;}
+.em-input:focus{border-color:var(--purple);}
+.em-textarea{width:100%;padding:11px 13px;background:rgba(255,255,255,0.03);border:1px solid rgba(167,139,250,0.12);border-radius:9px;color:var(--text);font-size:12.5px;font-family:'DM Sans',sans-serif;outline:none;resize:vertical;min-height:320px;line-height:1.7;transition:border-color 0.15s;}
+.em-textarea:focus{border-color:var(--purple);}
+.em-footer{padding:14px 22px;border-top:1px solid var(--border);display:flex;gap:8px;}
+.em-btn{flex:1;padding:10px;border-radius:10px;border:1px solid var(--border2);background:rgba(255,255,255,0.03);color:#9f7aea;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;transition:all 0.12s;text-align:center;}
+.em-btn:hover{background:rgba(124,58,237,0.15);color:var(--accent);}
+.em-btn.primary{background:linear-gradient(135deg,var(--purple),var(--purple2));border:none;color:#fff;flex:2;}
+.em-btn.primary:hover{opacity:0.9;}
+
+/* TOAST */
+#toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%) translateY(18px);background:#130a28;border:1px solid rgba(167,139,250,0.25);border-radius:10px;padding:9px 18px;font-size:12px;color:var(--accent);opacity:0;transition:opacity 0.18s,transform 0.18s;z-index:999;pointer-events:none;white-space:nowrap;}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+@keyframes fadeUp{from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:translateY(0);}}
+</style>
+</head>
+<body>
+
+<header class="hdr">
+  <div class="hdr-inner">
+    <div><div class="logo">🎮 Game Vault</div><div class="logo-sub">Orders Dashboard</div></div>
+    <div class="hdr-right">
+      <button class="btn-s" onclick="window.open('order.html','_blank')">↗ Open Order Form</button>
+      <button class="btn-s btn-danger" id="btnClearAll">Clear All Orders</button>
+    </div>
+  </div>
+</header>
+
+<!-- STATS -->
+<div class="stats-bar" id="statsBar"></div>
+
+<!-- MAIN -->
+<div class="main">
+  <div>
+    <div class="filter-row">
+      <input id="searchOrders" placeholder="🔍  Search by name or email...">
+      <select id="filterStatus">
+        <option value="">All statuses</option>
+        <option value="pending">Pending</option>
+        <option value="confirmed">Confirmed</option>
+        <option value="sent">Sent</option>
+        <option value="cancelled">Cancelled</option>
+      </select>
+      <select id="sortOrders">
+        <option value="newest">Newest first</option>
+        <option value="oldest">Oldest first</option>
+        <option value="total-high">Total: High → Low</option>
+        <option value="total-low">Total: Low → High</option>
+      </select>
+    </div>
+    <div class="orders-list" id="ordersList"></div>
+  </div>
+
+  <!-- DETAIL -->
+  <div class="detail-panel">
+    <div class="detail-box">
+      <div class="detail-empty" id="detailEmpty">
+        <div style="font-size:36px;margin-bottom:10px;">📋</div>
+        Select an order<br>to see details.
+      </div>
+      <div id="detailContent" style="display:none;"></div>
+    </div>
+  </div>
+</div>
+
+<!-- EMAIL MODAL -->
+<div class="overlay" id="emailOverlay">
+  <div class="email-modal">
+    <div class="em-hdr">
+      <div class="em-title">✉️ Email Template</div>
+      <button class="em-close" id="btnCloseEmail">✕</button>
+    </div>
+    <div class="em-body">
+      <div class="em-field">
+        <label>To</label>
+        <input class="em-input" id="emTo" readonly>
+      </div>
+      <div class="em-field">
+        <label>Subject</label>
+        <input class="em-input" id="emSubject">
+      </div>
+      <div class="em-field">
+        <label>Body — edit before sending</label>
+        <textarea class="em-textarea" id="emBody"></textarea>
+      </div>
+    </div>
+    <div class="em-footer">
+      <button class="em-btn" id="btnCopyEmail">📋 Copy body</button>
+      <button class="em-btn primary" id="btnOpenMailto">Open in Mail App ↗</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+var orders=[];
+var activeId=null;
+
+function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+function fmtDate(iso){var d=new Date(iso);return d.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})+' '+d.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'});}
+function statusClass(s){return 'st-'+(s||'pending');}
+
+function loadOrders(){
+  try{orders=JSON.parse(localStorage.getItem('gv-orders')||'[]');}catch(e){orders=[];}
+}
+function saveOrders(){try{localStorage.setItem('gv-orders',JSON.stringify(orders));}catch(e){}}
+
+var toastTimer;
+function toast(msg){
+  var el=document.getElementById('toast');el.textContent=msg;el.classList.add('show');
+  clearTimeout(toastTimer);toastTimer=setTimeout(function(){el.classList.remove('show');},2200);
+}
+
+function renderStats(){
+  var total=orders.reduce(function(s,o){return s+(o.total||0);},0);
+  var pending=orders.filter(function(o){return o.status==='pending'||!o.status;}).length;
+  var confirmed=orders.filter(function(o){return o.status==='confirmed';}).length;
+  var sent=orders.filter(function(o){return o.status==='sent';}).length;
+  document.getElementById('statsBar').innerHTML=
+    '<div class="stat-pill"><div class="sp-val">'+orders.length+'</div><div class="sp-lbl">Total Orders</div></div>'+
+    '<div class="stat-pill"><div class="sp-val yellow">'+pending+'</div><div class="sp-lbl">Pending</div></div>'+
+    '<div class="stat-pill"><div class="sp-val">'+confirmed+'</div><div class="sp-lbl">Confirmed</div></div>'+
+    '<div class="stat-pill"><div class="sp-val" style="color:#60a5fa">'+sent+'</div><div class="sp-lbl">Sent</div></div>'+
+    '<div class="stat-pill"><div class="sp-val green">$'+total.toFixed(2)+'</div><div class="sp-lbl">Total Revenue</div></div>';
+}
+
+function getFiltered(){
+  var q=(document.getElementById('searchOrders').value||'').toLowerCase();
+  var sf=document.getElementById('filterStatus').value;
+  var so=document.getElementById('sortOrders').value;
+  var list=orders.slice();
+  if(q)list=list.filter(function(o){return (o.firstName+' '+o.lastName).toLowerCase().includes(q)||o.email.toLowerCase().includes(q)||(o.id||'').toLowerCase().includes(q);});
+  if(sf)list=list.filter(function(o){return (o.status||'pending')===sf;});
+  if(so==='oldest')list.sort(function(a,b){return new Date(a.ts)-new Date(b.ts);});
+  else if(so==='total-high')list.sort(function(a,b){return b.total-a.total;});
+  else if(so==='total-low')list.sort(function(a,b){return a.total-b.total;});
+  else list.sort(function(a,b){return new Date(b.ts)-new Date(a.ts);});
+  return list;
+}
+
+function renderList(){
+  var list=getFiltered();
+  if(!list.length){
+    document.getElementById('ordersList').innerHTML=
+      '<div class="empty-orders"><div class="empty-orders-icon">📭</div>'+
+      '<h3>'+(orders.length?'No matching orders':'No orders yet')+'</h3>'+
+      '<p>'+(orders.length?'Try clearing your filters.':'Orders from the order form will appear here automatically.')+'</p></div>';
+    return;
+  }
+  document.getElementById('ordersList').innerHTML=list.map(function(o,i){
+    var name=o.firstName+' '+o.lastName;
+    var itemPreview=o.items.map(function(it){return it.name;}).join(', ');
+    return '<div class="order-card'+(activeId===o.id?' active':'')+'" data-oid="'+esc(o.id)+'" style="animation-delay:'+Math.min(i*0.03,0.4)+'s">'+
+      '<div class="oc-top">'+
+        '<span class="oc-id">'+esc(o.id)+'</span>'+
+        '<span class="oc-name">'+esc(name)+'</span>'+
+        '<span class="oc-total">$'+o.total.toFixed(2)+'</span>'+
+        '<span class="oc-status '+statusClass(o.status)+'">'+esc(o.status||'pending')+'</span>'+
+      '</div>'+
+      '<div class="oc-bottom">'+
+        '<span class="oc-email">'+esc(o.email)+'</span>'+
+        '<span class="oc-date">'+fmtDate(o.ts)+'</span>'+
+      '</div>'+
+      '<div class="oc-items-preview">'+esc(itemPreview)+'</div>'+
+    '</div>';
+  }).join('');
+  document.querySelectorAll('.order-card').forEach(function(card){
+    card.addEventListener('click',function(){openDetail(this.dataset.oid);});
+  });
+}
+
+function openDetail(oid){
+  activeId=oid;
+  var o=orders.find(function(x){return x.id===oid;});
+  if(!o){document.getElementById('detailEmpty').style.display='block';document.getElementById('detailContent').style.display='none';return;}
+  document.getElementById('detailEmpty').style.display='none';
+  document.getElementById('detailContent').style.display='block';
+  var name=o.firstName+' '+o.lastName;
+  document.getElementById('detailContent').innerHTML=
+    '<div class="detail-hdr">'+
+      '<div>'+
+        '<div class="detail-hdr-name">'+esc(name)+'</div>'+
+        '<div class="detail-hdr-id">'+esc(o.id)+' · '+fmtDate(o.ts)+'</div>'+
+      '</div>'+
+      '<span class="oc-status '+statusClass(o.status)+'">'+esc(o.status||'pending')+'</span>'+
+    '</div>'+
+    '<div class="detail-body">'+
+      '<div class="detail-row"><span class="dr-label">Email</span><span class="dr-val">'+esc(o.email)+'</span></div>'+
+      (o.notes?'<div class="detail-notes">📝 '+esc(o.notes)+'</div>':'')+
+      '<div class="dr-label" style="margin:10px 0 6px">Order Items</div>'+
+      '<div class="detail-items">'+
+        o.items.map(function(it){return'<div class="di-row">'+
+          '<span class="di-type">'+(it.type==='bundle'?'📦':'🎮')+'</span>'+
+          '<span class="di-name">'+esc(it.name)+'</span>'+
+          '<span class="di-price">$'+it.price+'</span></div>';
+        }).join('')+
+      '</div>'+
+      '<div class="detail-total"><span class="dt-label">Total</span><span class="dt-amount">$'+o.total.toFixed(2)+'</span></div>'+
+      '<div class="dr-label" style="margin:14px 0 7px;">Update Status</div>'+
+      '<div class="status-picker">'+
+        ['pending','confirmed','sent','cancelled'].map(function(s){
+          return'<button class="sp-btn'+(( o.status||'pending')===s?' active':'')+'" data-s="'+s+'">'+s.charAt(0).toUpperCase()+s.slice(1)+'</button>';
+        }).join('')+
+      '</div>'+
+    '</div>'+
+    '<div class="detail-actions">'+
+      '<button class="da-btn primary" id="daBtnEmail">✉️ Email Template</button>'+
+      '<button class="da-btn red" id="daBtnDelete">🗑 Delete</button>'+
+    '</div>';
+
+  document.querySelectorAll('.sp-btn').forEach(function(btn){
+    btn.addEventListener('click',function(){
+      var s=this.dataset.s;
+      o.status=s;saveOrders();renderStats();renderList();openDetail(oid);
+      toast('Status → '+s);
+    });
+  });
+  document.getElementById('daBtnEmail').addEventListener('click',function(){openEmailModal(oid);});
+  document.getElementById('daBtnDelete').addEventListener('click',function(){
+    if(!confirm('Delete order '+o.id+'?'))return;
+    orders=orders.filter(function(x){return x.id!==oid;});
+    saveOrders();activeId=null;
+    document.getElementById('detailEmpty').style.display='block';
+    document.getElementById('detailContent').style.display='none';
+    renderStats();renderList();toast('Order deleted');
+  });
+  renderList();
+}
+
+function buildEmailBody(o){
+  var name=o.firstName;
+  var itemLines=o.items.map(function(it){return '  • '+(it.type==='bundle'?'[Bundle] ':'')+it.name+' — $'+it.price;}).join('\n');
+  return 'Hi '+name+',\n\n'+
+    'Thanks for your order from Game Vault! I\'m reaching out to confirm your purchase and get you your links.\n\n'+
+    '━━━━━━━━━━━━━━━━━━━━━━\n'+
+    'ORDER SUMMARY\n'+
+    '━━━━━━━━━━━━━━━━━━━━━━\n'+
+    'Order ID: '+o.id+'\n'+
+    'Date: '+fmtDate(o.ts)+'\n\n'+
+    'Items ordered:\n'+itemLines+'\n\n'+
+    'Total: $'+o.total.toFixed(2)+'\n'+
+    '━━━━━━━━━━━━━━━━━━━━━━\n\n'+
+    'To complete your order, please send $'+o.total.toFixed(2)+' to [YOUR PAYMENT INFO HERE].\n\n'+
+    'Once payment is received I\'ll send over all your game links right away.\n\n'+
+    (o.notes?'Regarding your note: "'+o.notes+'"\n[ADDRESS NOTES HERE]\n\n':'')+
+    'If you have any questions, just reply to this email!\n\n'+
+    'Thanks again,\nGame Vault';
+}
+
+function openEmailModal(oid){
+  var o=orders.find(function(x){return x.id===oid;});if(!o)return;
+  var name=o.firstName+' '+o.lastName;
+  document.getElementById('emTo').value=o.email;
+  document.getElementById('emSubject').value='Your Game Vault Order ('+o.id+') — Confirmation';
+  document.getElementById('emBody').value=buildEmailBody(o);
+  document.getElementById('emailOverlay').classList.add('open');
+}
+
+document.getElementById('btnCloseEmail').addEventListener('click',function(){document.getElementById('emailOverlay').classList.remove('open');});
+document.getElementById('emailOverlay').addEventListener('click',function(e){if(e.target===this)this.classList.remove('open');});
+
+document.getElementById('btnCopyEmail').addEventListener('click',function(){
+  navigator.clipboard.writeText(document.getElementById('emBody').value)
+    .then(function(){toast('Email body copied!');})
+    .catch(function(){toast('Copy failed — select manually');});
+});
+
+document.getElementById('btnOpenMailto').addEventListener('click',function(){
+  var to=encodeURIComponent(document.getElementById('emTo').value);
+  var subject=encodeURIComponent(document.getElementById('emSubject').value);
+  var body=encodeURIComponent(document.getElementById('emBody').value);
+  window.open('mailto:'+to+'?subject='+subject+'&body='+body);
+});
+
+document.getElementById('btnClearAll').addEventListener('click',function(){
+  if(!orders.length){toast('No orders to clear');return;}
+  if(!confirm('Delete ALL '+orders.length+' orders? This cannot be undone.'))return;
+  orders=[];saveOrders();activeId=null;
+  document.getElementById('detailEmpty').style.display='block';
+  document.getElementById('detailContent').style.display='none';
+  renderStats();renderList();toast('All orders cleared');
+});
+
+['searchOrders','filterStatus','sortOrders'].forEach(function(id){
+  document.getElementById(id).addEventListener('input',function(){renderStats();renderList();});
+  document.getElementById(id).addEventListener('change',function(){renderStats();renderList();});
+});
+
+// Add a couple sample orders if empty for demo
+function addSampleIfEmpty(){
+  if(orders.length)return;
+  orders=[
+    {id:'GV-DEMO1',ts:new Date(Date.now()-3600000).toISOString(),firstName:'Alex',lastName:'Johnson',email:'alex@example.com',notes:'',items:[{type:'bundle',name:'FNAF Bundle',price:8},{type:'game',name:'Hollow Knight',price:5}],total:13,status:'pending'},
+    {id:'GV-DEMO2',ts:new Date(Date.now()-86400000).toISOString(),firstName:'Sam',lastName:'Rivera',email:'sam@example.com',notes:'Can I get the Genesis version of Sonic?',items:[{type:'bundle',name:'Sonic Bundle',price:10}],total:10,status:'confirmed'}
+  ];
+  saveOrders();
+}
+
+loadOrders();
+addSampleIfEmpty();
+renderStats();
+renderList();
+
+document.addEventListener('keydown',function(e){if(e.key==='Escape')document.getElementById('emailOverlay').classList.remove('open');});
+</script>
+</body>
+</html>
