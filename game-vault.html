@@ -21,6 +21,17 @@ body{background:#080511;min-height:100vh;font-family:'DM Sans',sans-serif;color:
 .btn-p:hover{transform:translateY(-1px);box-shadow:0 6px 20px rgba(124,58,237,0.55);}
 .btn-s{background:rgba(255,255,255,0.04);border:1px solid rgba(167,139,250,0.18);border-radius:9px;padding:8px 13px;color:#9f7aea;cursor:pointer;font-weight:600;font-size:12px;font-family:inherit;transition:background 0.12s,color 0.12s;white-space:nowrap;}
 .btn-s:hover{background:rgba(124,58,237,0.15);color:#c4b5fd;}
+.export-wrap{position:relative;display:inline-block;}
+.export-menu{display:none;position:absolute;top:calc(100% + 6px);right:0;background:#120826;border:1px solid rgba(167,139,250,0.22);border-radius:11px;overflow:hidden;min-width:186px;z-index:300;box-shadow:0 14px 44px rgba(0,0,0,0.6);}
+.export-menu.open{display:block;}
+.export-item{display:block;width:100%;padding:10px 15px;background:none;border:none;border-bottom:1px solid rgba(167,139,250,0.07);color:#9f7aea;font-size:12px;font-weight:600;font-family:inherit;cursor:pointer;text-align:left;transition:background 0.1s,color 0.1s;white-space:nowrap;}
+.export-item:last-child{border-bottom:none;}
+.export-item:hover{background:rgba(124,58,237,0.18);color:#c4b5fd;}
+.sec-hdr{display:flex;align-items:center;gap:10px;margin:0 0 12px;}
+.sec-hdr-title{font-family:'Playfair Display',serif;font-size:15px;font-weight:700;color:#f0e8ff;white-space:nowrap;}
+.sec-hdr-count{font-size:10px;font-family:'IBM Plex Mono',monospace;color:#4c1d95;white-space:nowrap;}
+.sec-hdr-line{flex:1;height:1px;background:rgba(167,139,250,0.1);}
+.sec-block{margin-bottom:28px;}
 .toolbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;}
 .srch-wrap{position:relative;flex:1;min-width:160px;}
 .srch-ico{position:absolute;left:10px;top:50%;transform:translateY(-50%);font-size:12px;color:#4c1d95;pointer-events:none;}
@@ -363,7 +374,13 @@ textarea.finput{resize:vertical;min-height:58px;}
         <button class="btn-s" id="btnNewBundle">📦 New Bundle</button>
         <button class="btn-s" id="btnChangelog">What's New</button>
         <button class="btn-s" id="btnSettings">⚙ Settings</button>
-        <button class="btn-s" id="btnExport">Export</button>
+        <div class="export-wrap" id="exportWrap">
+          <button class="btn-s" id="btnExport">Export ▾</button>
+          <div class="export-menu" id="exportMenu">
+            <button class="export-item" id="btnExportJson">📦 Export JSON</button>
+            <button class="export-item" id="btnExportCsv">📊 Export CSV (Sheets)</button>
+          </div>
+        </div>
         <button class="btn-s" id="btnImport">Import</button>
         <button class="btn-p" id="btnAdd">+ Add Game</button>
       </div>
@@ -438,10 +455,12 @@ textarea.finput{resize:vertical;min-height:58px;}
 <div class="overlay" id="importModal">
   <div class="modal">
     <div class="mhdr"><div class="mtitle">Import Games</div><button class="btn-mclose" id="btnCloseImport">✕</button></div>
-    <div class="idrop" id="importDrop"><div class="idrop-icon">📂</div><p><strong>Drop a JSON file here</strong><br>or click to browse</p><input type="file" id="importFileInput" accept=".json,application/json"></div>
+    <div class="idrop" id="importDrop"><div class="idrop-icon">📂</div><p><strong>Drop a JSON or CSV file here</strong><br>or click to browse</p><input type="file" id="importFileInput" accept=".json,.csv,application/json,text/csv"></div>
     <div class="ipreview" id="importPreview"><h4 id="importPreviewTitle"></h4><div class="ipreview-list" id="importPreviewList"></div></div>
     <div class="imode" id="importMode" style="display:none"><button class="imode-btn active" data-mode="merge">Merge</button><button class="imode-btn" data-mode="replace">Replace all</button></div>
-    <details class="ifmt"><summary>Expected JSON format</summary><pre>[{"title":"Elden Ring","cover":"https://img.jpg","color":"#7c3aed","status":"selling","tags":["RPG"],"notes":"...","links":[{"label":"Steam","url":"https://...","price":"4.99","note":"","soldCount":0,"priceHistory":[]}]}]</pre></details>
+    <details class="ifmt"><summary>Supported formats</summary><pre>JSON: [{"title":"Game","status":"selling","tags":["RPG"],"links":[{"label":"Steam","url":"https://...","price":"4.99"}]}]
+
+CSV (from Export CSV): re-import the exported CSV to restore games, bundles, and folders. Only the Games Overview and Bundles/Folders sections are read — link details are merged automatically.</pre></details>
     <div class="mactions"><button class="btn-mcancel" id="btnCancelImport">Cancel</button><button class="btn-msave" id="btnDoImport" disabled>Import</button></div>
   </div>
 </div>
@@ -735,71 +754,83 @@ textarea.finput{resize:vertical;min-height:58px;}
       return;
     }
 
-    /* ── NORMAL GRID (folders + bundles + games) ── */
-    document.getElementById('main').innerHTML=statsHtml+bulkHtml+'<div class="grid" id="grid"></div>';
-    var grid=document.getElementById('grid');
-    var items=[];
+    /* ── NORMAL VIEW: categorised sections ── */
+    var q=(document.getElementById('search').value||'').toLowerCase().trim();
 
-    /* Folder cards */
-    folders.forEach(function(f,fi){
-      items.push({type:'folder',data:f,idx:fi});
+    var visibleFolders=folders.filter(function(f){
+      if(!q)return true;
+      if(f.name.toLowerCase().includes(q))return true;
+      return(f.gameIds||[]).some(function(gid){var g=games.find(function(x){return x.id===gid;});return g&&(g.title.toLowerCase().includes(q)||(g.tags||[]).some(function(t){return t.toLowerCase().includes(q);}));});
     });
-    /* Bundle cards */
-    bundles.forEach(function(b,bi){
-      items.push({type:'bundle',data:b,idx:bi});
-    });
-    /* Game cards */
-    list.forEach(function(g,gi){
-      items.push({type:'game',data:g,idx:gi});
+    var visibleBundles=bundles.filter(function(b){
+      if(!q)return true;
+      if(b.name.toLowerCase().includes(q))return true;
+      if((b.notes||'').toLowerCase().includes(q))return true;
+      return(b.gameIds||[]).some(function(gid){var g=games.find(function(x){return x.id===gid;});return g&&(g.title.toLowerCase().includes(q)||(g.tags||[]).some(function(t){return t.toLowerCase().includes(q);}));});
     });
 
-    if(!items.length){
-      grid.innerHTML='<div class="empty"><div class="empty-icon">🎮</div><h3>Vault is empty</h3><p>Hit + Add Game to get started.</p></div>';
-    } else {
-      grid.innerHTML=items.map(function(item,i){
-        var delay='animation-delay:'+Math.min(i*0.025,0.4)+'s;';
-        if(item.type==='folder'){
-          var f=item.data;
+    var html='';
+
+    /* FOLDERS SECTION */
+    if(visibleFolders.length){
+      html+='<div class="sec-block"><div class="sec-hdr"><div class="sec-hdr-title">📁 Folders</div><div class="sec-hdr-count">'+visibleFolders.length+'</div><div class="sec-hdr-line"></div></div>'+
+        '<div class="grid" id="grid-folders">'+
+        visibleFolders.map(function(f,i){
           var cnt=(f.gameIds||[]).length;
+          var delay='animation-delay:'+Math.min(i*0.04,0.4)+'s;';
+          var mosaicGames=(f.gameIds||[]).map(function(gid){return games.find(function(x){return x.id===gid;});}).filter(Boolean).slice(0,4);
+          var hasMosaic=mosaicGames.some(function(g){return g.cover;});
+          var folderInner=hasMosaic
+            ?'<div style="display:grid;grid-template-columns:1fr 1fr;gap:3px;position:absolute;inset:0;padding:8px;">'+
+              mosaicGames.map(function(g){return g.cover
+                ?'<div style="border-radius:5px;overflow:hidden;"><img src="'+esc(g.cover)+'" style="width:100%;height:100%;object-fit:cover;display:block;" onerror="this.parentElement.innerHTML=\'🎮\'"></div>'
+                :'<div style="border-radius:5px;background:rgba(124,58,237,0.15);display:flex;align-items:center;justify-content:center;font-size:18px;">🎮</div>';
+              }).join('')+'</div>'
+            :'<div class="card-folder-icon">📁</div>';
           return '<div class="card-folder" style="'+delay+'" data-fid="'+f.id+'">'+
-            '<div class="card-folder-actions">'+
-              '<button class="cf-btn red" data-fid-del="'+f.id+'">✕</button>'+
-            '</div>'+
-            '<div class="card-folder-icon">📁</div>'+
-            '<div class="card-folder-body">'+
-              '<div class="card-folder-name" title="'+esc(f.name)+'">'+esc(f.name)+'</div>'+
-              '<div class="card-folder-meta">'+cnt+' game'+(cnt!==1?'s':'')+'</div>'+
-            '</div>'+
-          '</div>';
-        }
-        if(item.type==='bundle'){
-          var b=item.data;
+            '<div class="card-folder-actions"><button class="cf-btn red" data-fid-del="'+f.id+'">✕</button></div>'+
+            '<div style="flex:1;position:relative;overflow:hidden;">'+folderInner+'</div>'+
+            '<div class="card-folder-body"><div class="card-folder-name" title="'+esc(f.name)+'">'+esc(f.name)+'</div>'+
+            '<div class="card-folder-meta">'+cnt+' game'+(cnt!==1?'s':'')+'</div></div></div>';
+        }).join('')+'</div></div>';
+    }
+
+    /* BUNDLES SECTION */
+    if(visibleBundles.length){
+      html+='<div class="sec-block"><div class="sec-hdr"><div class="sec-hdr-title">📦 Bundles</div><div class="sec-hdr-count">'+visibleBundles.length+'</div><div class="sec-hdr-line"></div></div>'+
+        '<div class="grid" id="grid-bundles">'+
+        visibleBundles.map(function(b,i){
           var bGames=(b.gameIds||[]).map(function(gid){return games.find(function(x){return x.id===gid;});}).filter(Boolean);
-          var thumbs=bGames.slice(0,4).map(function(g){
-            return g.cover
-              ?'<img class="bundle-mini-thumb" src="'+esc(g.cover)+'" alt="" onerror="this.outerHTML=\'<div class=bundle-mini-emoji>🎮</div>\'">'
-              :'<div class="bundle-mini-emoji">'+EMOJIS[games.indexOf(g)%EMOJIS.length]+'</div>';
-          }).join('');
+          var thumbs=bGames.slice(0,4).map(function(g){return g.cover?'<img class="bundle-mini-thumb" src="'+esc(g.cover)+'" alt="" onerror="this.outerHTML=\'<div class=bundle-mini-emoji>🎮</div>\'">':'<div class="bundle-mini-emoji">'+EMOJIS[games.indexOf(g)%EMOJIS.length]+'</div>';}).join('');
+          var delay='animation-delay:'+Math.min(i*0.04,0.4)+'s;';
           return '<div class="card-bundle" style="'+delay+'" data-bid="'+b.id+'">'+
-            '<div class="card-bundle-actions">'+
-              '<button class="cf-btn red" data-bid-del="'+b.id+'">✕</button>'+
-            '</div>'+
+            '<div class="card-bundle-actions"><button class="cf-btn red" data-bid-del="'+b.id+'">✕</button></div>'+
             '<div class="card-bundle-badge">BUNDLE</div>'+
             '<div class="card-bundle-cover">'+thumbs+'</div>'+
-            '<div class="card-bundle-body">'+
-              '<div class="card-bundle-name" title="'+esc(b.name)+'">'+esc(b.name)+'</div>'+
-              '<div class="card-bundle-meta">'+bGames.length+' game'+(bGames.length!==1?'s':'')+(b.price?' · $'+b.price:'')+'</div>'+
-            '</div>'+
-          '</div>';
-        }
-        /* game card */
-        var g=item.data,gi=item.idx;
+            '<div class="card-bundle-body"><div class="card-bundle-name" title="'+esc(b.name)+'">'+esc(b.name)+'</div>'+
+            '<div class="card-bundle-meta">'+bGames.length+' game'+(bGames.length!==1?'s':'')+(b.price?' · $'+b.price:'')+'</div></div></div>';
+        }).join('')+'</div></div>';
+    }
+
+    /* GAMES SECTION */
+    var gamesLabel='🎮 Games';
+    if(q||document.getElementById('filterStatus').value) gamesLabel+=' <span style="font-family:\'IBM Plex Mono\',monospace;font-size:11px;font-weight:400;color:#4c1d95">('+list.length+' result'+(list.length!==1?'s':'')+')</span>';
+    html+='<div class="sec-block"><div class="sec-hdr"><div class="sec-hdr-title">'+gamesLabel+'</div><div class="sec-hdr-count">'+list.length+'</div><div class="sec-hdr-line"></div></div>';
+
+    var totalVisible=visibleFolders.length+visibleBundles.length+list.length;
+    if(!list.length&&!totalVisible){
+      html+='<div class="grid"><div class="empty"><div class="empty-icon">🎮</div><h3>'+(q?'No results':'Vault is empty')+'</h3><p>'+(q?'Try a different search.':'Hit + Add Game to get started.')+'</p></div></div>';
+    } else if(!list.length){
+      html+='<div style="padding:14px 0 4px;color:#2d1554;font-size:12px;font-style:italic;">'+(q?'No matching games.':'No games yet.')+'</div>';
+    } else {
+      html+='<div class="grid" id="grid-games">'+
+      list.map(function(g,gi){
         var links=g.links||[],isSel=selectedIds.has(g.id);
         var emoji=EMOJIS[gi%EMOJIS.length];
         var statusHtml=g.status?'<div class="card-status s-'+g.status+'">'+g.status+'</div>':'';
         var tsc=totalSold(g),rev=totalRev(g);
-        var coverInner=g.cover
-          ?'<img src="'+esc(g.cover)+'" alt="" onerror="this.style.display=\'none\'">'
+        var delay='animation-delay:'+Math.min(gi*0.025,0.4)+'s;';
+        var coverInner=g.cover?'<img src="'+esc(g.cover)+'" alt="" onerror="this.style.display=\'none\'">'
           :'<div class="card-cover-fallback" style="background:linear-gradient(160deg,'+(g.color||'#2d1554')+'33,#0a0514)">'+emoji+'</div>';
         return '<div class="card'+(isSel?' selected':'')+'" style="'+delay+'" data-gid="'+g.id+'">'+
           '<input type="checkbox" class="card-checkbox" data-gid="'+g.id+'" '+(isSel?'checked':'')+'>'+
@@ -807,47 +838,27 @@ textarea.finput{resize:vertical;min-height:58px;}
           statusHtml+(tsc>0?'<div class="card-sold-badge">×'+tsc+' sold</div>':'')+
           '<div class="card-body"><div class="card-title" title="'+esc(g.title)+'">'+esc(g.title)+'</div>'+
           '<div class="card-meta">'+links.length+' link'+(links.length!==1?'s':'')+(rev>0?' · $'+rev.toFixed(2):'')+'</div></div></div>';
-      }).join('');
+      }).join('')+'</div>';
     }
+    html+='</div>'; /* close games sec-block */
 
-    /* Folder card clicks */
-    grid.querySelectorAll('.card-folder').forEach(function(el){
-      el.addEventListener('click',function(e){
-        if(e.target.closest('[data-fid-del]'))return;
-        folderViewId=this.dataset.fid;render();
-      });
-    });
-    grid.querySelectorAll('[data-fid-del]').forEach(function(btn){
-      btn.addEventListener('click',function(e){
-        e.stopPropagation();
-        var fid=this.dataset.fidDel;
-        var f=folders.find(function(x){return x.id===fid;});
-        if(!f)return;
-        if(!confirm('Delete folder "'+f.name+'"? Games inside won\'t be deleted.'))return;
-        folders=folders.filter(function(x){return x.id!==fid;});
-        saveFolders();render();toast('Folder deleted');
-      });
-    });
-    /* Bundle card clicks */
-    grid.querySelectorAll('.card-bundle').forEach(function(el){
-      el.addEventListener('click',function(e){
-        if(e.target.closest('[data-bid-del]'))return;
-        openBundleDetail(this.dataset.bid);
-      });
-    });
-    grid.querySelectorAll('[data-bid-del]').forEach(function(btn){
-      btn.addEventListener('click',function(e){
-        e.stopPropagation();
-        var bid=this.dataset.bidDel;
-        var b=bundles.find(function(x){return x.id===bid;});
-        if(!b)return;
-        if(!confirm('Delete bundle "'+b.name+'"?'))return;
-        bundles=bundles.filter(function(x){return x.id!==bid;});
-        saveBundles();render();toast('Bundle deleted');
-      });
-    });
+    document.getElementById('main').innerHTML=statsHtml+bulkHtml+html;
 
-    wireGridEvents(grid);
+    /* folder events */
+    var gfEl=document.getElementById('grid-folders');
+    if(gfEl){
+      gfEl.querySelectorAll('.card-folder').forEach(function(el){el.addEventListener('click',function(e){if(e.target.closest('[data-fid-del]'))return;folderViewId=this.dataset.fid;render();});});
+      gfEl.querySelectorAll('[data-fid-del]').forEach(function(btn){btn.addEventListener('click',function(e){e.stopPropagation();var fid=this.dataset.fidDel;var f=folders.find(function(x){return x.id===fid;});if(!f)return;if(!confirm('Delete folder "'+f.name+'"? Games inside won\'t be deleted.'))return;folders=folders.filter(function(x){return x.id!==fid;});saveFolders();render();toast('Folder deleted');});});
+    }
+    /* bundle events */
+    var gbEl=document.getElementById('grid-bundles');
+    if(gbEl){
+      gbEl.querySelectorAll('.card-bundle').forEach(function(el){el.addEventListener('click',function(e){if(e.target.closest('[data-bid-del]'))return;openBundleDetail(this.dataset.bid);});});
+      gbEl.querySelectorAll('[data-bid-del]').forEach(function(btn){btn.addEventListener('click',function(e){e.stopPropagation();var bid=this.dataset.bidDel;var b=bundles.find(function(x){return x.id===bid;});if(!b)return;if(!confirm('Delete bundle "'+b.name+'"?'))return;bundles=bundles.filter(function(x){return x.id!==bid;});saveBundles();render();toast('Bundle deleted');});});
+    }
+    var grid=document.getElementById('grid-games')||document.querySelector('.grid');
+
+    if(grid)wireGridEvents(grid);
     wireSharedBulk();
     if(detailId&&document.getElementById('dpOverlay').classList.contains('open')){
       var gx=games.find(function(x){return x.id===detailId;});
@@ -1490,13 +1501,69 @@ textarea.finput{resize:vertical;min-height:58px;}
   }
 
   /* ── EXPORT/IMPORT ── */
-  document.getElementById('btnExport').addEventListener('click',function(){
+  /* ── EXPORT DROPDOWN ── */
+  var exportMenu=document.getElementById('exportMenu');
+  document.getElementById('btnExport').addEventListener('click',function(e){e.stopPropagation();exportMenu.classList.toggle('open');});
+  document.addEventListener('click',function(e){if(!e.target.closest('#exportWrap'))exportMenu.classList.remove('open');});
+
+  function dlFile(content,filename,type){
+    var a=document.createElement('a');a.href=URL.createObjectURL(new Blob([content],{type:type}));a.download=filename;a.click();URL.revokeObjectURL(a.href);
+  }
+
+  document.getElementById('btnExportJson').addEventListener('click',function(){
+    exportMenu.classList.remove('open');
     var data=JSON.stringify(games.map(function(g){
       return{title:g.title,cover:g.cover||'',color:g.color,status:g.status||'',tags:g.tags||[],notes:g.notes||'',
              links:(g.links||[]).map(function(l){return{label:l.label,url:l.url,price:l.price||'',note:l.note||'',soldCount:l.soldCount||0,priceHistory:l.priceHistory||[],healthStatus:l.healthStatus||'unknown'};})};
     }),null,2);
-    var a=document.createElement('a');a.href=URL.createObjectURL(new Blob([data],{type:'application/json'}));a.download='game-vault.json';a.click();URL.revokeObjectURL(a.href);toast('Exported!');
+    dlFile(data,'game-vault.json','application/json');
+    toast('JSON exported!');
   });
+
+  document.getElementById('btnExportCsv').addEventListener('click',function(){
+    exportMenu.classList.remove('open');
+    function cc(v){var s=String(v==null?'':v);return(s.includes(',')||s.includes('"')||s.includes('\n'))?'"'+s.replace(/"/g,'""')+'"':s;}
+    function cr(arr){return arr.map(cc).join(',');}
+    var rows=[];
+
+    /* SECTION: Games */
+    rows.push(['##GAMES##','Title','Status','Tags','Notes','Cover URL','# Links','Total Sold','Total Revenue']);
+    games.forEach(function(g){
+      rows.push(['',g.title,g.status||'',(g.tags||[]).join('; '),g.notes||'',g.cover||'',(g.links||[]).length,totalSold(g),totalRev(g).toFixed(2)]);
+    });
+
+    /* SECTION: Links (sub-rows under games) */
+    rows.push([]);
+    rows.push(['##LINKS##','Game Title','Link Label','URL','Price','Sold Count','Revenue','Link Note','Health']);
+    games.forEach(function(g){
+      (g.links||[]).forEach(function(l){
+        var sold=l.soldCount||0,price=parseFloat(l.price)||0;
+        rows.push(['',g.title,l.label||'',l.url||'',l.price||'',sold,(sold*price).toFixed(2),l.note||'',l.healthStatus||'']);
+      });
+    });
+
+    /* SECTION: Bundles */
+    rows.push([]);
+    rows.push(['##BUNDLES##','Name','Price','Notes','Games (semicolon-separated)','Times Sold','Revenue']);
+    bundles.forEach(function(b){
+      var bGameTitles=(b.gameIds||[]).map(function(gid){var g=games.find(function(x){return x.id===gid;});return g?g.title:'';}).filter(Boolean);
+      var sold=b.soldCount||0,price=parseFloat(b.price)||0;
+      rows.push(['',b.name,b.price||'',b.notes||'',bGameTitles.join('; '),sold,(sold*price).toFixed(2)]);
+    });
+
+    /* SECTION: Folders */
+    rows.push([]);
+    rows.push(['##FOLDERS##','Name','Games (semicolon-separated)']);
+    folders.forEach(function(f){
+      var fGameTitles=(f.gameIds||[]).map(function(gid){var g=games.find(function(x){return x.id===gid;});return g?g.title:'';}).filter(Boolean);
+      rows.push(['',f.name,fGameTitles.join('; ')]);
+    });
+
+    dlFile('\uFEFF'+rows.map(cr).join('\n'),'game-vault.csv','text/csv;charset=utf-8');
+    toast('CSV exported — open in Google Sheets!');
+  });
+
+  /* ── IMPORT ── */
   document.getElementById('btnImport').addEventListener('click',openImport);
   function openImport(){
     importData=null;
@@ -1513,38 +1580,156 @@ textarea.finput{resize:vertical;min-height:58px;}
   drop.addEventListener('dragleave',function(){drop.classList.remove('dragover');});
   drop.addEventListener('drop',function(e){e.preventDefault();drop.classList.remove('dragover');var f=e.dataTransfer.files[0];if(f)handleImport(f);});
   document.getElementById('importFileInput').addEventListener('change',function(){if(this.files[0])handleImport(this.files[0]);});
+
   function handleImport(file){
     var r=new FileReader();
     r.onload=function(e){
+      var text=e.target.result;
       try{
-        var p=JSON.parse(e.target.result);
-        if(!Array.isArray(p))throw new Error('Expected array');
-        var v=p.filter(function(x){return x&&typeof x.title==='string';});
-        if(!v.length)throw new Error('No valid games');
-        importData=v;
-        document.getElementById('importPreviewTitle').textContent='Found '+v.length+' game'+(v.length!==1?'s':'')+':';
-        document.getElementById('importPreviewList').innerHTML=v.slice(0,30).map(function(g){
-          return '<div class="ipreview-item"><div class="pd"></div><span>'+esc(g.title)+'</span><span class="plinks">'+(g.links||[]).length+' link'+((g.links||[]).length!==1?'s':'')+'</span></div>';
-        }).join('')+(v.length>30?'<div style="font-size:10px;color:#2d1554;margin-top:3px">and '+(v.length-30)+' more</div>':'');
-        document.getElementById('importPreview').style.display='block';
-        document.getElementById('importMode').style.display='flex';
-        document.getElementById('btnDoImport').disabled=false;
-      }catch(err){alert('Invalid JSON: '+err.message);}
+        if(file.name.toLowerCase().endsWith('.csv')||file.type==='text/csv'||text.trimStart().startsWith('##')||text.includes('##GAMES##')){
+          parseCsvImport(text);
+        } else {
+          parseJsonImport(text);
+        }
+      }catch(err){alert('Import error: '+err.message);}
     };
     r.readAsText(file);
   }
+
+  function parseJsonImport(text){
+    var p=JSON.parse(text);
+    if(!Array.isArray(p))throw new Error('Expected array');
+    var v=p.filter(function(x){return x&&typeof x.title==='string';});
+    if(!v.length)throw new Error('No valid games found');
+    importData={type:'json',games:v};
+    document.getElementById('importPreviewTitle').textContent='Found '+v.length+' game'+(v.length!==1?'s':'')+':';
+    document.getElementById('importPreviewList').innerHTML=v.slice(0,30).map(function(g){
+      return '<div class="ipreview-item"><div class="pd"></div><span>'+esc(g.title)+'</span><span class="plinks">'+(g.links||[]).length+' link'+((g.links||[]).length!==1?'s':'')+'</span></div>';
+    }).join('')+(v.length>30?'<div style="font-size:10px;color:#2d1554;margin-top:3px">and '+(v.length-30)+' more</div>':'');
+    document.getElementById('importPreview').style.display='block';
+    document.getElementById('importMode').style.display='flex';
+    document.getElementById('btnDoImport').disabled=false;
+  }
+
+  function parseCsvImport(text){
+    /* strip BOM */
+    text=text.replace(/^\uFEFF/,'');
+    /* split into lines, parse CSV cells */
+    function parseCsvLine(line){
+      var cells=[],cur='',inQ=false;
+      for(var i=0;i<line.length;i++){
+        var c=line[i];
+        if(inQ){if(c==='"'&&line[i+1]==='"'){cur+='"';i++;}else if(c==='"'){inQ=false;}else cur+=c;}
+        else{if(c==='"'){inQ=true;}else if(c===','){cells.push(cur);cur='';}else cur+=c;}
+      }
+      cells.push(cur);
+      return cells;
+    }
+    var lines=text.split(/\r?\n/);
+    var csvGames=[],csvBundles=[],csvFolders=[];
+    var section='';
+    for(var i=0;i<lines.length;i++){
+      var cells=parseCsvLine(lines[i]);
+      var marker=(cells[0]||'').trim();
+      if(marker==='##GAMES##'){section='games';continue;}
+      if(marker==='##LINKS##'){section='links';continue;}
+      if(marker==='##BUNDLES##'){section='bundles';continue;}
+      if(marker==='##FOLDERS##'){section='folders';continue;}
+      if(!cells.join('').trim())continue; /* blank line */
+      /* skip header rows (first cell non-empty and no data in col 0) */
+      if(section==='games'&&cells[0]===''&&cells[1]){
+        /* cols: '',title,status,tags,notes,cover,#links,sold,revenue */
+        csvGames.push({title:cells[1],status:cells[2]||'',tags:cells[3]?cells[3].split(';').map(function(t){return t.trim();}).filter(Boolean):[],notes:cells[4]||'',cover:cells[5]||''});
+      }
+      if(section==='links'&&cells[0]===''&&cells[1]&&cells[2]){
+        /* cols: '',gameTitle,label,url,price,sold,revenue,note,health */
+        var gt=cells[1];var existing=csvGames.find(function(g){return g.title===gt;});
+        if(existing){
+          if(!existing.links)existing.links=[];
+          existing.links.push({label:cells[2]||'',url:cells[3]||'',price:cells[4]||'',note:cells[7]||'',soldCount:parseInt(cells[5])||0,priceHistory:[],healthStatus:cells[8]||'unknown'});
+        }
+      }
+      if(section==='bundles'&&cells[0]===''&&cells[1]){
+        /* cols: '',name,price,notes,games,sold,revenue */
+        csvBundles.push({name:cells[1],price:cells[2]||'',notes:cells[3]||'',gameTitles:cells[4]?cells[4].split(';').map(function(t){return t.trim();}).filter(Boolean):[]});
+      }
+      if(section==='folders'&&cells[0]===''&&cells[1]){
+        /* cols: '',name,games */
+        csvFolders.push({name:cells[1],gameTitles:cells[2]?cells[2].split(';').map(function(t){return t.trim();}).filter(Boolean):[]});
+      }
+    }
+    if(!csvGames.length&&!csvBundles.length&&!csvFolders.length)throw new Error('No data found. Make sure this is a CSV exported from Game Vault.');
+    importData={type:'csv',games:csvGames,bundles:csvBundles,folders:csvFolders};
+    var summary=csvGames.length+' game'+(csvGames.length!==1?'s':'');
+    if(csvBundles.length)summary+=', '+csvBundles.length+' bundle'+(csvBundles.length!==1?'s':'');
+    if(csvFolders.length)summary+=', '+csvFolders.length+' folder'+(csvFolders.length!==1?'s':'');
+    document.getElementById('importPreviewTitle').textContent='Found: '+summary;
+    document.getElementById('importPreviewList').innerHTML=csvGames.slice(0,20).map(function(g){
+      return '<div class="ipreview-item"><div class="pd"></div><span>'+esc(g.title)+'</span><span class="plinks">'+(g.links||[]).length+' link'+((g.links||[]).length!==1?'s':'')+'</span></div>';
+    }).join('')+(csvGames.length>20?'<div style="font-size:10px;color:#2d1554;margin-top:3px">and '+(csvGames.length-20)+' more</div>':'');
+    document.getElementById('importPreview').style.display='block';
+    document.getElementById('importMode').style.display='flex';
+    document.getElementById('btnDoImport').disabled=false;
+  }
+
   document.querySelectorAll('.imode-btn').forEach(function(btn){
     btn.addEventListener('click',function(){importMode=this.dataset.mode;document.querySelectorAll('.imode-btn').forEach(function(b){b.classList.remove('active');});this.classList.add('active');});
   });
+
   document.getElementById('btnDoImport').addEventListener('click',function(){
     if(!importData)return;
-    var inc=importData.map(function(g){
-      return{id:uid(),title:g.title,cover:g.cover||'',color:g.color||rc(),status:g.status||'',tags:g.tags||[],notes:g.notes||'',
-             links:(g.links||[]).map(function(l){return{label:l.label||'',url:l.url||'',price:l.price||'',note:l.note||'',soldCount:l.soldCount||0,priceHistory:l.priceHistory||[],healthStatus:l.healthStatus||'unknown'};})};
-    });
-    if(importMode==='replace'){games=inc;}
-    else{inc.forEach(function(ng){var ex=games.find(function(x){return x.title.toLowerCase()===ng.title.toLowerCase();});if(ex){(ng.links||[]).forEach(function(nl){if(!ex.links.some(function(el){return el.url===nl.url;}))ex.links.push(nl);});}else{games.push(ng);}});}
-    save();closeImport();render();toast('Imported '+inc.length+' game'+(inc.length!==1?'s':''));
+    if(importData.type==='json'){
+      var inc=importData.games.map(function(g){
+        return{id:uid(),title:g.title,cover:g.cover||'',color:g.color||rc(),status:g.status||'',tags:g.tags||[],notes:g.notes||'',
+               links:(g.links||[]).map(function(l){return{label:l.label||'',url:l.url||'',price:l.price||'',note:l.note||'',soldCount:l.soldCount||0,priceHistory:l.priceHistory||[],healthStatus:l.healthStatus||'unknown'};})};
+      });
+      if(importMode==='replace'){games=inc;}
+      else{inc.forEach(function(ng){var ex=games.find(function(x){return x.title.toLowerCase()===ng.title.toLowerCase();});if(ex){(ng.links||[]).forEach(function(nl){if(!ex.links.some(function(el){return el.url===nl.url;}))ex.links.push(nl);});}else{games.push(ng);}});}
+      save();closeImport();render();toast('Imported '+inc.length+' game'+(inc.length!==1?'s':''));
+    } else {
+      /* CSV import */
+      var csvG=importData.games,csvB=importData.bundles,csvF=importData.folders;
+      var addedG=0,addedB=0,addedF=0;
+      if(importMode==='replace'){games=[];folders=[];bundles=[];}
+
+      /* import games */
+      csvG.forEach(function(g){
+        var ex=games.find(function(x){return x.title.toLowerCase()===g.title.toLowerCase();});
+        if(ex){
+          /* merge links */
+          (g.links||[]).forEach(function(nl){if(!ex.links.some(function(el){return el.url===nl.url;}))ex.links.push(nl);});
+        } else {
+          games.push({id:uid(),title:g.title,cover:g.cover||'',color:rc(),status:g.status||'',tags:g.tags||[],notes:g.notes||'',links:(g.links||[]).map(function(l){return Object.assign({id:uid()},l);})});
+          addedG++;
+        }
+      });
+
+      /* import bundles — resolve game titles to IDs */
+      csvB.forEach(function(b){
+        var ex=bundles.find(function(x){return x.name.toLowerCase()===b.name.toLowerCase();});
+        if(!ex){
+          var gids=(b.gameTitles||[]).map(function(t){var g=games.find(function(x){return x.title.toLowerCase()===t.toLowerCase();});return g?g.id:null;}).filter(Boolean);
+          bundles.push({id:uid(),name:b.name,price:b.price||'',notes:b.notes||'',gameIds:gids,soldCount:0,saleLog:[]});
+          addedB++;
+        }
+      });
+
+      /* import folders */
+      csvF.forEach(function(f){
+        var ex=folders.find(function(x){return x.name.toLowerCase()===f.name.toLowerCase();});
+        if(!ex){
+          var gids=(f.gameTitles||[]).map(function(t){var g=games.find(function(x){return x.title.toLowerCase()===t.toLowerCase();});return g?g.id:null;}).filter(Boolean);
+          folders.push({id:uid(),name:f.name,gameIds:gids});
+          addedF++;
+        }
+      });
+
+      save();saveBundles();saveFolders();closeImport();render();
+      var msg='Imported: '+addedG+' game'+(addedG!==1?'s':'');
+      if(addedB)msg+=', '+addedB+' bundle'+(addedB!==1?'s':'');
+      if(addedF)msg+=', '+addedF+' folder'+(addedF!==1?'s':'');
+      toast(msg);
+    }
   });
 
   /* ── WIRING ── */
