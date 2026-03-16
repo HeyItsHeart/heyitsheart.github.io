@@ -1,0 +1,1127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>WebEngine Launcher</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:ital,wght@0,300;0,400;0,500;1,300&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg:        #0a0a0a;
+    --surface:   #111111;
+    --surface2:  #181818;
+    --border:    rgba(255,255,255,0.08);
+    --border-hi: rgba(255,255,255,0.18);
+    --text:      #e8e4dc;
+    --muted:     #6b6760;
+    --accent:    #e8622a;
+    --accent2:   #3a8fd4;
+    --gold:      #c8a96e;
+    --mono:      'DM Mono', monospace;
+    --sans:      'DM Sans', sans-serif;
+    --display:   'Bebas Neue', sans-serif;
+  }
+
+  html, body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    min-height: 100vh;
+    overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background: repeating-linear-gradient(
+      to bottom,
+      transparent 0px, transparent 2px,
+      rgba(0,0,0,0.04) 2px, rgba(0,0,0,0.04) 4px
+    );
+    pointer-events: none;
+    z-index: 9999;
+  }
+
+  /* ─── LAYOUT ─── */
+  .app {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 48px 32px 80px;
+    transition: transform 0.9s cubic-bezier(0.76, 0, 0.24, 1),
+                opacity   0.6s ease;
+  }
+
+  .app.slide-away {
+    transform: translateY(-120vh);
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  /* ─── HEADER ─── */
+  .header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    margin-bottom: 56px;
+    animation: fadeUp 0.6s ease both;
+  }
+
+  .wordmark { display: flex; flex-direction: column; gap: 2px; }
+  .wordmark-top {
+    font-family: var(--mono); font-size: 10px; font-weight: 300;
+    letter-spacing: 0.25em; color: var(--muted); text-transform: uppercase;
+  }
+  .wordmark-main {
+    font-family: var(--display); font-size: 52px;
+    line-height: 0.9; letter-spacing: 0.04em; color: var(--text);
+  }
+  .wordmark-main span { color: var(--accent); }
+
+  .header-meta { text-align: right; padding-top: 8px; }
+  .header-meta .version { font-family: var(--mono); font-size: 10px; color: var(--muted); letter-spacing: 0.15em; }
+  .status-pill {
+    display: inline-flex; align-items: center; gap: 6px; margin-top: 6px;
+    padding: 4px 10px; border: 0.5px solid var(--border); border-radius: 20px;
+    font-family: var(--mono); font-size: 10px; color: var(--muted); letter-spacing: 0.1em;
+  }
+  .status-dot {
+    width: 5px; height: 5px; border-radius: 50%; background: #4a9e5c;
+    animation: pulse 2s ease-in-out infinite;
+  }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
+
+  /* ─── SECTIONS ─── */
+  .section-header { display: flex; align-items: center; gap: 16px; margin-bottom: 20px; }
+  .section-label { font-family: var(--mono); font-size: 10px; letter-spacing: 0.25em; text-transform: uppercase; color: var(--muted); }
+  .section-line { flex: 1; height: 0.5px; background: var(--border); }
+
+  /* ─── ENGINE CARDS ─── */
+  .engines {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 16px;
+    margin-bottom: 48px; animation: fadeUp 0.6s 0.1s ease both;
+  }
+
+  .engine-card {
+    border: 0.5px solid var(--border); border-radius: 2px; padding: 28px;
+    cursor: pointer; transition: border-color 0.2s, background 0.2s;
+    position: relative; overflow: hidden; background: var(--surface);
+  }
+  .engine-card::before {
+    content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px;
+    background: linear-gradient(90deg, transparent, var(--border-hi), transparent);
+    opacity: 0; transition: opacity 0.2s;
+  }
+  .engine-card:hover::before, .engine-card.active::before { opacity: 1; }
+  .engine-card:hover { border-color: var(--border-hi); background: var(--surface2); }
+  .engine-card.active { border-color: var(--accent); background: var(--surface2); }
+  .engine-card.active-blue { border-color: var(--accent2) !important; }
+
+  /* ─── LOGO SLOT ─── */
+  .logo-slot {
+    width: 100%; aspect-ratio: 16/5; border: 0.5px dashed rgba(255,255,255,0.12);
+    border-radius: 2px; display: flex; align-items: center; justify-content: center;
+    margin-bottom: 20px; position: relative; overflow: hidden;
+    background: rgba(255,255,255,0.02); transition: border-color 0.2s;
+  }
+  .engine-card:hover .logo-slot, .engine-card.active .logo-slot { border-color: rgba(255,255,255,0.2); }
+  .logo-slot::before, .logo-slot::after {
+    content: ''; position: absolute; width: 10px; height: 10px;
+  }
+  .logo-slot::before { top:-0.5px; left:-0.5px; border-top:1px solid rgba(255,255,255,0.3); border-left:1px solid rgba(255,255,255,0.3); }
+  .logo-slot::after  { bottom:-0.5px; right:-0.5px; border-bottom:1px solid rgba(255,255,255,0.3); border-right:1px solid rgba(255,255,255,0.3); }
+  .logo-slot img { max-width: 85%; max-height: 80%; object-fit: contain; filter: brightness(0.9); }
+
+  .logo-placeholder { display:flex; flex-direction:column; align-items:center; gap:6px; pointer-events:none; }
+  .logo-placeholder-icon {
+    width:32px; height:32px; border:0.5px dashed rgba(255,255,255,0.15);
+    border-radius:2px; display:flex; align-items:center; justify-content:center;
+  }
+  .logo-placeholder-icon svg { opacity:0.25; }
+  .logo-placeholder-text { font-family:var(--mono); font-size:9px; letter-spacing:0.2em; color:rgba(255,255,255,0.2); text-transform:uppercase; }
+
+  .engine-top { display:flex; align-items:flex-start; justify-content:space-between; margin-bottom:10px; }
+  .engine-name { font-family:var(--display); font-size:28px; letter-spacing:0.06em; line-height:1; }
+  .engine-badge { font-family:var(--mono); font-size:9px; letter-spacing:0.15em; text-transform:uppercase; padding:3px 8px; border-radius:1px; border:0.5px solid; }
+  .badge-ready { color:#4a9e5c; border-color:rgba(74,158,92,0.35); background:rgba(74,158,92,0.07); }
+  .badge-wip   { color:var(--gold); border-color:rgba(200,169,110,0.3); background:rgba(200,169,110,0.06); }
+  .engine-desc { font-size:12px; color:var(--muted); line-height:1.6; font-family:var(--mono); font-weight:300; }
+  .engine-games { display:flex; flex-wrap:wrap; gap:6px; margin-top:14px; }
+  .game-chip {
+    font-family:var(--mono); font-size:9px; letter-spacing:0.1em; text-transform:uppercase;
+    padding:3px 8px; border:0.5px solid var(--border); border-radius:1px; color:var(--muted);
+    transition: border-color 0.15s, color 0.15s;
+  }
+  .engine-card:hover .game-chip, .engine-card.active .game-chip { border-color:rgba(255,255,255,0.18); color:rgba(255,255,255,0.55); }
+  .game-chip.faded { opacity:0.4; }
+
+  /* ─── GAME GRID ─── */
+  .game-select-section { margin-bottom:40px; animation: fadeUp 0.6s 0.2s ease both; }
+  .game-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(140px,1fr)); gap:8px; }
+  .game-tile {
+    border:0.5px solid var(--border); border-radius:2px; padding:14px 14px 12px;
+    cursor:pointer; transition:all 0.15s; background:var(--surface); position:relative;
+  }
+  .game-tile:hover:not(.disabled) { border-color:var(--border-hi); background:var(--surface2); }
+  .game-tile.selected-orange { border-color:var(--accent); background:rgba(232,98,42,0.06); }
+  .game-tile.selected-blue   { border-color:var(--accent2); background:rgba(58,143,212,0.06); }
+  .game-tile.disabled { opacity:0.3; cursor:not-allowed; }
+  .tile-engine-bar { width:20px; height:2px; border-radius:1px; margin-bottom:10px; }
+  .bar-goldsrc { background:var(--accent); }
+  .bar-source  { background:var(--accent2); }
+  .tile-name { font-family:var(--display); font-size:17px; letter-spacing:0.04em; line-height:1.1; margin-bottom:3px; }
+  .tile-sub  { font-family:var(--mono); font-size:9px; color:var(--muted); letter-spacing:0.1em; }
+  .tile-soon { position:absolute; top:8px; right:8px; font-family:var(--mono); font-size:8px; letter-spacing:0.1em; color:var(--muted); text-transform:uppercase; }
+
+  /* ─── UPLOAD ─── */
+  .upload-section { margin-bottom:40px; animation: fadeUp 0.6s 0.3s ease both; }
+  .upload-row { display:grid; grid-template-columns:1fr 320px; gap:16px; align-items:start; }
+
+  .dropzone {
+    border:0.5px dashed var(--border-hi); border-radius:2px; padding:36px 24px;
+    text-align:center; cursor:pointer; transition:all 0.2s; position:relative;
+    background:var(--surface); min-height:160px;
+    display:flex; flex-direction:column; align-items:center; justify-content:center; gap:10px;
+  }
+  .dropzone:hover, .dropzone.dragover { border-color:rgba(255,255,255,0.35); background:var(--surface2); }
+  .dropzone.disabled { opacity:0.35; pointer-events:none; }
+  .dropzone.has-file  { border-style:solid; border-color:rgba(74,158,92,0.5); background:rgba(74,158,92,0.03); }
+  #file-input { display:none; }
+  .drop-icon { width:40px; height:40px; border:0.5px solid var(--border-hi); border-radius:2px; display:flex; align-items:center; justify-content:center; }
+  .drop-title { font-family:var(--display); font-size:18px; letter-spacing:0.06em; color:var(--text); }
+  .drop-sub   { font-family:var(--mono); font-size:10px; color:var(--muted); letter-spacing:0.12em; text-transform:uppercase; }
+
+  .info-panel { border:0.5px solid var(--border); border-radius:2px; background:var(--surface); padding:20px; min-height:160px; }
+  .info-label { font-family:var(--mono); font-size:9px; letter-spacing:0.2em; text-transform:uppercase; color:var(--muted); margin-bottom:12px; display:flex; align-items:center; gap:8px; }
+  .info-label::after { content:''; flex:1; height:0.5px; background:var(--border); }
+  .info-row { display:flex; justify-content:space-between; padding:7px 0; border-bottom:0.5px solid var(--border); font-family:var(--mono); font-size:11px; }
+  .info-row:last-child { border-bottom:none; }
+  .info-key { color:var(--muted); letter-spacing:0.08em; }
+  .info-val { color:var(--text); text-align:right; }
+  .info-val.ok   { color:#4a9e5c; }
+  .info-val.warn { color:var(--gold); }
+
+  .progress-wrap { margin-top:12px; display:none; }
+  .progress-track { height:2px; background:rgba(255,255,255,0.06); border-radius:1px; overflow:hidden; margin-bottom:8px; }
+  .progress-fill  { height:100%; background:var(--accent); border-radius:1px; width:0%; transition:width 0.35s ease; }
+  .progress-fill.blue { background:var(--accent2); }
+  .progress-row { display:flex; justify-content:space-between; font-family:var(--mono); font-size:10px; color:var(--muted); letter-spacing:0.08em; }
+
+  /* ─── LAUNCH BUTTON ─── */
+  .launch-section { animation: fadeUp 0.6s 0.4s ease both; }
+  .launch-btn {
+    width:100%; padding:18px; background:var(--text); color:var(--bg);
+    border:none; border-radius:2px; font-family:var(--display); font-size:22px;
+    letter-spacing:0.14em; cursor:pointer; transition:opacity 0.15s, transform 0.1s;
+    position:relative; overflow:hidden;
+  }
+  .launch-btn::before {
+    content:''; position:absolute; inset:0;
+    background:linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.06) 50%, transparent 100%);
+    transform:translateX(-100%); transition:transform 0.5s;
+  }
+  .launch-btn:hover:not(:disabled)::before { transform:translateX(100%); }
+  .launch-btn:hover:not(:disabled) { opacity:0.92; }
+  .launch-btn:active:not(:disabled) { transform:scale(0.995); }
+  .launch-btn:disabled { opacity:0.2; cursor:not-allowed; }
+
+  /* ─── FOOTER ─── */
+  .footer { margin-top:64px; padding-top:20px; border-top:0.5px solid var(--border); display:flex; justify-content:space-between; align-items:center; }
+  .footer-note { font-family:var(--mono); font-size:10px; color:var(--muted); letter-spacing:0.1em; }
+  .footer-links { display:flex; gap:20px; }
+  .footer-links a { font-family:var(--mono); font-size:10px; color:var(--muted); text-decoration:none; letter-spacing:0.1em; transition:color 0.15s; }
+  .footer-links a:hover { color:var(--text); }
+
+  /* ══════════════════════════════════════
+     ─── LOADING SCREEN ───
+     Slides in from the BOTTOM, covers full viewport
+     ══════════════════════════════════════ */
+  .loading-screen {
+    position: fixed;
+    inset: 0;
+    background: var(--bg);
+    z-index: 1000;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+
+    /* starts off-screen below */
+    transform: translateY(100%);
+    transition: transform 0.9s cubic-bezier(0.76, 0, 0.24, 1);
+  }
+
+  .loading-screen.visible {
+    transform: translateY(0);
+  }
+
+  /* scanlines on loading screen too */
+  .loading-screen::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: repeating-linear-gradient(
+      to bottom,
+      transparent 0px, transparent 2px,
+      rgba(0,0,0,0.06) 2px, rgba(0,0,0,0.06) 4px
+    );
+    pointer-events: none;
+  }
+
+  /* vertical rule lines for atmosphere */
+  .loading-screen::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background:
+      linear-gradient(90deg, rgba(255,255,255,0.015) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,0.015) 1px, transparent 1px);
+    background-size: 120px 120px, 24px 24px;
+    pointer-events: none;
+  }
+
+  .ls-inner {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0;
+    width: 100%;
+    max-width: 560px;
+    padding: 0 32px;
+  }
+
+  /* ── top: engine logo ── */
+  .ls-engine-logo {
+    width: 320px;
+    height: 80px;
+    border: 0.5px dashed rgba(255,255,255,0.1);
+    border-radius: 2px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 12px;
+    position: relative;
+    overflow: hidden;
+    opacity: 0;
+    transform: translateY(20px);
+    transition: opacity 0.5s 0.3s ease, transform 0.5s 0.3s ease;
+  }
+
+  .ls-engine-logo.show { opacity:1; transform:translateY(0); }
+  .ls-engine-logo img { max-width:85%; max-height:75%; object-fit:contain; filter:brightness(0.85); }
+
+  .ls-engine-name {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 40px;
+    opacity: 0;
+    transition: opacity 0.5s 0.5s ease;
+  }
+  .ls-engine-name.show { opacity:1; }
+
+  /* ── divider ── */
+  .ls-divider {
+    width: 1px;
+    height: 0px;
+    background: linear-gradient(to bottom, transparent, rgba(255,255,255,0.15), transparent);
+    margin-bottom: 40px;
+    transition: height 0.6s 0.6s ease;
+  }
+  .ls-divider.show { height: 48px; }
+
+  /* ── game logo ── */
+  .ls-game-logo {
+    width: 320px;
+    height: 100px;
+    border: 0.5px dashed rgba(255,255,255,0.1);
+    border-radius: 2px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 12px;
+    overflow: hidden;
+    opacity: 0;
+    transform: translateY(20px);
+    transition: opacity 0.5s 0.7s ease, transform 0.5s 0.7s ease;
+  }
+  .ls-game-logo.show { opacity:1; transform:translateY(0); }
+  .ls-game-logo img { max-width:90%; max-height:80%; object-fit:contain; }
+
+  .ls-game-name {
+    font-family: var(--display);
+    font-size: 36px;
+    letter-spacing: 0.1em;
+    color: var(--text);
+    opacity: 0;
+    transition: opacity 0.5s 0.85s ease;
+  }
+  .ls-game-name.show { opacity:1; }
+
+  /* ── progress bar ── */
+  .ls-progress-wrap {
+    margin-top: 48px;
+    width: 100%;
+    opacity: 0;
+    transition: opacity 0.4s 1.0s ease;
+  }
+  .ls-progress-wrap.show { opacity:1; }
+
+  .ls-progress-track {
+    height: 1px;
+    background: rgba(255,255,255,0.08);
+    border-radius: 1px;
+    overflow: hidden;
+    margin-bottom: 10px;
+  }
+  .ls-progress-fill {
+    height: 100%;
+    border-radius: 1px;
+    width: 0%;
+    transition: width 0.4s ease;
+  }
+  .ls-progress-fill.orange { background: var(--accent); }
+  .ls-progress-fill.blue   { background: var(--accent2); }
+
+  .ls-progress-row {
+    display: flex;
+    justify-content: space-between;
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--muted);
+    letter-spacing: 0.1em;
+  }
+
+  /* ── corner decorations ── */
+  .ls-corner {
+    position: absolute;
+    width: 24px;
+    height: 24px;
+  }
+  .ls-corner.tl { top:24px; left:24px; border-top:0.5px solid rgba(255,255,255,0.12); border-left:0.5px solid rgba(255,255,255,0.12); }
+  .ls-corner.tr { top:24px; right:24px; border-top:0.5px solid rgba(255,255,255,0.12); border-right:0.5px solid rgba(255,255,255,0.12); }
+  .ls-corner.bl { bottom:24px; left:24px; border-bottom:0.5px solid rgba(255,255,255,0.12); border-left:0.5px solid rgba(255,255,255,0.12); }
+  .ls-corner.br { bottom:24px; right:24px; border-bottom:0.5px solid rgba(255,255,255,0.12); border-right:0.5px solid rgba(255,255,255,0.12); }
+
+  /* ─── GAME VIEWPORT (hidden until launch complete) ─── */
+  .game-viewport {
+    position: fixed;
+    inset: 0;
+    background: #000;
+    z-index: 500;
+    display: none;
+    flex-direction: column;
+  }
+  .game-viewport.visible { display:flex; }
+
+  .game-topbar {
+    height: 40px;
+    background: rgba(0,0,0,0.85);
+    border-bottom: 0.5px solid rgba(255,255,255,0.06);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 16px;
+    flex-shrink: 0;
+  }
+  .game-topbar-left { font-family:var(--mono); font-size:10px; color:var(--muted); letter-spacing:0.15em; }
+  .game-topbar-right { display:flex; gap:12px; }
+  .topbar-btn {
+    font-family:var(--mono); font-size:9px; letter-spacing:0.15em; text-transform:uppercase;
+    padding:4px 10px; border:0.5px solid rgba(255,255,255,0.12); border-radius:1px;
+    color:var(--muted); background:transparent; cursor:pointer; transition:all 0.15s;
+  }
+  .topbar-btn:hover { border-color:rgba(255,255,255,0.3); color:var(--text); }
+  .topbar-btn.danger { border-color:rgba(232,98,42,0.3); color:var(--accent); }
+  .topbar-btn.danger:hover { background:rgba(232,98,42,0.1); }
+
+  #game-canvas {
+    flex: 1;
+    width: 100%;
+    display: block;
+    background: #000;
+  }
+
+  /* ─── ANIMS ─── */
+  @keyframes fadeUp {
+    from { opacity:0; transform:translateY(12px); }
+    to   { opacity:1; transform:translateY(0); }
+  }
+
+  @media (max-width: 700px) {
+    .app { padding:28px 16px 48px; }
+    .engines { grid-template-columns:1fr; }
+    .upload-row { grid-template-columns:1fr; }
+    .wordmark-main { font-size:36px; }
+    .ls-engine-logo, .ls-game-logo { width:260px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ══════════════════════════════════════════
+     LOADING SCREEN  (slides up from bottom)
+     ══════════════════════════════════════════ -->
+<div class="loading-screen" id="loading-screen">
+  <div class="ls-corner tl"></div>
+  <div class="ls-corner tr"></div>
+  <div class="ls-corner bl"></div>
+  <div class="ls-corner br"></div>
+
+  <div class="ls-inner">
+
+    <!-- Engine logo placeholder -->
+    <div class="ls-engine-logo" id="ls-engine-logo">
+      <!--
+        HOOK: Replace the placeholder below with your engine logo.
+        For GoldSrc: <img src="./assets/goldsrc-logo.svg" alt="GoldSrc">
+        For Source:  <img src="./assets/source-logo.svg"  alt="Source">
+        These are injected dynamically by setLoadingGame() in JS.
+      -->
+      <div class="logo-placeholder">
+        <span class="logo-placeholder-text" id="ls-engine-label">Engine</span>
+      </div>
+    </div>
+    <div class="ls-engine-name" id="ls-engine-name">GoldSrc Engine</div>
+
+    <div class="ls-divider" id="ls-divider"></div>
+
+    <!-- Game logo placeholder -->
+    <div class="ls-game-logo" id="ls-game-logo">
+      <!--
+        HOOK: Replace the placeholder below with your per-game logos.
+        <img src="./assets/games/half-life.svg" alt="Half-Life">
+        These are injected dynamically by setLoadingGame() in JS.
+      -->
+      <div class="logo-placeholder">
+        <span class="logo-placeholder-text" id="ls-game-label">Game</span>
+      </div>
+    </div>
+    <div class="ls-game-name" id="ls-game-name">Half-Life</div>
+
+    <!-- Engine init progress -->
+    <div class="ls-progress-wrap" id="ls-progress-wrap">
+      <div class="ls-progress-track">
+        <div class="ls-progress-fill orange" id="ls-progress-fill"></div>
+      </div>
+      <div class="ls-progress-row">
+        <span id="ls-progress-msg">Initialising WASM runtime...</span>
+        <span id="ls-progress-pct">0%</span>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     GAME VIEWPORT  (shown after engine boots)
+     ══════════════════════════════════════════ -->
+<div class="game-viewport" id="game-viewport">
+  <div class="game-topbar">
+    <span class="game-topbar-left" id="topbar-title">WEBENGINE — HALF-LIFE</span>
+    <div class="game-topbar-right">
+      <button class="topbar-btn" onclick="toggleFullscreen()">Fullscreen</button>
+      <button class="topbar-btn" onclick="togglePointerLock()">Lock Mouse</button>
+      <button class="topbar-btn danger" onclick="quitGame()">Quit</button>
+    </div>
+  </div>
+  <!--
+    HOOK: This is the canvas Xash3D renders into.
+    Pass document.getElementById('game-canvas') to new Xash3D({ canvas: ... })
+  -->
+  <canvas id="game-canvas"></canvas>
+</div>
+
+<!-- ══════════════════════════════════════════
+     LAUNCHER  (slides away on launch)
+     ══════════════════════════════════════════ -->
+<div class="app" id="app">
+
+  <header class="header">
+    <div class="wordmark">
+      <span class="wordmark-top">Browser Game Engine</span>
+      <div class="wordmark-main">WEB<span>ENGINE</span></div>
+    </div>
+    <div class="header-meta">
+      <div class="version">v0.1.0-alpha</div>
+      <div class="status-pill">
+        <div class="status-dot"></div>
+        WASM Runtime Ready
+      </div>
+    </div>
+  </header>
+
+  <!-- ── 01 Engine ── -->
+  <div class="section-header">
+    <span class="section-label">01 · Engine</span>
+    <div class="section-line"></div>
+  </div>
+
+  <div class="engines">
+    <div class="engine-card" id="card-goldsrc" onclick="selectEngine('goldsrc')">
+      <!--
+        HOOK ─ GoldSrc engine logo
+        Replace the .logo-placeholder div with:
+          <img src="./assets/goldsrc-logo.svg" alt="GoldSrc">
+        Recommended size: SVG, 16:5 aspect ratio, white/light coloured
+      -->
+      <div class="logo-slot" id="logo-goldsrc">
+        <div class="logo-placeholder">
+          <div class="logo-placeholder-icon">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><rect x="2" y="2" width="12" height="12" rx="1" stroke="white" stroke-width="1"/><path d="M5 8h6M8 5v6" stroke="white" stroke-width="1" stroke-linecap="round"/></svg>
+          </div>
+          <span class="logo-placeholder-text">GoldSrc Logo</span>
+        </div>
+      </div>
+      <div class="engine-top">
+        <span class="engine-name">GoldSrc</span>
+        <span class="engine-badge badge-ready">Ready</span>
+      </div>
+      <p class="engine-desc">Xash3D-FWGS · Emscripten WASM · OpenGL → WebGL2</p>
+      <div class="engine-games">
+        <span class="game-chip">Half-Life</span>
+        <span class="game-chip">Counter-Strike</span>
+        <span class="game-chip">Team Fortress</span>
+        <span class="game-chip">Opposing Force</span>
+        <span class="game-chip">Blue Shift</span>
+      </div>
+    </div>
+
+    <div class="engine-card" id="card-source" onclick="selectEngine('source')">
+      <!--
+        HOOK ─ Source engine logo
+        Replace the .logo-placeholder div with:
+          <img src="./assets/source-logo.svg" alt="Source Engine">
+      -->
+      <div class="logo-slot" id="logo-source">
+        <div class="logo-placeholder">
+          <div class="logo-placeholder-icon">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><rect x="2" y="2" width="12" height="12" rx="1" stroke="white" stroke-width="1"/><path d="M5 8h6M8 5v6" stroke="white" stroke-width="1" stroke-linecap="round"/></svg>
+          </div>
+          <span class="logo-placeholder-text">Source Logo</span>
+        </div>
+      </div>
+      <div class="engine-top">
+        <span class="engine-name">Source</span>
+        <span class="engine-badge badge-wip">In Progress</span>
+      </div>
+      <p class="engine-desc">Source SDK · DirectX → WebGPU · VPK filesystem</p>
+      <div class="engine-games">
+        <span class="game-chip">Half-Life 2</span>
+        <span class="game-chip">Portal</span>
+        <span class="game-chip">Portal 2</span>
+        <span class="game-chip faded">HL2: Ep. 1</span>
+        <span class="game-chip faded">HL2: Ep. 2</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── 02 Game ── -->
+  <div class="game-select-section">
+    <div class="section-header">
+      <span class="section-label">02 · Game</span>
+      <div class="section-line"></div>
+    </div>
+    <div class="game-grid" id="game-grid">
+      <div class="game-tile disabled" style="grid-column:1/-1;text-align:center;padding:24px;">
+        <span class="tile-sub">Select an engine above</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── 03 Upload ── -->
+  <div class="upload-section">
+    <div class="section-header">
+      <span class="section-label">03 · Upload Game Files</span>
+      <div class="section-line"></div>
+    </div>
+    <div class="upload-row">
+      <div>
+        <div class="dropzone disabled" id="dropzone" onclick="triggerUpload()">
+          <div class="drop-icon">
+            <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+              <path d="M9 11V3M9 3L6 6M9 3L12 6" stroke="rgba(255,255,255,0.5)" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M2 13v1.5A1.5 1.5 0 003.5 16h11A1.5 1.5 0 0016 14.5V13" stroke="rgba(255,255,255,0.5)" stroke-width="1.2" stroke-linecap="round"/>
+            </svg>
+          </div>
+          <span class="drop-title" id="drop-title">Select game first</span>
+          <span class="drop-sub" id="drop-sub">drag &amp; drop .zip · click to browse</span>
+        </div>
+        <input type="file" id="file-input" accept=".zip" onchange="handleFile(this.files[0])">
+        <div class="progress-wrap" id="progress-wrap">
+          <div class="progress-track"><div class="progress-fill" id="progress-fill"></div></div>
+          <div class="progress-row">
+            <span id="progress-msg">Extracting...</span>
+            <span id="progress-pct">0%</span>
+          </div>
+        </div>
+      </div>
+      <div class="info-panel">
+        <div class="info-label">File Requirements</div>
+        <div class="info-row"><span class="info-key">Engine</span><span class="info-val warn" id="info-engine">—</span></div>
+        <div class="info-row"><span class="info-key">Game</span><span class="info-val warn" id="info-game">—</span></div>
+        <div class="info-row"><span class="info-key">Required files</span><span class="info-val" id="info-files">—</span></div>
+        <div class="info-row"><span class="info-key">Archive</span><span class="info-val" id="info-archive">—</span></div>
+        <div class="info-row"><span class="info-key">Status</span><span class="info-val warn" id="info-status">Waiting</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── 04 Launch ── -->
+  <div class="launch-section">
+    <div class="section-header">
+      <span class="section-label">04 · Launch</span>
+      <div class="section-line"></div>
+    </div>
+    <button class="launch-btn" id="launch-btn" disabled onclick="launchGame()">
+      Launch Game
+    </button>
+  </div>
+
+  <footer class="footer">
+    <span class="footer-note">Bring your own legally-owned game files</span>
+    <div class="footer-links">
+      <!--
+        HOOK: Replace # with your actual GitHub Pages / repo URLs
+      -->
+      <a href="#">GitHub</a>
+      <a href="#">Docs</a>
+      <a href="#">Report Issue</a>
+    </div>
+  </footer>
+
+</div><!-- /app -->
+
+<script>
+/* ═══════════════════════════════════════════════════════════════════
+   GAME DATA
+   ─────────────────────────────────────────────────────────────────
+   HOOK: For each game, set:
+     logoUrl  → path to a per-game logo image (e.g. './assets/games/hl1.svg')
+                Leave as null to show text fallback
+     gameId   → the -game argument passed to Xash3D (folder name)
+     sdkPkg   → npm package providing the compiled .wasm game DLLs
+   ═══════════════════════════════════════════════════════════════════ */
+const GAMES = {
+  goldsrc: [
+    { id:'hl1',  gameId:'valve',    name:'Half-Life',       sub:'1998 · Valve',   logoUrl:null, files:'valve/pak0.pak, pak1.pak',  archive:'zip the valve/ folder',    sdkPkg:'hlsdk-portable' },
+    { id:'cs',   gameId:'cstrike',  name:'Counter-Strike',  sub:'2000 · Valve',   logoUrl:null, files:'cstrike/pak0.pak',          archive:'zip the cstrike/ folder',  sdkPkg:'cs16-client' },
+    { id:'tfc',  gameId:'tfc',      name:'Team Fortress',   sub:'1999 · Valve',   logoUrl:null, files:'tfc/pak0.pak',              archive:'zip the tfc/ folder',      sdkPkg:'hlsdk-portable' },
+    { id:'of',   gameId:'gearbox',  name:'Op. Force',       sub:'1999 · Gearbox', logoUrl:null, files:'gearbox/pak0.pak',          archive:'zip the gearbox/ folder',  sdkPkg:'hlsdk-portable' },
+    { id:'bs',   gameId:'bshift',   name:'Blue Shift',      sub:'2001 · Gearbox', logoUrl:null, files:'bshift/pak0.pak',           archive:'zip the bshift/ folder',   sdkPkg:'hlsdk-portable' },
+  ],
+  source: [
+    { id:'hl2',     gameId:'hl2',     name:'Half-Life 2', sub:'2004 · Valve', logoUrl:null, files:'hl2_dir.vpk + data', archive:'zip hl2/ folder', sdkPkg:null, wip:true },
+    { id:'portal',  gameId:'portal',  name:'Portal',      sub:'2007 · Valve', logoUrl:null, files:'portal_dir.vpk',    archive:'zip portal/ folder', sdkPkg:null, wip:true },
+    { id:'portal2', gameId:'portal2', name:'Portal 2',    sub:'2011 · Valve', logoUrl:null, files:'portal2_dir.vpk',   archive:'zip portal2/ folder', sdkPkg:null, wip:true },
+    { id:'ep1',     gameId:'episodic',name:'Episode 1',   sub:'2006 · Valve', logoUrl:null, files:'ep1_dir.vpk',       archive:'zip episodic/ folder', sdkPkg:null, wip:true },
+    { id:'ep2',     gameId:'ep2',     name:'Episode 2',   sub:'2007 · Valve', logoUrl:null, files:'ep2_dir.vpk',       archive:'zip ep2/ folder', sdkPkg:null, wip:true },
+  ]
+};
+
+/* ═══════════════════════════════════════════════════════════════════
+   ENGINE LOGO PATHS
+   ─────────────────────────────────────────────────────────────────
+   HOOK: Set these to your actual logo image paths.
+   Shown both on the engine card AND on the loading screen.
+   ═══════════════════════════════════════════════════════════════════ */
+const ENGINE_LOGOS = {
+  goldsrc: null,  // e.g. './assets/goldsrc-logo.svg'
+  source:  null,  // e.g. './assets/source-logo.svg'
+};
+
+let engine = null, game = null, fileReady = false, uploadedArrayBuffer = null;
+
+/* ─────────────────────────────────────────────────────────────────
+   ENGINE SELECTION
+   ───────────────────────────────────────────────────────────────── */
+function selectEngine(e) {
+  engine = e; game = null; fileReady = false; uploadedArrayBuffer = null;
+
+  document.getElementById('card-goldsrc').classList.remove('active','active-blue');
+  document.getElementById('card-source').classList.remove('active','active-blue');
+  if (e === 'goldsrc') {
+    document.getElementById('card-goldsrc').classList.add('active');
+    document.getElementById('progress-fill').classList.remove('blue');
+    document.getElementById('ls-progress-fill').className = 'ls-progress-fill orange';
+  } else {
+    document.getElementById('card-source').classList.add('active','active-blue');
+    document.getElementById('progress-fill').classList.add('blue');
+    document.getElementById('ls-progress-fill').className = 'ls-progress-fill blue';
+  }
+  renderGames(); resetUpload(); updateInfo();
+}
+
+function renderGames() {
+  const grid = document.getElementById('game-grid');
+  grid.innerHTML = GAMES[engine].map(g => `
+    <div class="game-tile ${g.wip ? 'disabled' : ''} ${game===g.id ? (engine==='goldsrc'?'selected-orange':'selected-blue') : ''}"
+         onclick="${g.wip ? '' : `selectGame('${g.id}')`}">
+      <div class="tile-engine-bar bar-${engine}"></div>
+      <div class="tile-name">${g.name}</div>
+      <div class="tile-sub">${g.sub}</div>
+      ${g.wip ? '<span class="tile-soon">Soon</span>' : ''}
+    </div>
+  `).join('');
+}
+
+function selectGame(id) {
+  game = id; fileReady = false; uploadedArrayBuffer = null;
+  renderGames(); resetUpload(); updateInfo();
+  const g = allGames().find(x => x.id === id);
+  const dz = document.getElementById('dropzone');
+  dz.classList.remove('disabled','has-file');
+  document.getElementById('drop-title').textContent = `Upload ${g.name} files`;
+  document.getElementById('drop-sub').textContent = 'drag & drop .zip · click to browse';
+}
+
+function allGames() { return [...GAMES.goldsrc, ...GAMES.source]; }
+
+function resetUpload() {
+  document.getElementById('dropzone').classList.add('disabled');
+  document.getElementById('dropzone').classList.remove('has-file');
+  document.getElementById('drop-title').textContent = game ? 'Click to upload .zip' : 'Select game first';
+  document.getElementById('drop-sub').textContent = 'drag & drop .zip · click to browse';
+  document.getElementById('progress-wrap').style.display = 'none';
+  document.getElementById('progress-fill').style.width = '0%';
+  document.getElementById('launch-btn').disabled = true;
+  document.getElementById('info-status').textContent = 'Waiting';
+  document.getElementById('info-status').className = 'info-val warn';
+  document.getElementById('file-input').value = '';
+}
+
+function updateInfo() {
+  const g = game ? allGames().find(x => x.id === game) : null;
+  document.getElementById('info-engine').textContent = engine ? (engine==='goldsrc'?'GoldSrc (Xash3D-FWGS)':'Source SDK') : '—';
+  document.getElementById('info-engine').className = engine ? 'info-val ok' : 'info-val warn';
+  document.getElementById('info-game').textContent = g ? g.name : '—';
+  document.getElementById('info-game').className = g ? 'info-val ok' : 'info-val warn';
+  document.getElementById('info-files').textContent = g ? g.files : '—';
+  document.getElementById('info-archive').textContent = g ? g.archive : '—';
+}
+
+/* ─────────────────────────────────────────────────────────────────
+   FILE UPLOAD
+   ─────────────────────────────────────────────────────────────────
+   HOOK: handleFile reads the zip as an ArrayBuffer and stores it.
+   At launch time, JSZip iterates every entry and writes them into
+   Emscripten's MEMFS before booting the engine.
+   ───────────────────────────────────────────────────────────────── */
+function triggerUpload() { if (!game) return; document.getElementById('file-input').click(); }
+
+function handleFile(file) {
+  if (!file) return;
+  const mb = (file.size/1024/1024).toFixed(1);
+  document.getElementById('drop-title').textContent = file.name;
+  document.getElementById('drop-sub').textContent = `${mb} MB · reading...`;
+
+  /* Read the full ArrayBuffer now — we'll pass it to JSZip at launch time */
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    uploadedArrayBuffer = e.target.result;
+    document.getElementById('drop-sub').textContent = `${mb} MB · ready`;
+    simulateValidation(file.name);
+  };
+  reader.readAsArrayBuffer(file);
+
+  const pw = document.getElementById('progress-wrap');
+  pw.style.display = 'block';
+}
+
+function simulateValidation(filename) {
+  const steps = [
+    [20, 'Reading zip directory...'],
+    [50, 'Validating PAK/BSP structure...'],
+    [80, 'Checking file signatures...'],
+    [100, 'Verified — ready to launch'],
+  ];
+  let i = 0;
+  const iv = setInterval(() => {
+    if (i >= steps.length) {
+      clearInterval(iv);
+      fileReady = true;
+      document.getElementById('dropzone').classList.add('has-file');
+      document.getElementById('info-status').textContent = 'Ready to launch';
+      document.getElementById('info-status').className = 'info-val ok';
+      document.getElementById('launch-btn').disabled = false;
+      return;
+    }
+    const [p, msg] = steps[i++];
+    document.getElementById('progress-fill').style.width = p + '%';
+    document.getElementById('progress-pct').textContent = p + '%';
+    document.getElementById('progress-msg').textContent = msg;
+  }, 300);
+}
+
+/* ─────────────────────────────────────────────────────────────────
+   LAUNCH SEQUENCE
+   ─────────────────────────────────────────────────────────────────
+   1. Launcher slides UP off screen
+   2. Loading screen slides UP from bottom
+   3. Logos and progress animate in
+   4. JSZip mounts the uploaded zip into Emscripten MEMFS
+   5. Xash3D boots with the mounted filesystem
+   6. Loading screen fades, game canvas shown
+   ───────────────────────────────────────────────────────────────── */
+function launchGame() {
+  if (!game || !fileReady || !uploadedArrayBuffer) return;
+  const g = allGames().find(x => x.id === game);
+
+  /* ── Step 1: slide launcher away ── */
+  document.getElementById('app').classList.add('slide-away');
+
+  /* ── Step 2: populate loading screen ── */
+  setLoadingScreen(g);
+
+  /* ── Step 3: slide loading screen up after short delay ── */
+  setTimeout(() => {
+    const ls = document.getElementById('loading-screen');
+    ls.classList.add('visible');
+
+    /* ── Step 4: animate in the logo elements ── */
+    setTimeout(() => {
+      document.getElementById('ls-engine-logo').classList.add('show');
+      document.getElementById('ls-engine-name').classList.add('show');
+    }, 200);
+    setTimeout(() => document.getElementById('ls-divider').classList.add('show'), 500);
+    setTimeout(() => {
+      document.getElementById('ls-game-logo').classList.add('show');
+      document.getElementById('ls-game-name').classList.add('show');
+    }, 700);
+    setTimeout(() => {
+      document.getElementById('ls-progress-wrap').classList.add('show');
+      /* ── Step 5: mount filesystem + boot engine ── */
+      bootEngine(g);
+    }, 1100);
+  }, 300);
+}
+
+function setLoadingScreen(g) {
+  /* Engine logo */
+  const engineLogoEl = document.getElementById('ls-engine-logo');
+  const engineLogoUrl = ENGINE_LOGOS[engine];
+  /*
+    HOOK: when ENGINE_LOGOS[engine] is set, inject an <img>.
+    The placeholder text is shown when logoUrl is null.
+  */
+  if (engineLogoUrl) {
+    engineLogoEl.innerHTML = `<img src="${engineLogoUrl}" alt="${engine}">`;
+  } else {
+    engineLogoEl.innerHTML = `<div class="logo-placeholder"><span class="logo-placeholder-text">${engine === 'goldsrc' ? 'GoldSrc Engine' : 'Source Engine'}</span></div>`;
+  }
+  document.getElementById('ls-engine-name').textContent = engine === 'goldsrc' ? 'GoldSrc Engine · Xash3D-FWGS' : 'Source Engine';
+
+  /* Game logo */
+  const gameLogoEl = document.getElementById('ls-game-logo');
+  /*
+    HOOK: set g.logoUrl in the GAMES data above to show a real image.
+    e.g. logoUrl: './assets/games/half-life.svg'
+  */
+  if (g.logoUrl) {
+    gameLogoEl.innerHTML = `<img src="${g.logoUrl}" alt="${g.name}">`;
+  } else {
+    gameLogoEl.innerHTML = `<div class="logo-placeholder"><span class="logo-placeholder-text">${g.name}</span></div>`;
+  }
+  document.getElementById('ls-game-name').textContent = g.name.toUpperCase();
+
+  /* Topbar */
+  document.getElementById('topbar-title').textContent = `WEBENGINE — ${g.name.toUpperCase()}`;
+
+  /* Progress bar color */
+  document.getElementById('ls-progress-fill').className = `ls-progress-fill ${engine === 'goldsrc' ? 'orange' : 'blue'}`;
+}
+
+function setLsProgress(pct, msg) {
+  document.getElementById('ls-progress-fill').style.width = pct + '%';
+  document.getElementById('ls-progress-pct').textContent = pct + '%';
+  document.getElementById('ls-progress-msg').textContent = msg;
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   BOOT ENGINE
+   ─────────────────────────────────────────────────────────────────
+   This is where the real Xash3D integration lives.
+
+   DEPENDENCIES (add to your index.html or bundle):
+     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+     <script src="./engine/xash3d.js"></script>   ← your built WASM wrapper
+
+   PACKAGES (npm install in your project):
+     npm install xash3d-fwgs hlsdk-portable cs16-client
+
+   Then import the SDK DLL .wasm URLs (via your bundler):
+     import clientUrl from 'hlsdk-portable/cl_dll/client_emscripten_wasm32.wasm'
+     import serverUrl from 'hlsdk-portable/dlls/hl_emscripten_wasm32.so'
+     import menuUrl   from 'hlsdk-portable/cl_dll/menu_emscripten_wasm32.wasm'
+   ═══════════════════════════════════════════════════════════════════ */
+async function bootEngine(g) {
+  const canvas = document.getElementById('game-canvas');
+
+  try {
+    setLsProgress(5, 'Loading JSZip...');
+
+    /*
+      ── REAL IMPLEMENTATION ──────────────────────────────────────────
+      Replace the simulation block below with this:
+
+      // 1. Unzip the user's game files into Emscripten's virtual FS
+      setLsProgress(10, 'Unpacking game archive...');
+      const zip = await JSZip.loadAsync(uploadedArrayBuffer);
+      const files = Object.values(zip.files).filter(f => !f.dir);
+      let done = 0;
+      for (const entry of files) {
+        const data = await entry.async('uint8array');
+        const path = '/' + entry.name;
+        const dir  = path.substring(0, path.lastIndexOf('/'));
+        // Create directory tree
+        const parts = dir.split('/').filter(Boolean);
+        let cur = '/';
+        for (const part of parts) {
+          cur += part + '/';
+          try { FS.mkdir(cur); } catch(e) { /* already exists */ }
+        }
+        FS.createDataFile('/', entry.name, data, true, true, true);
+        done++;
+        const pct = Math.round(10 + (done / files.length) * 55);
+        setLsProgress(pct, `Extracting ${entry.name.split('/').pop()}...`);
+      }
+
+      // 2. Boot Xash3D with the mounted filesystem
+      setLsProgress(68, 'Starting Xash3D engine...');
+      const x = new Xash3D({
+        canvas,
+        arguments: ['-game', g.gameId, '-dev', '2'],
+        // For CS 1.6, swap hlsdk-portable urls for cs16-client urls
+        libraries: {
+          menu:   menuUrl,    // from hlsdk-portable or cs16-client
+          client: clientUrl,  // from hlsdk-portable or cs16-client
+          server: serverUrl,  // from hlsdk-portable or cs16-client
+        },
+        onProgress: (pct, msg) => setLsProgress(68 + Math.round(pct * 0.3), msg),
+      });
+      setLsProgress(72, 'Awaiting WASM init...');
+      await x.init();
+      setLsProgress(92, 'Mounting game filesystem...');
+      x.main();
+      setLsProgress(100, 'Game running!');
+      showGame();
+
+      ── END REAL IMPLEMENTATION ─────────────────────────────────────
+    */
+
+    /* ── SIMULATION (remove when wiring up real engine) ── */
+    const fakeSteps = [
+      [10,  'Loading JSZip...'],
+      [22,  'Unpacking game archive...'],
+      [38,  'Extracting PAK files...'],
+      [52,  'Writing to virtual filesystem...'],
+      [65,  'Indexing BSP maps...'],
+      [72,  'Starting Xash3D-FWGS WASM...'],
+      [84,  'Initialising WebGL2 renderer...'],
+      [93,  'Loading game DLLs...'],
+      [100, 'Game ready!'],
+    ];
+    for (const [pct, msg] of fakeSteps) {
+      await delay(400 + Math.random() * 200);
+      setLsProgress(pct, msg);
+    }
+    await delay(600);
+    showGame();
+    /* ── END SIMULATION ── */
+
+  } catch (err) {
+    setLsProgress(0, `Error: ${err.message}`);
+    console.error('Engine boot failed:', err);
+  }
+}
+
+function delay(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+/* ─────────────────────────────────────────────────────────────────
+   SHOW GAME CANVAS
+   ───────────────────────────────────────────────────────────────── */
+function showGame() {
+  /* Fade out loading screen */
+  const ls = document.getElementById('loading-screen');
+  ls.style.transition = 'opacity 0.6s ease';
+  ls.style.opacity = '0';
+  setTimeout(() => { ls.style.display = 'none'; }, 700);
+
+  /* Show game viewport */
+  document.getElementById('game-viewport').classList.add('visible');
+  document.getElementById('game-canvas').focus();
+}
+
+/* ─────────────────────────────────────────────────────────────────
+   IN-GAME CONTROLS
+   ───────────────────────────────────────────────────────────────── */
+function toggleFullscreen() {
+  const vp = document.getElementById('game-viewport');
+  if (!document.fullscreenElement) {
+    vp.requestFullscreen().catch(e => console.warn('Fullscreen failed:', e));
+  } else {
+    document.exitFullscreen();
+  }
+}
+
+function togglePointerLock() {
+  const canvas = document.getElementById('game-canvas');
+  if (!document.pointerLockElement) {
+    canvas.requestPointerLock();
+  } else {
+    document.exitPointerLock();
+  }
+}
+
+function quitGame() {
+  /*
+    HOOK: call x.quit() on your Xash3D instance here before resetting.
+    e.g.  if (window._xash3dInstance) window._xash3dInstance.quit();
+  */
+  document.getElementById('game-viewport').classList.remove('visible');
+  if (document.fullscreenElement) document.exitFullscreen();
+  if (document.pointerLockElement) document.exitPointerLock();
+
+  /* Reset launcher */
+  const app = document.getElementById('app');
+  app.classList.remove('slide-away');
+
+  /* Reset loading screen */
+  const ls = document.getElementById('loading-screen');
+  ls.style.transition = '';
+  ls.style.opacity = '1';
+  ls.style.display = '';
+  ls.classList.remove('visible');
+  ['ls-engine-logo','ls-engine-name','ls-divider','ls-game-logo','ls-game-name','ls-progress-wrap'].forEach(id => {
+    document.getElementById(id).classList.remove('show');
+  });
+  setLsProgress(0, 'Initialising WASM runtime...');
+
+  /* Reset launch state */
+  fileReady = false; uploadedArrayBuffer = null;
+  resetUpload();
+}
+
+/* ─────────────────────────────────────────────────────────────────
+   DRAG & DROP
+   ───────────────────────────────────────────────────────────────── */
+const dz = document.getElementById('dropzone');
+dz.addEventListener('dragover', e => { e.preventDefault(); if (game) dz.classList.add('dragover'); });
+dz.addEventListener('dragleave', () => dz.classList.remove('dragover'));
+dz.addEventListener('drop', e => {
+  e.preventDefault(); dz.classList.remove('dragover');
+  if (!game) return;
+  const f = e.dataTransfer.files[0];
+  if (f && f.name.endsWith('.zip')) handleFile(f);
+});
+</script>
+</body>
+</html>
