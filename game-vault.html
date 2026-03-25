@@ -579,65 +579,82 @@ CSV (from Export CSV): re-import the exported CSV to restore games, bundles, and
 
 <!-- SALE EMAIL MODAL -->
 <div class="overlay" id="saleEmailModal">
-  <div class="modal" style="max-width:660px;">
+  <div class="modal" style="max-width:680px;">
     <div class="mhdr">
-      <div class="mtitle">💌 Generate Sale Email</div>
+      <div>
+        <div class="mtitle">💌 Sale Email Generator</div>
+        <div id="seStepLabel" style="font-size:10px;color:#4c1d95;font-family:'IBM Plex Mono',monospace;margin-top:2px;">Step 1 of 3 — Order details</div>
+      </div>
       <button class="btn-mclose" id="btnCloseSaleEmail">✕</button>
     </div>
 
-    <!-- Step 1: Pick items -->
+    <!-- STEP 1: Details + pick items -->
     <div id="seStep1">
-      <div class="fg">
-        <label class="flabel">Recipient Name</label>
-        <input class="finput" id="seRecipient" placeholder="e.g. Alex">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:4px;">
+        <div class="fg" style="margin-bottom:0">
+          <label class="flabel">Recipient name</label>
+          <input class="finput" id="seRecipient" placeholder="e.g. Alex">
+        </div>
+        <div class="fg" style="margin-bottom:0">
+          <label class="flabel">Recipient email (optional)</label>
+          <input class="finput" id="seRecipientEmail" placeholder="e.g. alex@email.com" type="email">
+        </div>
       </div>
-      <div class="fg">
-        <label class="flabel">Your name / sign-off</label>
-        <input class="finput" id="seFrom" placeholder="e.g. Heart">
-      </div>
-      <div class="fg">
-        <label class="flabel">Extra message (optional)</label>
-        <textarea class="finput" id="seNote" placeholder="e.g. Let me know if you have any issues!" style="min-height:46px;"></textarea>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:13px;">
+        <div class="fg" style="margin-bottom:0">
+          <label class="flabel">Your sign-off name</label>
+          <input class="finput" id="seFrom" placeholder="e.g. Heart">
+        </div>
+        <div class="fg" style="margin-bottom:0">
+          <label class="flabel">Extra note (optional)</label>
+          <input class="finput" id="seNote" placeholder="e.g. Enjoy!">
+        </div>
       </div>
 
       <div class="fg">
-        <label class="flabel">Search & pick games / bundles sold</label>
-        <input class="finput" id="seSearch" placeholder="🔍  Filter...">
+        <label class="flabel">Search & select what was sold</label>
+        <input class="finput" id="seSearch" placeholder="🔍  Filter games and bundles...">
       </div>
-
-      <!-- Games -->
-      <div style="margin-bottom:6px;">
+      <div style="margin-bottom:8px;">
         <div style="font-size:10px;color:#4c1d95;font-family:'IBM Plex Mono',monospace;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:6px;">🎮 Games</div>
         <div class="fgame-pick" id="seGamePick"></div>
       </div>
-
-      <!-- Bundles -->
-      <div id="seBundleSection" style="margin-top:10px;margin-bottom:6px;">
+      <div id="seBundleSection" style="margin-bottom:8px;">
         <div style="font-size:10px;color:#4c1d95;font-family:'IBM Plex Mono',monospace;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:6px;">📦 Bundles</div>
         <div class="fgame-pick" id="seBundlePick"></div>
       </div>
-
-      <div id="seSelSummary" style="display:none;margin-top:10px;padding:9px 12px;background:rgba(52,211,153,0.06);border:1px solid rgba(52,211,153,0.15);border-radius:9px;font-size:12px;color:#34d399;font-family:'IBM Plex Mono',monospace;"></div>
-
+      <div id="seSelSummary" style="display:none;padding:9px 12px;background:rgba(52,211,153,0.06);border:1px solid rgba(52,211,153,0.15);border-radius:9px;font-size:12px;color:#34d399;font-family:'IBM Plex Mono',monospace;margin-bottom:4px;"></div>
       <div class="mactions">
         <button class="btn-mcancel" id="btnCancelSaleEmail">Cancel</button>
-        <button class="btn-msave" id="btnGenerateEmail" style="background:linear-gradient(135deg,#059669,#10b981);" disabled>Generate Email →</button>
+        <button class="btn-msave" id="btnGoStep2" style="background:linear-gradient(135deg,#059669,#10b981);" disabled>Next: Choose Links →</button>
       </div>
     </div>
 
-    <!-- Step 2: Email output -->
+    <!-- STEP 2: Choose link per game (only shown if any game has 2+ links) -->
     <div id="seStep2" style="display:none;">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
-        <div style="font-size:11px;color:#34d399;font-family:'IBM Plex Mono',monospace;">✓ Email ready</div>
-        <button class="btn-s" id="seBtnBack" style="padding:5px 12px;font-size:11px;">← Back</button>
+      <div style="font-size:12px;color:#9f7aea;margin-bottom:14px;line-height:1.6;">For games with multiple links, choose which one to send to this customer.</div>
+      <div id="seLinkPickers" style="display:flex;flex-direction:column;gap:12px;max-height:380px;overflow-y:auto;padding-right:4px;"></div>
+      <div class="mactions" style="margin-top:14px;">
+        <button class="btn-mcancel" id="seBtnBack1">← Back</button>
+        <button class="btn-msave" id="btnGoStep3" style="background:linear-gradient(135deg,#059669,#10b981);">Generate Email →</button>
       </div>
+    </div>
+
+    <!-- STEP 3: Email output -->
+    <div id="seStep3" style="display:none;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+        <div id="seOrderBadge" style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:#34d399;background:rgba(52,211,153,0.08);border:1px solid rgba(52,211,153,0.18);border-radius:6px;padding:4px 10px;"></div>
+        <button class="btn-s" id="seBtnBack2" style="padding:5px 12px;font-size:11px;">← Back</button>
+      </div>
+      <!-- Order summary card -->
+      <div id="seOrderCard" style="background:rgba(255,255,255,0.02);border:1px solid rgba(167,139,250,0.12);border-radius:10px;padding:13px 15px;margin-bottom:12px;font-size:12px;line-height:1.8;font-family:'IBM Plex Mono',monospace;color:#9f7aea;"></div>
       <div class="fg">
         <label class="flabel">Subject line</label>
         <input class="finput" id="seSubject" style="font-family:'IBM Plex Mono',monospace;font-size:12px;">
       </div>
       <div class="fg">
         <label class="flabel">Email body — edit before sending</label>
-        <textarea class="finput" id="seBody" style="min-height:320px;font-size:12px;line-height:1.7;font-family:'DM Sans',sans-serif;"></textarea>
+        <textarea class="finput" id="seBody" style="min-height:260px;font-size:12px;line-height:1.75;font-family:'DM Sans',sans-serif;"></textarea>
       </div>
       <div class="mactions">
         <button class="btn-mcancel" id="seBtnCopy">📋 Copy body</button>
@@ -1805,58 +1822,61 @@ CSV (from Export CSV): re-import the exported CSV to restore games, bundles, and
 
   /* ── SALE EMAIL GENERATOR ── */
   var seSelGames=new Set(),seSelBundles=new Set();
+  var seChosenLinks={};   /* gameId -> linkIndex */
+  var seCurrentOrderId='';
+
+  function genOrderId(){
+    return 'GV-'+Math.random().toString(36).toUpperCase().slice(2,8);
+  }
+
+  function seGoStep(n){
+    [1,2,3].forEach(function(i){document.getElementById('seStep'+i).style.display=i===n?'':'none';});
+    var labels=['Step 1 of 3 — Order details','Step 2 of 3 — Choose links','Step 3 of 3 — Email ready'];
+    document.getElementById('seStepLabel').textContent=labels[n-1];
+  }
 
   function openSaleEmail(){
-    seSelGames.clear();seSelBundles.clear();
-    document.getElementById('seRecipient').value='';
-    document.getElementById('seFrom').value='';
-    document.getElementById('seNote').value='';
-    document.getElementById('seSearch').value='';
-    document.getElementById('seStep1').style.display='';
-    document.getElementById('seStep2').style.display='none';
-    document.getElementById('btnGenerateEmail').disabled=true;
+    seSelGames.clear();seSelBundles.clear();seChosenLinks={};
+    seCurrentOrderId=genOrderId();
+    ['seRecipient','seRecipientEmail','seFrom','seNote','seSearch'].forEach(function(id){document.getElementById(id).value='';});
+    document.getElementById('btnGoStep2').disabled=true;
     refreshSePickers('');
+    seGoStep(1);
     document.getElementById('saleEmailModal').classList.add('open');
   }
   function closeSaleEmail(){document.getElementById('saleEmailModal').classList.remove('open');}
 
   function refreshSePickers(q){
-    q=q.toLowerCase();
-    /* games */
+    q=(q||'').toLowerCase();
     var gFiltered=games.filter(function(g){return !q||g.title.toLowerCase().includes(q)||(g.tags||[]).some(function(t){return t.toLowerCase().includes(q);});});
     document.getElementById('seGamePick').innerHTML=gFiltered.map(function(g){
       var sel=seSelGames.has(g.id);
-      var thumb=g.cover
-        ?'<div class="fgame-chip-thumb"><img src="'+esc(g.cover)+'" alt="" onerror="this.parentElement.textContent=\'🎮\'"></div>'
-        :'<div class="fgame-chip-thumb">🎮</div>';
-      var linkCount=(g.links||[]).length;
+      var thumb=g.cover?'<div class="fgame-chip-thumb"><img src="'+esc(g.cover)+'" alt="" onerror="this.parentElement.textContent=\'🎮\'"></div>':'<div class="fgame-chip-thumb">🎮</div>';
+      var lc=(g.links||[]).length;
+      var price=g.links&&g.links[0]&&g.links[0].price?'$'+g.links[0].price:'';
       return '<div class="fgame-chip'+(sel?' sel':'')+'" data-segid="'+g.id+'">'+thumb+
-        '<div><div>'+esc(g.title)+'</div>'+
-        '<div style="font-size:9px;color:'+(sel?'#34d399':'#4c1d95')+';">'+linkCount+' link'+(linkCount!==1?'s':'')+'</div></div></div>';
-    }).join('')||'<div style="font-size:11px;color:#4c1d95;padding:4px;">No games found.</div>';
+        '<div><div style="font-weight:600">'+esc(g.title)+'</div>'+
+        '<div style="font-size:9px;color:'+(sel?'#34d399':'#4c1d95')+';">'+lc+' link'+(lc!==1?'s':'')+(price?' · '+price:'')+'</div></div></div>';
+    }).join('')||'<div style="font-size:11px;color:#4c1d95;padding:4px 0;">No games match.</div>';
 
-    /* bundles */
     var bFiltered=bundles.filter(function(b){return !q||b.name.toLowerCase().includes(q);});
-    var bSection=document.getElementById('seBundleSection');
-    bSection.style.display=bundles.length?'':'none';
+    document.getElementById('seBundleSection').style.display=bundles.length?'':'none';
     document.getElementById('seBundlePick').innerHTML=bFiltered.map(function(b){
-      var sel=seSelBundles.has(b.id);
-      var cnt=(b.gameIds||[]).length;
+      var sel=seSelBundles.has(b.id);var cnt=(b.gameIds||[]).length;
       return '<div class="fgame-chip'+(sel?' sel':'')+'" data-sebid="'+b.id+'">'+
         '<div class="fgame-chip-thumb">📦</div>'+
-        '<div><div>'+esc(b.name)+'</div>'+
+        '<div><div style="font-weight:600">'+esc(b.name)+'</div>'+
         '<div style="font-size:9px;color:'+(sel?'#34d399':'#4c1d95')+';">'+cnt+' game'+(cnt!==1?'s':'')+(b.price?' · $'+b.price:'')+'</div></div></div>';
-    }).join('')||'<div style="font-size:11px;color:#4c1d95;padding:4px;">No bundles match.</div>';
+    }).join('')||'<div style="font-size:11px;color:#4c1d95;padding:4px 0;">No bundles match.</div>';
 
-    wireSeChips();
-    updateSeSummary();
+    wireSeChips();updateSeSummary();
   }
 
   function wireSeChips(){
     document.querySelectorAll('[data-segid]').forEach(function(el){
       el.addEventListener('click',function(){
         var gid=this.dataset.segid;
-        if(seSelGames.has(gid))seSelGames.delete(gid);else seSelGames.add(gid);
+        if(seSelGames.has(gid)){seSelGames.delete(gid);delete seChosenLinks[gid];}else seSelGames.add(gid);
         refreshSePickers(document.getElementById('seSearch').value);
       });
     });
@@ -1871,95 +1891,202 @@ CSV (from Export CSV): re-import the exported CSV to restore games, bundles, and
 
   function updateSeSummary(){
     var total=seSelGames.size+seSelBundles.size;
-    var btn=document.getElementById('btnGenerateEmail');
+    var btn=document.getElementById('btnGoStep2');
     var sumEl=document.getElementById('seSelSummary');
     if(!total){sumEl.style.display='none';btn.disabled=true;return;}
     var parts=[];
     if(seSelGames.size)parts.push(seSelGames.size+' game'+(seSelGames.size!==1?'s':''));
     if(seSelBundles.size)parts.push(seSelBundles.size+' bundle'+(seSelBundles.size!==1?'s':''));
-    sumEl.textContent='Selected: '+parts.join(' + ');
-    sumEl.style.display='block';
-    btn.disabled=false;
+    /* calc total price */
+    var total$=0;
+    seSelGames.forEach(function(gid){var g=games.find(function(x){return x.id===gid;});if(g&&g.links&&g.links[0]&&g.links[0].price)total$+=parseFloat(g.links[0].price)||0;});
+    seSelBundles.forEach(function(bid){var b=bundles.find(function(x){return x.id===bid;});if(b&&b.price)total$+=parseFloat(b.price)||0;});
+    sumEl.innerHTML='Selected: '+parts.join(' + ')+(total$>0?' &nbsp;·&nbsp; Total: <strong>$'+total$.toFixed(2)+'</strong>':'');
+    sumEl.style.display='block';btn.disabled=false;
   }
 
-  function buildSaleEmail(){
-    var recipient=document.getElementById('seRecipient').value.trim()||'there';
-    var from=document.getElementById('seFrom').value.trim()||'Game Vault';
-    var note=document.getElementById('seNote').value.trim();
-
-    var lines=[];
-    lines.push('Hi '+recipient+',');
-    lines.push('');
-    lines.push('Here are your game links! Everything should work right in your browser — just click and play.');
-    lines.push('');
-
-    /* individual games */
-    var selGamesList=games.filter(function(g){return seSelGames.has(g.id);});
-    selGamesList.forEach(function(g){
-      lines.push('🎮 '+g.title);
-      (g.links||[]).forEach(function(l){
-        var label=l.label||'Link';
-        var price=l.price?'($'+l.price+')':'';
-        lines.push('   '+label+' '+price+': '+l.url);
+  function buildLinkPickers(){
+    /* collect all games that need a link pick (games selected directly + games inside bundles) */
+    var gamesToPick=[];
+    seSelGames.forEach(function(gid){
+      var g=games.find(function(x){return x.id===gid;});
+      if(g&&(g.links||[]).length>1)gamesToPick.push({g:g,source:'game'});
+    });
+    seSelBundles.forEach(function(bid){
+      var b=bundles.find(function(x){return x.id===bid;});
+      if(!b)return;
+      (b.gameIds||[]).forEach(function(gid){
+        var g=games.find(function(x){return x.id===gid;});
+        if(g&&(g.links||[]).length>1&&!gamesToPick.some(function(p){return p.g.id===g.id;}))
+          gamesToPick.push({g:g,source:'bundle:'+b.name});
       });
-      lines.push('');
     });
 
-    /* bundles */
-    var selBundlesList=bundles.filter(function(b){return seSelBundles.has(b.id);});
-    selBundlesList.forEach(function(b){
-      lines.push('📦 '+b.name+(b.price?' — $'+b.price:''));
-      var bGames=(b.gameIds||[]).map(function(gid){return games.find(function(x){return x.id===gid;});}).filter(Boolean);
-      bGames.forEach(function(g){
-        lines.push('');
-        lines.push('   🎮 '+g.title);
-        (g.links||[]).forEach(function(l){
-          var label=l.label||'Link';
-          lines.push('      '+label+': '+l.url);
-        });
-      });
-      lines.push('');
-    });
-
-    if(note){
-      lines.push(note);
-      lines.push('');
+    if(!gamesToPick.length){
+      /* skip step 2, go straight to step 3 */
+      buildAndShowEmail();return;
     }
 
-    lines.push('Thanks for your order!');
-    lines.push('— '+from);
+    document.getElementById('seLinkPickers').innerHTML=gamesToPick.map(function(item){
+      var g=item.g;
+      var links=g.links||[];
+      var thumbHtml=g.cover?'<img src="'+esc(g.cover)+'" style="width:28px;height:36px;object-fit:cover;border-radius:4px;flex-shrink:0;" onerror="this.style.display=\'none\'">':'';
+      var from=item.source!=='game'?'<span style="font-size:9px;color:#4c1d95;"> (in '+esc(item.source.replace('bundle:',''))+')</span>':'';
+      var opts=links.map(function(l,idx){
+        var chosen=seChosenLinks[g.id];
+        var sel=(chosen===undefined&&idx===0)||chosen===idx;
+        return '<label style="display:flex;align-items:center;gap:8px;padding:7px 10px;border-radius:7px;border:1px solid '+(sel?'rgba(52,211,153,0.3)':'rgba(167,139,250,0.1)')+';background:'+(sel?'rgba(52,211,153,0.06)':'rgba(255,255,255,0.02)')+';cursor:pointer;margin-bottom:5px;">'+
+          '<input type="radio" name="selink_'+g.id+'" value="'+idx+'" '+(sel?'checked':'')+' style="accent-color:#34d399;">'+
+          '<div style="flex:1;min-width:0;">'+
+            '<div style="font-size:12px;font-weight:600;color:#c4b5fd;">'+esc(l.label||'Link '+(idx+1))+'</div>'+
+            '<div style="font-size:10px;color:#4c1d95;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+esc(l.url)+(l.price?' · <span style="color:#34d399;">$'+l.price+'</span>':'')+(l.note?' · '+esc(l.note):'')+'</div>'+
+          '</div>'+
+        '</label>';
+      }).join('');
+      return '<div style="background:rgba(255,255,255,0.02);border:1px solid rgba(167,139,250,0.1);border-radius:10px;padding:11px 13px;">'+
+        '<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">'+thumbHtml+
+          '<div><div style="font-size:13px;font-weight:700;color:#e9d5ff;">'+esc(g.title)+from+'</div></div>'+
+        '</div>'+
+        '<div class="se-link-opts" data-gid="'+g.id+'">'+opts+'</div>'+
+      '</div>';
+    }).join('');
 
-    /* subject */
-    var itemNames=[];
-    selGamesList.slice(0,2).forEach(function(g){itemNames.push(g.title);});
-    selBundlesList.slice(0,2).forEach(function(b){itemNames.push(b.name);});
-    var subject='Your Game Vault Links'+(itemNames.length?' — '+itemNames.join(', ')+(seSelGames.size+seSelBundles.size>2?' & more':''):'');
+    /* wire radio changes to update styling */
+    document.querySelectorAll('[name^="selink_"]').forEach(function(radio){
+      radio.addEventListener('change',function(){
+        var gid=this.closest('[data-gid]').dataset.gid;
+        seChosenLinks[gid]=parseInt(this.value);
+        /* update border/bg of siblings */
+        var container=this.closest('[data-gid]');
+        container.querySelectorAll('label').forEach(function(lbl,li){
+          var sel=li===parseInt(radio.closest('label').parentElement.querySelectorAll('label')[li]?li:0);
+        });
+        /* re-render just the opts */
+        var g=games.find(function(x){return x.id===gid;});
+        if(!g)return;
+        container.querySelectorAll('label').forEach(function(lbl){
+          var r=lbl.querySelector('input[type=radio]');
+          var chosen=seChosenLinks[gid];
+          var idx=parseInt(r.value);
+          var isSel=chosen===idx;
+          lbl.style.border='1px solid '+(isSel?'rgba(52,211,153,0.3)':'rgba(167,139,250,0.1)');
+          lbl.style.background=isSel?'rgba(52,211,153,0.06)':'rgba(255,255,255,0.02)';
+        });
+      });
+    });
 
-    document.getElementById('seSubject').value=subject;
-    document.getElementById('seBody').value=lines.join('\n');
-    document.getElementById('seStep1').style.display='none';
-    document.getElementById('seStep2').style.display='';
+    seGoStep(2);
   }
 
+  function collectChosenLinks(){
+    /* read radio selections */
+    document.querySelectorAll('.se-link-opts').forEach(function(container){
+      var gid=container.dataset.gid;
+      var checked=container.querySelector('input[type=radio]:checked');
+      if(checked)seChosenLinks[gid]=parseInt(checked.value);
+    });
+  }
+
+  function buildAndShowEmail(){
+    collectChosenLinks();
+    var recipient=document.getElementById('seRecipient').value.trim()||'there';
+    var recipientEmail=document.getElementById('seRecipientEmail').value.trim();
+    var from=document.getElementById('seFrom').value.trim()||'Game Vault';
+    var note=document.getElementById('seNote').value.trim();
+    var orderId=seCurrentOrderId;
+    var now=new Date();
+    var dateStr=now.toLocaleDateString('en-US',{year:'numeric',month:'long',day:'numeric'});
+    var timeStr=now.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'});
+
+    var selGamesList=games.filter(function(g){return seSelGames.has(g.id);});
+    var selBundlesList=bundles.filter(function(b){return seSelBundles.has(b.id);});
+
+    /* calc total */
+    var grandTotal=0;
+    selGamesList.forEach(function(g){var li=seChosenLinks[g.id]||0;var l=(g.links||[])[li];if(l&&l.price)grandTotal+=parseFloat(l.price)||0;});
+    selBundlesList.forEach(function(b){if(b.price)grandTotal+=parseFloat(b.price)||0;});
+
+    /* order card for display */
+    var cardLines=['Order ID: '+orderId,'Date: '+dateStr+' at '+timeStr,'Customer: '+recipient+(recipientEmail?' ('+recipientEmail+')':''),''];
+    selGamesList.forEach(function(g){var li=seChosenLinks[g.id]||0;var l=(g.links||[])[li];cardLines.push('🎮 '+g.title+(l&&l.price?' — $'+l.price:''));});
+    selBundlesList.forEach(function(b){cardLines.push('📦 '+b.name+(b.price?' — $'+b.price:''));});
+    cardLines.push('');cardLines.push('Total: $'+grandTotal.toFixed(2));
+    document.getElementById('seOrderCard').innerHTML=cardLines.map(function(l){
+      return '<div style="'+(l.startsWith('Total')?'color:#34d399;font-weight:700;border-top:1px solid rgba(167,139,250,0.1);margin-top:6px;padding-top:6px;':'')+'">'+esc(l)+'</div>';
+    }).join('');
+    document.getElementById('seOrderBadge').textContent='Order '+orderId;
+
+    /* build email body — NO links */
+    var body=[];
+    body.push('Hi '+recipient+',');body.push('');
+    body.push('Thank you for your order! Here\'s your order summary:');body.push('');
+    body.push('━━━━━━━━━━━━━━━━━━━━━━');
+    body.push('ORDER DETAILS');
+    body.push('━━━━━━━━━━━━━━━━━━━━━━');
+    body.push('Order ID:  '+orderId);
+    body.push('Date:      '+dateStr);
+    body.push('Customer:  '+recipient);
+    if(recipientEmail)body.push('Email:     '+recipientEmail);
+    body.push('');
+    body.push('ITEMS ORDERED');
+    body.push('─────────────────────');
+    selGamesList.forEach(function(g){
+      var li=seChosenLinks[g.id]||0;var l=(g.links||[])[li];
+      body.push('🎮 '+g.title+(l&&l.price?'  ···  $'+l.price:''));
+      if(l&&l.label&&(g.links||[]).length>1)body.push('   ('+l.label+')');
+    });
+    selBundlesList.forEach(function(b){
+      body.push('📦 '+b.name+(b.price?'  ···  $'+b.price:''));
+      var bGames=(b.gameIds||[]).map(function(gid){return games.find(function(x){return x.id===gid;});}).filter(Boolean);
+      bGames.forEach(function(g){body.push('   • '+g.title);});
+    });
+    body.push('─────────────────────');
+    body.push('TOTAL:  $'+grandTotal.toFixed(2));
+    body.push('━━━━━━━━━━━━━━━━━━━━━━');
+    body.push('');
+    body.push('I\'ll follow up shortly with your game links once payment is confirmed.');
+    body.push('');
+    if(note){body.push(note);body.push('');}
+    body.push('Thanks again for your order!');
+    body.push('— '+from);
+
+    var subject='Your Game Vault Order ('+orderId+')';
+    document.getElementById('seSubject').value=subject;
+    document.getElementById('seBody').value=body.join('\n');
+    seGoStep(3);
+  }
+
+  /* wiring */
   document.getElementById('btnSaleEmail').addEventListener('click',openSaleEmail);
   document.getElementById('btnCloseSaleEmail').addEventListener('click',closeSaleEmail);
   document.getElementById('btnCancelSaleEmail').addEventListener('click',closeSaleEmail);
   document.getElementById('saleEmailModal').addEventListener('click',function(e){if(e.target===this)closeSaleEmail();});
   document.getElementById('seSearch').addEventListener('input',function(){refreshSePickers(this.value);});
-  document.getElementById('btnGenerateEmail').addEventListener('click',buildSaleEmail);
-  document.getElementById('seBtnBack').addEventListener('click',function(){
-    document.getElementById('seStep1').style.display='';
-    document.getElementById('seStep2').style.display='none';
+  document.getElementById('btnGoStep2').addEventListener('click',function(){buildLinkPickers();});
+  document.getElementById('seBtnBack1').addEventListener('click',function(){seGoStep(1);});
+  document.getElementById('btnGoStep3').addEventListener('click',function(){buildAndShowEmail();});
+  document.getElementById('seBtnBack2').addEventListener('click',function(){
+    /* go back to step 2 if there were link choices, else step 1 */
+    var hasMulti=false;
+    seSelGames.forEach(function(gid){var g=games.find(function(x){return x.id===gid;});if(g&&(g.links||[]).length>1)hasMulti=true;});
+    seSelBundles.forEach(function(bid){var b=bundles.find(function(x){return x.id===bid;});if(b)(b.gameIds||[]).forEach(function(gid){var g=games.find(function(x){return x.id===gid;});if(g&&(g.links||[]).length>1)hasMulti=true;});});
+    seGoStep(hasMulti?2:1);
   });
   document.getElementById('seBtnCopy').addEventListener('click',function(){
     navigator.clipboard.writeText(document.getElementById('seBody').value)
-      .then(function(){toast('Email body copied!');})
-      .catch(function(){toast('Copy failed — select manually');});
+      .then(function(){toast('Copied!');}).catch(function(){toast('Copy failed — select manually');});
   });
   document.getElementById('seBtnMailto').addEventListener('click',function(){
-    var subject=encodeURIComponent(document.getElementById('seSubject').value);
-    var body=encodeURIComponent(document.getElementById('seBody').value);
-    window.open('mailto:?subject='+subject+'&body='+body);
+    /* Build mailto in a hidden form to avoid URL length limits */
+    var subject=document.getElementById('seSubject').value;
+    var body=document.getElementById('seBody').value;
+    var recipEmail=document.getElementById('seRecipientEmail').value.trim();
+    var link=document.createElement('a');
+    link.href='mailto:'+encodeURIComponent(recipEmail)+'?subject='+encodeURIComponent(subject)+'&body='+encodeURIComponent(body);
+    link.style.display='none';
+    document.body.appendChild(link);
+    link.click();
+    setTimeout(function(){document.body.removeChild(link);},200);
   });
 
   /* ── WIRING ── */
