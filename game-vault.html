@@ -370,6 +370,7 @@ textarea.finput{resize:vertical;min-height:58px;}
       <div><div class="logo">🎮 Game Vault</div><div class="logo-sub">Your personal game link database</div></div>
       <div class="hdr-btns">
         <button class="btn-s" onclick="window.open('https://heyitsheart.github.io/vault-games.html','_blank')">🕹 Vault Games</button>
+        <button class="btn-s" id="btnKiosk" style="background:rgba(251,191,36,0.08);border-color:rgba(251,191,36,0.25);color:#fbbf24;">🛍 Kiosk Mode</button>
         <button class="btn-s" id="btnNewFolder">📁 New Folder</button>
         <button class="btn-s" id="btnNewBundle">📦 New Bundle</button>
         <button class="btn-s" id="btnSaleEmail" style="background:rgba(52,211,153,0.08);border-color:rgba(52,211,153,0.25);color:#34d399;">💌 Sale Email</button>
@@ -575,6 +576,169 @@ CSV (from Export CSV): re-import the exported CSV to restore games, bundles, and
 <!-- BUNDLE DETAIL OVERLAY -->
 <div class="bdp-overlay" id="bdpOverlay">
   <div class="bdp-panel" id="bdpPanel"></div>
+</div>
+
+<!-- KIOSK MODE -->
+<style>
+/* ── KIOSK ── */
+#kioskOverlay{position:fixed;inset:0;z-index:500;background:#06030f;display:none;flex-direction:column;overflow:hidden;}
+#kioskOverlay.open{display:flex;}
+.kiosk-hdr{flex-shrink:0;background:rgba(6,3,15,0.98);border-bottom:1px solid rgba(167,139,250,0.1);padding:14px 28px;display:flex;align-items:center;gap:16px;}
+.kiosk-logo{font-family:'Playfair Display',serif;font-size:22px;font-weight:900;background:linear-gradient(90deg,#fbbf24,#f59e0b);-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+.kiosk-logo-sub{font-size:10px;color:#78350f;font-family:'IBM Plex Mono',monospace;margin-top:1px;}
+.kiosk-search-wrap{flex:1;max-width:420px;position:relative;}
+.kiosk-search-wrap span{position:absolute;left:11px;top:50%;transform:translateY(-50%);color:#4c1d95;font-size:13px;pointer-events:none;}
+#kioskSearch{width:100%;padding:9px 12px 9px 32px;background:rgba(255,255,255,0.04);border:1px solid rgba(167,139,250,0.15);border-radius:10px;color:#e9d5ff;font-size:13px;font-family:inherit;outline:none;}
+#kioskSearch:focus{border-color:#7c3aed;}
+#kioskSearch::placeholder{color:#3b1f6b;}
+.kiosk-exit{margin-left:auto;background:rgba(248,113,113,0.08);border:1px solid rgba(248,113,113,0.2);border-radius:9px;padding:8px 16px;color:#f87171;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;transition:background 0.12s;}
+.kiosk-exit:hover{background:rgba(248,113,113,0.18);}
+.kiosk-body{flex:1;overflow:hidden;display:flex;gap:0;}
+.kiosk-catalog{flex:1;overflow-y:auto;padding:24px 28px;}
+.kiosk-catalog::-webkit-scrollbar{width:5px;}.kiosk-catalog::-webkit-scrollbar-thumb{background:#3b1f6b;border-radius:3px;}
+.kiosk-sec-hdr{display:flex;align-items:center;gap:10px;margin:0 0 14px;}
+.kiosk-sec-hdr-title{font-family:'Playfair Display',serif;font-size:17px;font-weight:700;color:#fef3c7;}
+.kiosk-sec-hdr-line{flex:1;height:1px;background:rgba(251,191,36,0.1);}
+.kiosk-sec-block{margin-bottom:32px;}
+/* kiosk bundle cards */
+.kiosk-bundles{display:grid;grid-template-columns:repeat(auto-fill,minmax(175px,1fr));gap:12px;margin-bottom:8px;}
+.kiosk-bundle-card{border-radius:13px;border:2px solid rgba(251,191,36,0.18);background:linear-gradient(145deg,#1a1005,#0d0720);cursor:pointer;transition:border-color 0.15s,transform 0.15s,box-shadow 0.15s;position:relative;overflow:hidden;user-select:none;display:flex;flex-direction:column;aspect-ratio:3/4;}
+.kiosk-bundle-card:hover{border-color:rgba(251,191,36,0.5);transform:translateY(-3px);box-shadow:0 12px 36px rgba(251,191,36,0.12);}
+.kiosk-bundle-card.ksel{border-color:#fbbf24;box-shadow:0 0 0 2px rgba(251,191,36,0.3),0 12px 36px rgba(251,191,36,0.18);}
+.kiosk-bundle-mosaic{flex:1;position:relative;overflow:hidden;display:grid;grid-template-columns:1fr 1fr;gap:3px;padding:8px;}
+.kiosk-bm-img{border-radius:5px;overflow:hidden;background:rgba(124,58,237,0.12);display:flex;align-items:center;justify-content:center;font-size:18px;}
+.kiosk-bm-img img{width:100%;height:100%;object-fit:cover;display:block;}
+.kiosk-bundle-badge{position:absolute;top:8px;right:8px;background:rgba(251,191,36,0.15);border:1px solid rgba(251,191,36,0.3);border-radius:4px;padding:2px 7px;font-size:9px;font-weight:700;color:#fbbf24;letter-spacing:0.07em;text-transform:uppercase;z-index:2;}
+.kiosk-ksel-check{position:absolute;top:8px;left:8px;width:20px;height:20px;border-radius:50%;background:#fbbf24;color:#0d0720;font-size:11px;font-weight:900;display:none;align-items:center;justify-content:center;z-index:3;box-shadow:0 2px 8px rgba(0,0,0,0.4);}
+.kiosk-bundle-card.ksel .kiosk-ksel-check{display:flex;}
+.kiosk-bundle-body{padding:9px 11px 11px;border-top:1px solid rgba(251,191,36,0.1);}
+.kiosk-bundle-name{font-family:'Playfair Display',serif;font-size:13px;font-weight:700;color:#fef3c7;margin-bottom:3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.kiosk-bundle-meta{font-size:10px;color:#78570a;font-family:'IBM Plex Mono',monospace;}
+.kiosk-bundle-price{font-size:14px;font-weight:800;color:#fbbf24;font-family:'IBM Plex Mono',monospace;margin-top:3px;}
+/* kiosk game rows */
+.kiosk-games-list{display:flex;flex-direction:column;gap:6px;}
+.kiosk-game-row{display:flex;align-items:center;gap:12px;background:rgba(255,255,255,0.02);border:1px solid rgba(167,139,250,0.1);border-radius:11px;padding:9px 13px;cursor:pointer;transition:border-color 0.15s,background 0.15s;user-select:none;}
+.kiosk-game-row:hover{border-color:rgba(167,139,250,0.28);background:rgba(124,58,237,0.05);}
+.kiosk-game-row.ksel{border-color:rgba(251,191,36,0.45);background:rgba(251,191,36,0.06);}
+.kgr-cover{width:34px;height:44px;border-radius:5px;overflow:hidden;flex-shrink:0;background:rgba(124,58,237,0.1);display:flex;align-items:center;justify-content:center;font-size:18px;}
+.kgr-cover img{width:100%;height:100%;object-fit:cover;display:block;}
+.kgr-info{flex:1;min-width:0;}
+.kgr-title{font-size:13px;font-weight:700;color:#c4b5fd;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.kgr-tags{font-size:10px;color:#3b1f6b;font-family:'IBM Plex Mono',monospace;margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.kgr-price{font-family:'IBM Plex Mono',monospace;font-size:14px;font-weight:800;color:#34d399;flex-shrink:0;}
+.kgr-check{width:20px;height:20px;border-radius:50%;border:2px solid rgba(167,139,250,0.2);display:flex;align-items:center;justify-content:center;font-size:10px;color:#fbbf24;flex-shrink:0;transition:all 0.12s;}
+.kiosk-game-row.ksel .kgr-check{background:#fbbf24;border-color:#fbbf24;color:#0d0720;}
+/* kiosk cart sidebar */
+.kiosk-cart{width:300px;flex-shrink:0;background:rgba(13,7,32,0.98);border-left:1px solid rgba(167,139,250,0.1);display:flex;flex-direction:column;overflow:hidden;}
+.kiosk-cart-hdr{padding:18px 20px 14px;border-bottom:1px solid rgba(167,139,250,0.08);}
+.kiosk-cart-title{font-family:'Playfair Display',serif;font-size:17px;font-weight:700;color:#f0e8ff;margin-bottom:2px;}
+.kiosk-cart-count{font-size:10px;color:#4c1d95;font-family:'IBM Plex Mono',monospace;}
+.kiosk-cart-items{flex:1;overflow-y:auto;padding:12px 16px;}
+.kiosk-cart-items::-webkit-scrollbar{width:3px;}.kiosk-cart-items::-webkit-scrollbar-thumb{background:#3b1f6b;}
+.kiosk-empty-cart{text-align:center;padding:32px 12px;color:#2d1554;font-size:13px;line-height:1.6;}
+.kiosk-empty-cart-icon{font-size:32px;margin-bottom:8px;}
+.kci-row{display:flex;align-items:center;gap:8px;padding:7px 8px;border-radius:8px;background:rgba(255,255,255,0.02);border:1px solid rgba(167,139,250,0.07);margin-bottom:5px;}
+.kci-name{flex:1;font-size:12px;color:#c4b5fd;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.kci-price{font-size:12px;color:#34d399;font-family:'IBM Plex Mono',monospace;font-weight:700;flex-shrink:0;}
+.kci-type{font-size:10px;flex-shrink:0;}
+.kci-remove{background:none;border:none;color:#2d1554;cursor:pointer;font-size:11px;transition:color 0.1s;flex-shrink:0;}
+.kci-remove:hover{color:#f87171;}
+.kiosk-cart-footer{padding:16px 20px;border-top:1px solid rgba(167,139,250,0.08);}
+.kiosk-total-row{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:14px;}
+.kiosk-total-label{font-size:11px;color:#4c1d95;text-transform:uppercase;letter-spacing:0.08em;font-family:'IBM Plex Mono',monospace;}
+.kiosk-total-amount{font-family:'IBM Plex Mono',monospace;font-size:26px;font-weight:800;color:#34d399;}
+.kiosk-savings{font-size:11px;color:#fbbf24;font-family:'IBM Plex Mono',monospace;margin-bottom:10px;display:none;}
+.btn-kiosk-order{width:100%;padding:13px;background:linear-gradient(135deg,#7c3aed,#9333ea);border:none;border-radius:11px;color:#fff;font-size:14px;font-weight:700;font-family:inherit;cursor:pointer;box-shadow:0 4px 18px rgba(124,58,237,0.4);transition:transform 0.1s,box-shadow 0.1s,opacity 0.12s;}
+.btn-kiosk-order:hover:not(:disabled){transform:translateY(-1px);box-shadow:0 8px 28px rgba(124,58,237,0.55);}
+.btn-kiosk-order:disabled{opacity:0.3;cursor:not-allowed;}
+/* kiosk game detail panel */
+.kiosk-detail-overlay{position:absolute;inset:0;z-index:10;background:rgba(4,2,10,0.88);backdrop-filter:blur(14px);display:flex;align-items:center;justify-content:center;padding:20px;opacity:0;pointer-events:none;transition:opacity 0.18s;}
+.kiosk-detail-overlay.open{opacity:1;pointer-events:all;}
+.kiosk-detail-panel{background:linear-gradient(145deg,#130a28,#0a0514);border:1px solid rgba(167,139,250,0.2);border-radius:18px;max-width:480px;width:100%;padding:24px;position:relative;animation:modalIn 0.2s cubic-bezier(0.34,1.56,0.64,1);}
+.kdp-close{position:absolute;top:14px;right:16px;background:none;border:none;color:#4c1d95;cursor:pointer;font-size:18px;}
+.kdp-cover{width:100%;aspect-ratio:3/4;border-radius:12px;overflow:hidden;background:#0a0514;margin-bottom:16px;max-height:220px;}
+.kdp-cover img{width:100%;height:100%;object-fit:cover;}
+.kdp-title{font-family:'Playfair Display',serif;font-size:20px;font-weight:900;color:#f0e8ff;margin-bottom:6px;}
+.kdp-tags{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:10px;}
+.kdp-tag{font-size:9px;font-weight:700;background:rgba(124,58,237,0.15);border:1px solid rgba(167,139,250,0.15);color:#a78bfa;border-radius:5px;padding:2px 7px;font-family:'IBM Plex Mono',monospace;}
+.kdp-notes{font-size:12px;color:#6b4c9f;font-style:italic;line-height:1.6;margin-bottom:14px;}
+.kdp-price{font-family:'IBM Plex Mono',monospace;font-size:28px;font-weight:800;color:#34d399;margin-bottom:16px;}
+.btn-kdp-add{width:100%;padding:13px;background:linear-gradient(135deg,#7c3aed,#9333ea);border:none;border-radius:11px;color:#fff;font-size:14px;font-weight:700;font-family:inherit;cursor:pointer;}
+.btn-kdp-add.added{background:linear-gradient(135deg,#059669,#10b981);}
+/* kiosk order confirm */
+.kiosk-confirm-overlay{position:absolute;inset:0;z-index:20;background:rgba(4,2,10,0.95);backdrop-filter:blur(20px);display:none;align-items:center;justify-content:center;padding:20px;}
+.kiosk-confirm-overlay.open{display:flex;}
+.kiosk-confirm-box{background:linear-gradient(145deg,#130a28,#0a0514);border:1px solid rgba(167,139,250,0.2);border-radius:20px;max-width:440px;width:100%;padding:32px 28px;text-align:center;}
+.kcb-icon{font-size:44px;margin-bottom:12px;}
+.kcb-title{font-family:'Playfair Display',serif;font-size:22px;font-weight:900;color:#f0e8ff;margin-bottom:8px;}
+.kcb-sub{font-size:13px;color:#4c1d95;line-height:1.7;margin-bottom:20px;}
+.kcb-order-id{font-family:'IBM Plex Mono',monospace;font-size:13px;color:#34d399;background:rgba(52,211,153,0.08);border:1px solid rgba(52,211,153,0.18);border-radius:8px;padding:8px 16px;margin-bottom:20px;display:inline-block;}
+.kcb-items{text-align:left;background:rgba(255,255,255,0.02);border:1px solid rgba(167,139,250,0.1);border-radius:10px;padding:12px 16px;margin-bottom:18px;font-size:12px;color:#9f7aea;font-family:'IBM Plex Mono',monospace;line-height:2;}
+.kcb-total{font-family:'IBM Plex Mono',monospace;font-size:22px;font-weight:800;color:#34d399;margin-bottom:20px;}
+.kcb-btns{display:flex;gap:10px;}
+.btn-kcb{flex:1;padding:11px;border-radius:10px;border:1px solid rgba(167,139,250,0.2);background:rgba(255,255,255,0.03);color:#9f7aea;font-size:13px;font-weight:700;font-family:inherit;cursor:pointer;}
+.btn-kcb.primary{background:linear-gradient(135deg,#7c3aed,#9333ea);border:none;color:#fff;flex:2;}
+</style>
+
+<div id="kioskOverlay">
+  <div class="kiosk-hdr">
+    <div>
+      <div class="kiosk-logo">🛍 Game Vault</div>
+      <div class="kiosk-logo-sub">Browse & select games</div>
+    </div>
+    <div class="kiosk-search-wrap">
+      <span>🔍</span>
+      <input id="kioskSearch" placeholder="Search games and bundles...">
+    </div>
+    <button class="kiosk-exit" id="btnKioskExit">✕ Exit Kiosk</button>
+  </div>
+
+  <div class="kiosk-body">
+    <!-- Catalog -->
+    <div class="kiosk-catalog" id="kioskCatalog"></div>
+
+    <!-- Cart sidebar -->
+    <div class="kiosk-cart">
+      <div class="kiosk-cart-hdr">
+        <div class="kiosk-cart-title">🛒 Selection</div>
+        <div class="kiosk-cart-count" id="kioskCartCount">Nothing selected yet</div>
+      </div>
+      <div class="kiosk-cart-items" id="kioskCartItems">
+        <div class="kiosk-empty-cart"><div class="kiosk-empty-cart-icon">🎮</div>Pick some games<br>from the catalog!</div>
+      </div>
+      <div class="kiosk-cart-footer">
+        <div class="kiosk-savings" id="kioskSavings"></div>
+        <div class="kiosk-total-row">
+          <div class="kiosk-total-label">Total</div>
+          <div class="kiosk-total-amount" id="kioskTotal">$0.00</div>
+        </div>
+        <button class="btn-kiosk-order" id="btnKioskOrder" disabled>Place Order →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Game detail panel -->
+  <div class="kiosk-detail-overlay" id="kioskDetailOverlay">
+    <div class="kiosk-detail-panel" id="kioskDetailPanel">
+      <button class="kdp-close" id="btnKioskDetailClose">✕</button>
+    </div>
+  </div>
+
+  <!-- Order confirm screen -->
+  <div class="kiosk-confirm-overlay" id="kioskConfirmOverlay">
+    <div class="kiosk-confirm-box">
+      <div class="kcb-icon">✅</div>
+      <div class="kcb-title">Order Placed!</div>
+      <div class="kcb-sub">Your order has been recorded. The seller will follow up with your game links shortly.</div>
+      <div class="kcb-order-id" id="kcbOrderId"></div>
+      <div class="kcb-items" id="kcbItems"></div>
+      <div class="kcb-total" id="kcbTotal"></div>
+      <div class="kcb-btns">
+        <button class="btn-kcb" id="btnKcbNew">New Order</button>
+        <button class="btn-kcb primary" id="btnKcbExit">Done</button>
+      </div>
+    </div>
+  </div>
 </div>
 
 <!-- SALE EMAIL MODAL -->
@@ -2089,6 +2253,216 @@ CSV (from Export CSV): re-import the exported CSV to restore games, bundles, and
     setTimeout(function(){document.body.removeChild(link);},200);
   });
 
+  /* ── KIOSK MODE ── */
+  var kioskCart={};  /* key -> {type,name,price,id} */
+
+  function openKiosk(){
+    kioskCart={};
+    document.getElementById('kioskSearch').value='';
+    document.getElementById('kioskConfirmOverlay').classList.remove('open');
+    document.getElementById('kioskDetailOverlay').classList.remove('open');
+    renderKiosk('');
+    renderKioskCart();
+    document.getElementById('kioskOverlay').classList.add('open');
+    document.body.style.overflow='hidden';
+  }
+  function closeKiosk(){
+    document.getElementById('kioskOverlay').classList.remove('open');
+    document.body.style.overflow='';
+  }
+
+  function renderKiosk(q){
+    q=(q||'').toLowerCase();
+    var html='';
+    var sellingGames=games.filter(function(g){
+      var matchQ=!q||g.title.toLowerCase().includes(q)||(g.tags||[]).some(function(t){return t.toLowerCase().includes(q);});
+      return matchQ;
+    });
+    var visB=bundles.filter(function(b){return !q||b.name.toLowerCase().includes(q);});
+
+    /* BUNDLES */
+    if(visB.length){
+      html+='<div class="kiosk-sec-block"><div class="kiosk-sec-hdr"><div class="kiosk-sec-hdr-title">📦 Bundles</div><div class="kiosk-sec-hdr-line"></div></div>';
+      html+='<div class="kiosk-bundles">';
+      visB.forEach(function(b,i){
+        var sel=!!kioskCart['b:'+b.id];
+        var bGames=(b.gameIds||[]).map(function(gid){return games.find(function(x){return x.id===gid;});}).filter(Boolean);
+        var mosaic=bGames.slice(0,4).map(function(g){
+          return g.cover?'<div class="kiosk-bm-img"><img src="'+esc(g.cover)+'" onerror="this.parentElement.innerHTML=\'🎮\'"></div>':'<div class="kiosk-bm-img">🎮</div>';
+        }).join('');
+        var delay='animation-delay:'+Math.min(i*0.04,0.5)+'s';
+        html+='<div class="kiosk-bundle-card'+(sel?' ksel':'')+'" data-kbid="'+b.id+'" style="'+delay+'">'+
+          '<div class="kiosk-ksel-check">✓</div>'+
+          '<div class="kiosk-bundle-badge">BUNDLE</div>'+
+          '<div class="kiosk-bundle-mosaic">'+mosaic+'</div>'+
+          '<div class="kiosk-bundle-body">'+
+            '<div class="kiosk-bundle-name">'+esc(b.name)+'</div>'+
+            '<div class="kiosk-bundle-meta">'+bGames.length+' game'+(bGames.length!==1?'s':'')+'</div>'+
+            '<div class="kiosk-bundle-price">'+(b.price?'$'+b.price:'—')+'</div>'+
+          '</div></div>';
+      });
+      html+='</div></div>';
+    }
+
+    /* GAMES */
+    if(sellingGames.length){
+      html+='<div class="kiosk-sec-block"><div class="kiosk-sec-hdr"><div class="kiosk-sec-hdr-title">🎮 Games</div><div class="kiosk-sec-hdr-line"></div></div>';
+      html+='<div class="kiosk-games-list">';
+      sellingGames.forEach(function(g){
+        var sel=!!kioskCart['g:'+g.id];
+        var price=maxP(g);
+        var cover=g.cover?'<div class="kgr-cover"><img src="'+esc(g.cover)+'" onerror="this.parentElement.innerHTML=\'🎮\'"></div>':'<div class="kgr-cover">🎮</div>';
+        var tags=(g.tags||[]).join(' · ');
+        html+='<div class="kiosk-game-row'+(sel?' ksel':'')+'" data-kgid="'+g.id+'">'+
+          cover+
+          '<div class="kgr-info"><div class="kgr-title">'+esc(g.title)+'</div>'+(tags?'<div class="kgr-tags">'+esc(tags)+'</div>':'')+'</div>'+
+          '<div class="kgr-price">'+(price?'$'+price:'—')+'</div>'+
+          '<div class="kgr-check">'+(sel?'✓':'')+'</div>'+
+        '</div>';
+      });
+      html+='</div></div>';
+    }
+
+    if(!visB.length&&!sellingGames.length){
+      html='<div style="text-align:center;padding:80px 20px;color:#2d1554;font-size:14px;">No games or bundles found'+(q?' matching "'+esc(q)+'"':'')+'.</div>';
+    }
+
+    document.getElementById('kioskCatalog').innerHTML=html;
+
+    /* wire bundle clicks */
+    document.querySelectorAll('[data-kbid]').forEach(function(el){
+      el.addEventListener('click',function(e){
+        var bid=this.dataset.kbid;
+        var key='b:'+bid;
+        if(kioskCart[key]){delete kioskCart[key];}
+        else{
+          var b=bundles.find(function(x){return x.id===bid;});
+          if(b)kioskCart[key]={type:'bundle',name:b.name,price:parseFloat(b.price)||0,id:bid};
+        }
+        renderKiosk(document.getElementById('kioskSearch').value);
+        renderKioskCart();
+      });
+    });
+
+    /* wire game clicks — single click toggles, show detail on cover click */
+    document.querySelectorAll('[data-kgid]').forEach(function(el){
+      el.addEventListener('click',function(e){
+        var gid=this.dataset.kgid;
+        /* if click on cover, show detail */
+        if(e.target.closest('.kgr-cover')){openKioskDetail(gid);return;}
+        var key='g:'+gid;
+        if(kioskCart[key]){delete kioskCart[key];}
+        else{
+          var g=games.find(function(x){return x.id===gid;});
+          if(g)kioskCart[key]={type:'game',name:g.title,price:maxP(g),id:gid};
+        }
+        renderKiosk(document.getElementById('kioskSearch').value);
+        renderKioskCart();
+      });
+    });
+  }
+
+  function openKioskDetail(gid){
+    var g=games.find(function(x){return x.id===gid;});if(!g)return;
+    var sel=!!kioskCart['g:'+gid];
+    var price=maxP(g);
+    var coverHtml=g.cover?'<div class="kdp-cover"><img src="'+esc(g.cover)+'" onerror="this.style.display=\'none\'"></div>':'';
+    var tagsHtml=(g.tags||[]).map(function(t){return'<span class="kdp-tag">'+esc(t)+'</span>';}).join('');
+    document.getElementById('kioskDetailPanel').innerHTML=
+      '<button class="kdp-close" id="btnKioskDetailClose">✕</button>'+
+      coverHtml+
+      '<div class="kdp-title">'+esc(g.title)+'</div>'+
+      (tagsHtml?'<div class="kdp-tags">'+tagsHtml+'</div>':'')+
+      (g.notes?'<div class="kdp-notes">'+esc(g.notes)+'</div>':'')+
+      (price?'<div class="kdp-price">$'+price+'</div>':'')+
+      '<button class="btn-kdp-add'+(sel?' added':'')+'" id="btnKdpAdd">'+(sel?'✓ Added to Order':'+ Add to Order')+'</button>';
+
+    document.getElementById('btnKioskDetailClose').onclick=function(){document.getElementById('kioskDetailOverlay').classList.remove('open');};
+    document.getElementById('btnKdpAdd').onclick=function(){
+      var key='g:'+gid;
+      if(kioskCart[key]){delete kioskCart[key];}
+      else{kioskCart[key]={type:'game',name:g.title,price:maxP(g),id:gid};}
+      renderKiosk(document.getElementById('kioskSearch').value);
+      renderKioskCart();
+      document.getElementById('kioskDetailOverlay').classList.remove('open');
+    };
+    document.getElementById('kioskDetailOverlay').classList.add('open');
+  }
+
+  function renderKioskCart(){
+    var keys=Object.keys(kioskCart);
+    var total=keys.reduce(function(s,k){return s+(kioskCart[k].price||0);},0);
+    document.getElementById('kioskTotal').textContent='$'+total.toFixed(2);
+    document.getElementById('kioskCartCount').textContent=keys.length?keys.length+' item'+(keys.length!==1?'s':'')+ ' selected':'Nothing selected yet';
+    document.getElementById('btnKioskOrder').disabled=!keys.length;
+
+    /* savings: sum of individual game prices vs bundle prices */
+    var savingsEl=document.getElementById('kioskSavings');
+    var bundleKeys=keys.filter(function(k){return kioskCart[k].type==='bundle';});
+    if(bundleKeys.length){
+      var individualTotal=0;
+      bundleKeys.forEach(function(k){
+        var b=bundles.find(function(x){return x.id===kioskCart[k].id;});
+        if(b)(b.gameIds||[]).forEach(function(gid){var g=games.find(function(x){return x.id===gid;});if(g)individualTotal+=maxP(g);});
+      });
+      var bundleTotal=bundleKeys.reduce(function(s,k){return s+(kioskCart[k].price||0);},0);
+      var saved=individualTotal-bundleTotal;
+      if(saved>0){savingsEl.textContent='🎉 Saving $'+saved.toFixed(2)+' with bundles!';savingsEl.style.display='block';}
+      else savingsEl.style.display='none';
+    } else {savingsEl.style.display='none';}
+
+    if(!keys.length){
+      document.getElementById('kioskCartItems').innerHTML='<div class="kiosk-empty-cart"><div class="kiosk-empty-cart-icon">🎮</div>Pick some games<br>from the catalog!</div>';
+      return;
+    }
+    document.getElementById('kioskCartItems').innerHTML=keys.map(function(k){
+      var it=kioskCart[k];
+      return'<div class="kci-row">'+
+        '<span class="kci-type">'+(it.type==='bundle'?'📦':'🎮')+'</span>'+
+        '<span class="kci-name">'+esc(it.name)+'</span>'+
+        '<span class="kci-price">'+(it.price?'$'+it.price:'—')+'</span>'+
+        '<button class="kci-remove" data-kkey="'+k+'">✕</button>'+
+      '</div>';
+    }).join('');
+    document.querySelectorAll('[data-kkey]').forEach(function(btn){
+      btn.addEventListener('click',function(e){
+        e.stopPropagation();
+        delete kioskCart[this.dataset.kkey];
+        renderKiosk(document.getElementById('kioskSearch').value);
+        renderKioskCart();
+      });
+    });
+  }
+
+  function kioskPlaceOrder(){
+    var keys=Object.keys(kioskCart);
+    var total=keys.reduce(function(s,k){return s+(kioskCart[k].price||0);},0);
+    var orderId='GV-'+Math.random().toString(36).toUpperCase().slice(2,8);
+    document.getElementById('kcbOrderId').textContent='Order ID: '+orderId;
+    document.getElementById('kcbTotal').textContent='Total: $'+total.toFixed(2);
+    document.getElementById('kcbItems').innerHTML=keys.map(function(k){
+      var it=kioskCart[k];
+      return(it.type==='bundle'?'📦 ':'🎮 ')+esc(it.name)+(it.price?' — $'+it.price:'');
+    }).join('<br>');
+    document.getElementById('kioskConfirmOverlay').classList.add('open');
+  }
+
+  document.getElementById('btnKiosk').addEventListener('click',openKiosk);
+  document.getElementById('btnKioskExit').addEventListener('click',closeKiosk);
+  document.getElementById('kioskSearch').addEventListener('input',function(){renderKiosk(this.value);renderKioskCart();});
+  document.getElementById('btnKioskOrder').addEventListener('click',kioskPlaceOrder);
+  document.getElementById('kioskDetailOverlay').addEventListener('click',function(e){if(e.target===this)this.classList.remove('open');});
+  document.getElementById('btnKcbNew').addEventListener('click',function(){
+    kioskCart={};
+    document.getElementById('kioskConfirmOverlay').classList.remove('open');
+    renderKiosk(document.getElementById('kioskSearch').value);
+    renderKioskCart();
+  });
+  document.getElementById('btnKcbExit').addEventListener('click',function(){
+    document.getElementById('kioskConfirmOverlay').classList.remove('open');
+    closeKiosk();
+  });
+
   /* ── WIRING ── */
   document.getElementById('btnAdd').addEventListener('click',openAdd);
   document.getElementById('btnCloseModal').addEventListener('click',closeModal);
@@ -2105,7 +2479,7 @@ CSV (from Export CSV): re-import the exported CSV to restore games, bundles, and
   document.getElementById('dpOverlay').addEventListener('click',function(e){if(e.target===this)closeDetail();});
   document.addEventListener('keydown',function(e){
     if(e.target.tagName==='INPUT'||e.target.tagName==='TEXTAREA')return;
-    if(e.key==='Escape'){closeModal();closeImport();closeDetail();closeSettings();closeFolderModal();closeBundleModal();closeBundleDetail();closeSaleEmail();}
+    if(e.key==='Escape'){closeModal();closeImport();closeDetail();closeSettings();closeFolderModal();closeBundleModal();closeBundleDetail();closeSaleEmail();closeKiosk();}
     if(e.key==='n'||e.key==='N')openAdd();
   });
 
