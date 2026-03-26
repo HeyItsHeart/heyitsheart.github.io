@@ -735,6 +735,7 @@ CSV (from Export CSV): re-import the exported CSV to restore games, bundles, and
       <div class="kcb-total" id="kcbTotal"></div>
       <div class="kcb-btns">
         <button class="btn-kcb" id="btnKcbNew">New Order</button>
+        <button class="btn-kcb" id="btnKcbEmail" style="background:rgba(52,211,153,0.1);border-color:rgba(52,211,153,0.25);color:#34d399;">💌 Sale Email</button>
         <button class="btn-kcb primary" id="btnKcbExit">Done</button>
       </div>
     </div>
@@ -2434,11 +2435,12 @@ CSV (from Export CSV): re-import the exported CSV to restore games, bundles, and
     });
   }
 
+  var kioskLastOrderId='';
   function kioskPlaceOrder(){
     var keys=Object.keys(kioskCart);
     var total=keys.reduce(function(s,k){return s+(kioskCart[k].price||0);},0);
-    var orderId='GV-'+Math.random().toString(36).toUpperCase().slice(2,8);
-    document.getElementById('kcbOrderId').textContent='Order ID: '+orderId;
+    kioskLastOrderId='GV-'+Math.random().toString(36).toUpperCase().slice(2,8);
+    document.getElementById('kcbOrderId').textContent='Order ID: '+kioskLastOrderId;
     document.getElementById('kcbTotal').textContent='Total: $'+total.toFixed(2);
     document.getElementById('kcbItems').innerHTML=keys.map(function(k){
       var it=kioskCart[k];
@@ -2447,11 +2449,31 @@ CSV (from Export CSV): re-import the exported CSV to restore games, bundles, and
     document.getElementById('kioskConfirmOverlay').classList.add('open');
   }
 
+  function openSaleEmailFromKiosk(){
+    /* pre-fill the sale email generator from the current kiosk cart */
+    seSelGames.clear();seSelBundles.clear();seChosenLinks={};
+    seCurrentOrderId=kioskLastOrderId;
+    Object.keys(kioskCart).forEach(function(k){
+      var it=kioskCart[k];
+      if(it.type==='game')seSelGames.add(it.id);
+      else if(it.type==='bundle')seSelBundles.add(it.id);
+    });
+    /* clear fields */
+    ['seRecipient','seRecipientEmail','seFrom','seNote','seSearch'].forEach(function(id){document.getElementById(id).value='';});
+    refreshSePickers('');
+    /* close kiosk, open sale email */
+    document.getElementById('kioskConfirmOverlay').classList.remove('open');
+    closeKiosk();
+    document.getElementById('saleEmailModal').classList.add('open');
+    seGoStep(1);
+  }
+
   document.getElementById('btnKiosk').addEventListener('click',openKiosk);
   document.getElementById('btnKioskExit').addEventListener('click',closeKiosk);
   document.getElementById('kioskSearch').addEventListener('input',function(){renderKiosk(this.value);renderKioskCart();});
   document.getElementById('btnKioskOrder').addEventListener('click',kioskPlaceOrder);
   document.getElementById('kioskDetailOverlay').addEventListener('click',function(e){if(e.target===this)this.classList.remove('open');});
+  document.getElementById('btnKcbEmail').addEventListener('click',openSaleEmailFromKiosk);
   document.getElementById('btnKcbNew').addEventListener('click',function(){
     kioskCart={};
     document.getElementById('kioskConfirmOverlay').classList.remove('open');
