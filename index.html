@@ -3,560 +3,368 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Game Vault — Your Personal Game Link Database</title>
-<meta name="description" content="A personal database for storing and managing your game links, prices, and sales. Built for collectors and resellers.">
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700&family=DM+Sans:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<title>HeyItsHeart — Developer</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400;1,700;1,900&family=DM+Sans:wght@300;400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
-:root {
-  --bg: #06030f;
-  --surface: #0d0820;
-  --purple: #7c3aed;
-  --purple-light: #a78bfa;
-  --purple-glow: rgba(124,58,237,0.35);
-  --text: #e9d5ff;
-  --muted: #4c1d95;
-  --green: #34d399;
-  --amber: #fbbf24;
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --bg:#06040f;
+  --bg2:#0a0718;
+  --purple:#7c3aed;
+  --purple2:#9333ea;
+  --accent:#c4b5fd;
+  --green:#34d399;
+  --gold:#fbbf24;
+  --text:#e9e0ff;
+  --muted:rgba(196,181,253,0.45);
+  --dim:rgba(196,181,253,0.15);
+  --border:rgba(124,58,237,0.15);
 }
+html{scroll-behavior:smooth;}
+body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;overflow-x:hidden;}
+::-webkit-scrollbar{width:4px;}::-webkit-scrollbar-track{background:var(--bg);}::-webkit-scrollbar-thumb{background:#3b1f6b;border-radius:2px;}
+body::before{content:'';position:fixed;inset:0;z-index:1000;pointer-events:none;opacity:0.025;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");}
 
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+/* NAV */
+nav{position:fixed;top:0;left:0;right:0;z-index:100;padding:20px 60px;display:flex;align-items:center;justify-content:space-between;background:linear-gradient(to bottom,rgba(6,4,15,0.9) 0%,transparent 100%);transition:backdrop-filter 0.3s,background 0.3s;}
+nav.scrolled{backdrop-filter:blur(20px);background:rgba(6,4,15,0.88);}
+.nav-logo{font-family:'Playfair Display',serif;font-size:18px;font-weight:900;color:var(--accent);text-decoration:none;}
+.nav-links{display:flex;gap:32px;align-items:center;}
+.nav-links a{font-size:13px;font-weight:500;color:var(--muted);text-decoration:none;letter-spacing:0.05em;transition:color 0.2s;font-family:'IBM Plex Mono',monospace;}
+.nav-links a:hover{color:var(--accent);}
+.nav-cta{padding:8px 20px;border:1px solid var(--border);border-radius:8px;color:var(--accent)!important;background:rgba(124,58,237,0.06);transition:background 0.2s,border-color 0.2s!important;}
+.nav-cta:hover{background:rgba(124,58,237,0.15)!important;border-color:rgba(124,58,237,0.35)!important;}
+@media(max-width:700px){nav{padding:16px 24px;}.nav-links a:not(.nav-cta){display:none;}}
 
-html { scroll-behavior: smooth; }
+/* HERO */
+#hero{position:relative;min-height:100vh;display:flex;flex-direction:column;justify-content:flex-end;padding:0 60px 100px;overflow:hidden;}
+@media(max-width:700px){#hero{padding:0 24px 80px;}}
+.hero-bg{position:absolute;inset:0;background:radial-gradient(ellipse 80% 60% at 70% 40%,rgba(124,58,237,0.12) 0%,transparent 70%),radial-gradient(ellipse 50% 50% at 20% 80%,rgba(147,51,234,0.08) 0%,transparent 60%);}
+.hero-grid{position:absolute;inset:0;background-image:linear-gradient(rgba(124,58,237,0.04) 1px,transparent 1px),linear-gradient(90deg,rgba(124,58,237,0.04) 1px,transparent 1px);background-size:64px 64px;mask-image:linear-gradient(to bottom,transparent 0%,rgba(0,0,0,0.3) 30%,rgba(0,0,0,0.1) 70%,transparent 100%);}
+.hero-eyebrow{font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:0.25em;text-transform:uppercase;color:var(--purple2);margin-bottom:20px;opacity:0;animation:fadeUp 0.7s 0.2s ease both;}
+.hero-eyebrow::before{content:'// ';opacity:0.4;}
+.hero-h1{font-family:'Playfair Display',serif;font-size:clamp(48px,8vw,110px);font-weight:900;line-height:0.92;letter-spacing:-0.02em;color:#f5f0ff;margin-bottom:28px;opacity:0;animation:fadeUp 0.7s 0.3s ease both;}
+.hero-h1 em{font-style:italic;background:linear-gradient(135deg,#c4b5fd,#a78bfa,#7c3aed);-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+.hero-h1 .line2{display:block;padding-left:clamp(20px,8vw,80px);}
+.hero-sub{font-size:17px;font-weight:300;color:var(--muted);line-height:1.75;max-width:520px;margin-bottom:44px;opacity:0;animation:fadeUp 0.7s 0.4s ease both;}
+.hero-sub strong{color:var(--accent);font-weight:600;}
+.hero-sub em{color:rgba(196,181,253,0.8);font-style:italic;}
+.hero-actions{display:flex;gap:14px;flex-wrap:wrap;opacity:0;animation:fadeUp 0.7s 0.5s ease both;}
+.hero-scroll-hint{position:absolute;bottom:40px;right:60px;font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:0.15em;text-transform:uppercase;color:var(--dim);display:flex;flex-direction:column;align-items:center;gap:8px;opacity:0;animation:fadeIn 1s 1.2s ease both;}
+.scroll-line{width:1px;height:48px;background:linear-gradient(to bottom,var(--dim),transparent);}
 
-body {
-  background: var(--bg);
-  color: var(--text);
-  font-family: 'DM Sans', sans-serif;
-  min-height: 100vh;
-  overflow-x: hidden;
-}
+/* BUTTONS */
+.btn-primary{display:inline-flex;align-items:center;gap:10px;padding:14px 30px;background:linear-gradient(135deg,var(--purple),var(--purple2));border:none;border-radius:10px;color:#fff;font-size:14px;font-weight:700;font-family:'DM Sans',sans-serif;text-decoration:none;cursor:pointer;box-shadow:0 8px 32px rgba(124,58,237,0.4);transition:transform 0.15s,box-shadow 0.15s;letter-spacing:0.02em;}
+.btn-primary:hover{transform:translateY(-2px);box-shadow:0 14px 44px rgba(124,58,237,0.55);}
+.btn-ghost{display:inline-flex;align-items:center;gap:10px;padding:14px 28px;background:transparent;border:1px solid var(--border);border-radius:10px;color:var(--accent);font-size:14px;font-weight:600;font-family:'DM Sans',sans-serif;text-decoration:none;cursor:pointer;transition:background 0.15s,border-color 0.15s;letter-spacing:0.02em;}
+.btn-ghost:hover{background:rgba(124,58,237,0.1);border-color:rgba(124,58,237,0.4);}
 
-/* ── GRAIN OVERLAY ── */
-body::before {
-  content: '';
-  position: fixed;
-  inset: 0;
-  z-index: 0;
-  pointer-events: none;
-  opacity: 0.032;
-  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
-  background-size: 200px 200px;
-}
+/* SECTION COMMON */
+section{padding:120px 60px;}
+@media(max-width:700px){section{padding:80px 24px;}}
+.sec-label{font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:0.2em;text-transform:uppercase;color:var(--purple2);margin-bottom:16px;display:flex;align-items:center;gap:8px;}
+.sec-label::before{content:'';display:block;width:24px;height:1px;background:var(--purple2);}
+.sec-h2{font-family:'Playfair Display',serif;font-size:clamp(36px,5vw,64px);font-weight:900;line-height:1;color:#f5f0ff;margin-bottom:20px;}
+.sec-h2 em{font-style:italic;color:var(--accent);}
 
-/* ── AMBIENT ORBS ── */
-.orb {
-  position: fixed;
-  border-radius: 50%;
-  filter: blur(120px);
-  pointer-events: none;
-  z-index: 0;
-}
-.orb-1 { width: 600px; height: 600px; background: rgba(124,58,237,0.18); top: -200px; right: -150px; animation: drift1 18s ease-in-out infinite; }
-.orb-2 { width: 400px; height: 400px; background: rgba(219,39,119,0.10); bottom: 10%; left: -100px; animation: drift2 22s ease-in-out infinite; }
-.orb-3 { width: 300px; height: 300px; background: rgba(52,211,153,0.07); top: 50%; right: 10%; animation: drift3 14s ease-in-out infinite; }
+/* ABOUT */
+#about{display:grid;grid-template-columns:1fr 1fr;gap:80px;align-items:center;max-width:1200px;margin:0 auto;}
+@media(max-width:900px){#about{grid-template-columns:1fr;gap:40px;}}
+.about-text p{font-size:16px;color:var(--muted);line-height:1.85;margin-bottom:16px;font-weight:300;}
+.about-text p strong{color:var(--text);font-weight:600;}
+.about-text p em{color:var(--accent);font-style:italic;}
+.about-stats{display:grid;grid-template-columns:1fr 1fr;gap:2px;}
+.about-stat{padding:28px 24px;background:var(--bg2);border:1px solid var(--border);}
+.about-stat:first-child{border-radius:14px 0 0 0;}.about-stat:nth-child(2){border-radius:0 14px 0 0;}.about-stat:nth-child(3){border-radius:0 0 0 14px;}.about-stat:last-child{border-radius:0 0 14px 0;}
+.as-val{font-family:'Playfair Display',serif;font-size:42px;font-weight:900;color:var(--accent);line-height:1;margin-bottom:6px;}
+.as-lbl{font-size:12px;color:var(--muted);letter-spacing:0.05em;}
 
-@keyframes drift1 { 0%,100%{transform:translate(0,0);} 50%{transform:translate(-40px,60px);} }
-@keyframes drift2 { 0%,100%{transform:translate(0,0);} 50%{transform:translate(60px,-40px);} }
-@keyframes drift3 { 0%,100%{transform:translate(0,0);} 50%{transform:translate(-30px,30px);} }
+/* FEATURED */
+#featured{background:var(--bg2);padding:0;}
+.featured-inner{max-width:1200px;margin:0 auto;display:grid;grid-template-columns:1fr 1fr;min-height:600px;}
+@media(max-width:900px){.featured-inner{grid-template-columns:1fr;}}
+.featured-visual{position:relative;overflow:hidden;background:linear-gradient(145deg,#0d0720,#130a28);display:flex;align-items:center;justify-content:center;padding:60px;min-height:480px;}
+.featured-visual::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 70% 70% at 50% 50%,rgba(124,58,237,0.2) 0%,transparent 70%);}
+.gv-mockup{position:relative;z-index:1;width:100%;max-width:380px;background:rgba(8,5,17,0.96);border:1px solid rgba(124,58,237,0.25);border-radius:16px;overflow:hidden;box-shadow:0 32px 80px rgba(0,0,0,0.6),0 0 0 1px rgba(124,58,237,0.1);transform:perspective(800px) rotateY(-8deg) rotateX(2deg);transition:transform 0.45s ease;}
+.featured-visual:hover .gv-mockup{transform:perspective(800px) rotateY(-1deg) rotateX(0deg);}
+.gv-hdr{padding:12px 16px;background:rgba(124,58,237,0.08);border-bottom:1px solid rgba(124,58,237,0.12);display:flex;align-items:center;gap:7px;}
+.gv-dot{width:10px;height:10px;border-radius:50%;}
+.gv-logo{margin-left:6px;font-family:'Playfair Display',serif;font-size:13px;font-weight:700;color:#c4b5fd;}
+.gv-stats{display:flex;}
+.gv-st{flex:1;padding:9px 12px;border-right:1px solid rgba(124,58,237,0.07);}
+.gv-st:last-child{border-right:none;}
+.gv-sv{font-size:14px;font-weight:800;color:#c4b5fd;font-family:'IBM Plex Mono',monospace;}
+.gv-sl{font-size:7px;color:#4c1d95;text-transform:uppercase;letter-spacing:0.08em;}
+.gv-cards{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;padding:14px;}
+.gv-card{border-radius:8px;background:linear-gradient(145deg,#1a0a3a,#0d0515);border:1px solid rgba(124,58,237,0.12);overflow:hidden;}
+.gv-ca{aspect-ratio:3/4;display:flex;align-items:center;justify-content:center;font-size:20px;}
+.gv-ca.c1{background:linear-gradient(145deg,#1e0a3a,#0a0514);}
+.gv-ca.c2{background:linear-gradient(145deg,#0a1e0a,#051405);}
+.gv-ca.c3{background:linear-gradient(145deg,#1e1a0a,#14100a);}
+.gv-ca.c4{background:linear-gradient(145deg,#0a1a1e,#051014);}
+.gv-cb{padding:5px 6px;}
+.gv-ct{font-size:7px;font-weight:700;color:#c4b5fd;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.gv-cm{font-size:6px;color:#4c1d95;font-family:'IBM Plex Mono',monospace;margin-top:1px;}
 
-/* ── NAV ── */
-nav {
-  position: fixed;
-  top: 0; left: 0; right: 0;
-  z-index: 100;
-  padding: 18px 48px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  background: rgba(6,3,15,0.7);
-  backdrop-filter: blur(24px);
-  border-bottom: 1px solid rgba(167,139,250,0.07);
-}
-.nav-logo {
-  font-family: 'Playfair Display', serif;
-  font-size: 18px;
-  font-weight: 900;
-  background: linear-gradient(90deg, #c4b5fd, #a78bfa, #8b5cf6);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  letter-spacing: -0.01em;
-}
-.nav-launch {
-  font-family: 'IBM Plex Mono', monospace;
-  font-size: 11px;
-  font-weight: 500;
-  color: var(--purple-light);
-  border: 1px solid rgba(167,139,250,0.25);
-  border-radius: 6px;
-  padding: 7px 16px;
-  text-decoration: none;
-  transition: background 0.15s, color 0.15s, border-color 0.15s;
-  letter-spacing: 0.05em;
-}
-.nav-launch:hover { background: rgba(124,58,237,0.18); border-color: rgba(167,139,250,0.5); color: #e9d5ff; }
+.featured-info{padding:80px 60px;display:flex;flex-direction:column;justify-content:center;}
+@media(max-width:900px){.featured-info{padding:48px 28px;}}
+.featured-tag{display:inline-block;font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:0.15em;text-transform:uppercase;color:var(--purple2);background:rgba(124,58,237,0.1);border:1px solid rgba(124,58,237,0.2);border-radius:5px;padding:4px 12px;margin-bottom:20px;}
+.featured-h2{font-family:'Playfair Display',serif;font-size:clamp(36px,5vw,60px);font-weight:900;line-height:0.95;color:#f5f0ff;margin-bottom:18px;}
+.featured-h2 em{font-style:italic;color:var(--accent);}
+.featured-desc{font-size:15px;color:var(--muted);line-height:1.8;margin-bottom:28px;font-weight:300;}
+.feature-pills{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:32px;}
+.feature-pill{font-size:11px;font-weight:600;padding:5px 12px;border-radius:6px;background:rgba(124,58,237,0.08);border:1px solid rgba(124,58,237,0.18);color:var(--accent);font-family:'IBM Plex Mono',monospace;}
+.featured-actions{display:flex;gap:12px;flex-wrap:wrap;}
 
-/* ── HERO ── */
-.hero {
-  position: relative;
-  z-index: 1;
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  text-align: center;
-  padding: 120px 24px 80px;
-}
+/* PROJECTS */
+#projects{max-width:1200px;margin:0 auto;}
+.projects-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:18px;margin-top:48px;}
+.project-card{border:1px solid var(--border);border-radius:16px;background:var(--bg2);overflow:hidden;transition:border-color 0.2s,transform 0.2s,box-shadow 0.2s;}
+.project-card:hover{border-color:rgba(124,58,237,0.35);transform:translateY(-4px);box-shadow:0 20px 60px rgba(124,58,237,0.15);}
+.pc-header{padding:26px 26px 18px;display:flex;align-items:flex-start;justify-content:space-between;}
+.pc-icon{font-size:30px;margin-bottom:10px;}
+.pc-status{font-family:'IBM Plex Mono',monospace;font-size:9px;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;padding:3px 9px;border-radius:4px;}
+.pc-status.live{background:rgba(52,211,153,0.1);border:1px solid rgba(52,211,153,0.2);color:var(--green);}
+.pc-status.wip{background:rgba(251,191,36,0.1);border:1px solid rgba(251,191,36,0.2);color:var(--gold);}
+.pc-name{font-family:'Playfair Display',serif;font-size:21px;font-weight:700;color:#f5f0ff;margin-bottom:8px;}
+.pc-desc{font-size:13px;color:var(--muted);line-height:1.7;font-weight:300;padding:0 26px;}
+.pc-tags{display:flex;flex-wrap:wrap;gap:6px;padding:14px 26px 0;}
+.pc-tag{font-size:10px;font-weight:600;padding:3px 9px;border-radius:4px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);color:var(--muted);font-family:'IBM Plex Mono',monospace;}
+.pc-footer{padding:18px 26px 22px;display:flex;gap:10px;align-items:center;border-top:1px solid var(--border);margin-top:18px;}
+.pc-link{font-size:12px;font-weight:600;color:var(--accent);text-decoration:none;display:flex;align-items:center;gap:5px;font-family:'IBM Plex Mono',monospace;transition:color 0.15s;}
+.pc-link:hover{color:#fff;}
+.pc-link-sep{width:1px;height:12px;background:var(--border);}
 
-.hero-eyebrow {
-  font-family: 'IBM Plex Mono', monospace;
-  font-size: 11px;
-  letter-spacing: 0.2em;
-  text-transform: uppercase;
-  color: var(--purple-light);
-  opacity: 0.7;
-  margin-bottom: 28px;
-  animation: fadeUp 0.8s ease both;
-}
+/* SKILLS */
+#skills{background:var(--bg2);border-top:1px solid var(--border);border-bottom:1px solid var(--border);}
+.skills-inner{max-width:1200px;margin:0 auto;}
+.skills-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:2px;margin-top:48px;}
+.skill-item{padding:24px 26px;background:rgba(255,255,255,0.01);border:1px solid rgba(124,58,237,0.07);transition:background 0.2s,border-color 0.2s;display:flex;flex-direction:column;gap:10px;}
+.skill-item:hover{background:rgba(124,58,237,0.06);border-color:rgba(124,58,237,0.18);}
+.skill-icon{font-size:22px;}
+.skill-name{font-size:13px;font-weight:700;color:var(--text);}
+.skill-bar{height:3px;border-radius:2px;background:rgba(124,58,237,0.12);overflow:hidden;}
+.skill-fill{height:100%;border-radius:2px;background:linear-gradient(90deg,var(--purple),var(--accent));transition:width 1s ease;}
 
-.hero-title {
-  font-family: 'Playfair Display', serif;
-  font-size: clamp(52px, 9vw, 112px);
-  font-weight: 900;
-  line-height: 0.92;
-  letter-spacing: -0.02em;
-  margin-bottom: 32px;
-  animation: fadeUp 0.8s 0.1s ease both;
-}
-.hero-title .line1 { display: block; color: #f0e8ff; }
-.hero-title .line2 {
-  display: block;
-  background: linear-gradient(90deg, #c4b5fd 0%, #a78bfa 40%, #7c3aed 80%, #db2777 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-size: 200% auto;
-  animation: fadeUp 0.8s 0.1s ease both, shimmer 6s linear infinite;
-}
-@keyframes shimmer { 0%{background-position:0% center;} 100%{background-position:200% center;} }
+/* PHILOSOPHY */
+#philosophy{max-width:900px;margin:0 auto;}
+.philo-quote{font-family:'Playfair Display',serif;font-size:clamp(20px,3vw,34px);font-weight:400;font-style:italic;color:rgba(196,181,253,0.65);line-height:1.6;border-left:3px solid var(--purple);padding-left:36px;margin:48px 0;}
+.philo-quote strong{color:#f5f0ff;font-weight:700;font-style:normal;}
+.philo-points{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:40px;}
+@media(max-width:700px){.philo-points{grid-template-columns:1fr;}}
+.philo-point{padding:24px;border:1px solid var(--border);border-radius:12px;background:rgba(124,58,237,0.03);}
+.pp-num{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--purple2);letter-spacing:0.15em;margin-bottom:8px;}
+.pp-title{font-size:15px;font-weight:700;color:var(--text);margin-bottom:6px;}
+.pp-desc{font-size:13px;color:var(--muted);line-height:1.65;font-weight:300;}
 
-.hero-sub {
-  font-size: clamp(16px, 2.2vw, 20px);
-  color: #8b6fbf;
-  font-weight: 400;
-  line-height: 1.65;
-  max-width: 560px;
-  margin: 0 auto 52px;
-  animation: fadeUp 0.8s 0.2s ease both;
-}
+/* CONTACT */
+#contact{text-align:center;padding:120px 60px;position:relative;overflow:hidden;}
+#contact::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 60% 50% at 50% 50%,rgba(124,58,237,0.1) 0%,transparent 70%);}
+.contact-inner{position:relative;z-index:1;max-width:600px;margin:0 auto;}
+.contact-h2{font-family:'Playfair Display',serif;font-size:clamp(36px,6vw,72px);font-weight:900;line-height:0.95;color:#f5f0ff;margin-bottom:20px;}
+.contact-h2 em{font-style:italic;color:var(--accent);}
+.contact-sub{font-size:16px;color:var(--muted);line-height:1.7;margin-bottom:40px;font-weight:300;}
+.contact-links{display:flex;gap:14px;justify-content:center;flex-wrap:wrap;}
 
-.hero-cta-group {
-  display: flex;
-  gap: 14px;
-  align-items: center;
-  justify-content: center;
-  flex-wrap: wrap;
-  animation: fadeUp 0.8s 0.3s ease both;
-}
+/* FOOTER */
+footer{border-top:1px solid var(--border);padding:28px 60px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;}
+@media(max-width:700px){footer{padding:24px;}}
+.footer-logo{font-family:'Playfair Display',serif;font-size:16px;font-weight:700;color:var(--muted);}
+.footer-mono{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--dim);letter-spacing:0.04em;}
 
-.btn-launch {
-  position: relative;
-  display: inline-flex;
-  align-items: center;
-  gap: 10px;
-  background: linear-gradient(135deg, #7c3aed, #9333ea);
-  border: none;
-  border-radius: 14px;
-  padding: 16px 34px;
-  color: #fff;
-  font-family: 'DM Sans', sans-serif;
-  font-size: 16px;
-  font-weight: 700;
-  text-decoration: none;
-  cursor: pointer;
-  box-shadow: 0 8px 32px rgba(124,58,237,0.5), 0 0 0 1px rgba(167,139,250,0.2) inset;
-  transition: transform 0.15s, box-shadow 0.15s;
-  overflow: hidden;
-}
-.btn-launch::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(135deg, rgba(255,255,255,0.15), transparent 60%);
-  opacity: 0;
-  transition: opacity 0.15s;
-}
-.btn-launch:hover { transform: translateY(-2px); box-shadow: 0 14px 48px rgba(124,58,237,0.65), 0 0 0 1px rgba(167,139,250,0.3) inset; }
-.btn-launch:hover::before { opacity: 1; }
-.btn-launch:active { transform: translateY(0); }
-.btn-launch .arrow {
-  font-size: 20px;
-  transition: transform 0.2s;
-}
-.btn-launch:hover .arrow { transform: translateX(4px); }
-
-.btn-ghost {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  background: rgba(255,255,255,0.04);
-  border: 1px solid rgba(167,139,250,0.18);
-  border-radius: 14px;
-  padding: 16px 28px;
-  color: #9f7aea;
-  font-family: 'DM Sans', sans-serif;
-  font-size: 15px;
-  font-weight: 600;
-  text-decoration: none;
-  transition: background 0.15s, color 0.15s, border-color 0.15s;
-}
-.btn-ghost:hover { background: rgba(124,58,237,0.12); color: #c4b5fd; border-color: rgba(167,139,250,0.35); }
-
-/* ── SHELF PREVIEW ── */
-.shelf-wrap {
-  position: relative;
-  z-index: 1;
-  padding: 0 24px 100px;
-  max-width: 1000px;
-  margin: 0 auto;
-  animation: fadeUp 0.8s 0.4s ease both;
-}
-.shelf-label {
-  text-align: center;
-  font-family: 'IBM Plex Mono', monospace;
-  font-size: 10px;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-  color: var(--muted);
-  margin-bottom: 24px;
-}
-.shelf {
-  display: flex;
-  gap: 12px;
-  justify-content: center;
-  flex-wrap: wrap;
-}
-.shelf-card {
-  width: 120px;
-  border-radius: 10px;
-  overflow: hidden;
-  border: 1px solid rgba(167,139,250,0.1);
-  background: var(--surface);
-  animation: cardFloat var(--dur, 4s) var(--delay, 0s) ease-in-out infinite;
-  flex-shrink: 0;
-}
-@keyframes cardFloat {
-  0%,100%{transform:translateY(0px);}
-  50%{transform:translateY(var(--lift, -8px));}
-}
-.shelf-card-cover {
-  width: 100%;
-  aspect-ratio: 3/4;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 36px;
-  position: relative;
-}
-.shelf-card-cover::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(to bottom, transparent 50%, rgba(5,2,14,0.9) 100%);
-}
-.shelf-card-body { padding: 8px 9px 9px; }
-.shelf-card-title { font-family: 'Playfair Display', serif; font-size: 10px; font-weight: 700; color: #d4b5ff; line-height: 1.3; margin-bottom: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.shelf-card-meta { font-family: 'IBM Plex Mono', monospace; font-size: 9px; color: #3b1f6b; }
-.shelf-card-price { font-family: 'IBM Plex Mono', monospace; font-size: 10px; font-weight: 600; color: var(--green); }
-
-/* ── FEATURES ── */
-.features {
-  position: relative;
-  z-index: 1;
-  max-width: 960px;
-  margin: 0 auto;
-  padding: 0 24px 120px;
-}
-.features-header {
-  text-align: center;
-  margin-bottom: 60px;
-}
-.features-header h2 {
-  font-family: 'Playfair Display', serif;
-  font-size: clamp(30px, 5vw, 48px);
-  font-weight: 900;
-  color: #f0e8ff;
-  margin-bottom: 14px;
-}
-.features-header p { font-size: 16px; color: #6b4c9f; max-width: 440px; margin: 0 auto; line-height: 1.6; }
-
-.feature-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-  gap: 16px;
-}
-.feature-card {
-  background: rgba(255,255,255,0.02);
-  border: 1px solid rgba(167,139,250,0.09);
-  border-radius: 18px;
-  padding: 28px 24px;
-  transition: border-color 0.2s, background 0.2s, transform 0.2s;
-  position: relative;
-  overflow: hidden;
-}
-.feature-card::before {
-  content: '';
-  position: absolute;
-  top: 0; left: 0; right: 0;
-  height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(167,139,250,0.3), transparent);
-  opacity: 0;
-  transition: opacity 0.2s;
-}
-.feature-card:hover { border-color: rgba(167,139,250,0.22); background: rgba(124,58,237,0.05); transform: translateY(-3px); }
-.feature-card:hover::before { opacity: 1; }
-.feature-icon { font-size: 28px; margin-bottom: 16px; display: block; }
-.feature-title { font-family: 'Playfair Display', serif; font-size: 18px; font-weight: 700; color: #d4b5ff; margin-bottom: 9px; }
-.feature-desc { font-size: 14px; color: #5a3f8a; line-height: 1.65; }
-
-/* ── STATS ROW ── */
-.stats-row {
-  position: relative;
-  z-index: 1;
-  max-width: 800px;
-  margin: 0 auto 100px;
-  padding: 0 24px;
-  display: flex;
-  gap: 0;
-  background: rgba(255,255,255,0.02);
-  border: 1px solid rgba(167,139,250,0.09);
-  border-radius: 18px;
-  overflow: hidden;
-}
-.stat-block { flex: 1; padding: 28px 20px; border-right: 1px solid rgba(167,139,250,0.07); text-align: center; }
-.stat-block:last-child { border-right: none; }
-.stat-num { font-family: 'Playfair Display', serif; font-size: 38px; font-weight: 900; line-height: 1; margin-bottom: 6px; }
-.stat-num.p { color: var(--purple-light); }
-.stat-num.g { color: var(--green); }
-.stat-num.a { color: var(--amber); }
-.stat-label { font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); }
-
-/* ── FINAL CTA ── */
-.final-cta {
-  position: relative;
-  z-index: 1;
-  text-align: center;
-  padding: 0 24px 120px;
-}
-.final-cta-box {
-  max-width: 640px;
-  margin: 0 auto;
-  background: radial-gradient(ellipse at 50% 0%, rgba(124,58,237,0.18) 0%, transparent 70%);
-  border: 1px solid rgba(167,139,250,0.14);
-  border-radius: 24px;
-  padding: 60px 40px;
-  position: relative;
-  overflow: hidden;
-}
-.final-cta-box::before {
-  content: '';
-  position: absolute;
-  top: 0; left: 50%; transform: translateX(-50%);
-  width: 200px; height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(167,139,250,0.5), transparent);
-}
-.final-cta-box h2 {
-  font-family: 'Playfair Display', serif;
-  font-size: clamp(26px, 4vw, 40px);
-  font-weight: 900;
-  color: #f0e8ff;
-  margin-bottom: 14px;
-  line-height: 1.15;
-}
-.final-cta-box p { font-size: 15px; color: #6b4c9f; margin-bottom: 36px; line-height: 1.6; }
-
-/* ── FOOTER ── */
-footer {
-  position: relative;
-  z-index: 1;
-  text-align: center;
-  padding: 24px;
-  border-top: 1px solid rgba(167,139,250,0.06);
-  font-family: 'IBM Plex Mono', monospace;
-  font-size: 11px;
-  color: #2d1554;
-  letter-spacing: 0.05em;
-}
-footer a { color: #4c1d95; text-decoration: none; transition: color 0.1s; }
-footer a:hover { color: #9f7aea; }
-
-@keyframes fadeUp {
-  from { opacity: 0; transform: translateY(20px); }
-  to   { opacity: 1; transform: translateY(0); }
-}
-
-@media (max-width: 600px) {
-  nav { padding: 14px 20px; }
-  .shelf-card { width: 90px; }
-  .shelf-card-cover { font-size: 28px; }
-  .stats-row { flex-direction: column; }
-  .stat-block { border-right: none; border-bottom: 1px solid rgba(167,139,250,0.07); }
-  .stat-block:last-child { border-bottom: none; }
-  .final-cta-box { padding: 40px 24px; }
-}
+/* ANIMATIONS */
+.reveal{opacity:0;transform:translateY(22px);transition:opacity 0.7s ease,transform 0.7s ease;}
+.reveal.visible{opacity:1;transform:translateY(0);}
+.reveal-delay-1{transition-delay:0.1s;}.reveal-delay-2{transition-delay:0.2s;}.reveal-delay-3{transition-delay:0.3s;}
+@keyframes fadeUp{from{opacity:0;transform:translateY(18px);}to{opacity:1;transform:translateY(0);}}
+@keyframes fadeIn{from{opacity:0;}to{opacity:1;}}
 </style>
 </head>
 <body>
 
-<div class="orb orb-1"></div>
-<div class="orb orb-2"></div>
-<div class="orb orb-3"></div>
-
-<!-- NAV -->
-<nav>
-  <div class="nav-logo">🎮 Game Vault</div>
-  <a href="game-vault.html" class="nav-launch">Open App →</a>
+<nav id="nav">
+  <a href="#" class="nav-logo">HeyItsHeart</a>
+  <div class="nav-links">
+    <a href="#about">About</a>
+    <a href="#featured">Game Vault</a>
+    <a href="#projects">Projects</a>
+    <a href="#contact" class="nav-cta">Get in Touch</a>
+  </div>
 </nav>
 
-<!-- HERO -->
-<section class="hero">
-  <div class="hero-eyebrow">Personal · Organized · Yours</div>
-  <h1 class="hero-title">
-    <span class="line1">Your Game</span>
-    <span class="line2">Link Vault.</span>
+<div id="hero">
+  <div class="hero-bg"></div>
+  <div class="hero-grid"></div>
+  <div class="hero-eyebrow">Browser Developer · Game Vault Creator</div>
+  <h1 class="hero-h1">
+    Building things<br>
+    <em class="line2">worth playing with.</em>
   </h1>
   <p class="hero-sub">
-    Store, organize, and track every game link you own. Manage prices, record sales, and build your collection — all in one beautiful offline app.
+    I'm <strong>HeyItsHeart</strong> — a developer who builds <em>fast, polished, no-install web apps</em> that actually get used. Specializing in browser-native tools, game experiences, and WebAssembly engine ports.
   </p>
-  <div class="hero-cta-group">
-    <a href="game-vault.html" class="btn-launch">
-      Open Game Vault <span class="arrow">→</span>
-    </a>
-    <a href="#features" class="btn-ghost">See features</a>
+  <div class="hero-actions">
+    <a href="#featured" class="btn-primary"><span>🎮</span> See Game Vault</a>
+    <a href="https://github.com/heyitsheart" class="btn-ghost" target="_blank" rel="noopener"><span>↗</span> GitHub</a>
   </div>
-</section>
-
-<!-- SHELF PREVIEW -->
-<div class="shelf-wrap">
-  <div class="shelf-label">Your collection, at a glance</div>
-  <div class="shelf">
-    <div class="shelf-card" style="--dur:4.2s;--delay:0s;--lift:-10px;">
-      <div class="shelf-card-cover" style="background:linear-gradient(145deg,#7c3aed44,#0d0820)">⚔️</div>
-      <div class="shelf-card-body">
-        <div class="shelf-card-title">1v1.lol</div>
-        <div class="shelf-card-price">$3</div>
-      </div>
-    </div>
-    <div class="shelf-card" style="--dur:5s;--delay:0.4s;--lift:-7px;">
-      <div class="shelf-card-cover" style="background:linear-gradient(145deg,#9333ea44,#0d0820)">🌌</div>
-      <div class="shelf-card-body">
-        <div class="shelf-card-title">Hollow Knight</div>
-        <div class="shelf-card-price">$5</div>
-      </div>
-    </div>
-    <div class="shelf-card" style="--dur:3.8s;--delay:0.2s;--lift:-12px;">
-      <div class="shelf-card-cover" style="background:linear-gradient(145deg,#db277744,#0d0820)">🧙</div>
-      <div class="shelf-card-body">
-        <div class="shelf-card-title">Undertale</div>
-        <div class="shelf-card-price">$5</div>
-      </div>
-    </div>
-    <div class="shelf-card" style="--dur:4.6s;--delay:0.6s;--lift:-9px;">
-      <div class="shelf-card-cover" style="background:linear-gradient(145deg,#2563eb44,#0d0820)">🔫</div>
-      <div class="shelf-card-body">
-        <div class="shelf-card-title">Doom</div>
-        <div class="shelf-card-price">$3</div>
-      </div>
-    </div>
-    <div class="shelf-card" style="--dur:5.2s;--delay:0.1s;--lift:-8px;">
-      <div class="shelf-card-cover" style="background:linear-gradient(145deg,#0891b244,#0d0820)">🐉</div>
-      <div class="shelf-card-body">
-        <div class="shelf-card-title">Deltarune</div>
-        <div class="shelf-card-price">$5</div>
-      </div>
-    </div>
-    <div class="shelf-card" style="--dur:4s;--delay:0.8s;--lift:-11px;">
-      <div class="shelf-card-cover" style="background:linear-gradient(145deg,#16a34a44,#0d0820)">🏰</div>
-      <div class="shelf-card-body">
-        <div class="shelf-card-title">Pokemon LeafGreen</div>
-        <div class="shelf-card-price">$5</div>
-      </div>
-    </div>
-  </div>
+  <div class="hero-scroll-hint"><span>Scroll</span><div class="scroll-line"></div></div>
 </div>
 
-<!-- FEATURES -->
-<section class="features" id="features">
-  <div class="features-header">
-    <h2>Everything you need,<br>nothing you don't.</h2>
-    <p>Built for people who collect game links and want to stay organized without the bloat.</p>
-  </div>
-  <div class="feature-grid">
-    <div class="feature-card">
-      <span class="feature-icon">🖼️</span>
-      <div class="feature-title">Cover Art Grid</div>
-      <div class="feature-desc">Paste any image URL as cover art. Your vault looks like a real game shelf, with beautiful portrait cards for every title.</div>
+<section>
+  <div id="about">
+    <div class="about-text reveal">
+      <div class="sec-label">About Me</div>
+      <h2 class="sec-h2">Dev who ships.<br><em>Not just plans.</em></h2>
+      <p>I build complete, production-grade apps as <strong>single HTML files</strong> — no frameworks, no build steps, no deployment complexity. Everything runs in the browser and works offline. If it's not shippable, it's not worth building.</p>
+      <p>My focus is on <strong>tools people actually use</strong> — from game library managers to browser-native WebAssembly engine ports. I care deeply about <em>feel</em>: animations, typography, interaction design, the tiny details that make something alive.</p>
+      <p>Currently deep in <strong>Game Vault</strong> (a full game selling platform in a single HTML file) and <strong>WebEngine</strong> — porting Half-Life's GoldSrc and Valve's Source Engine to WASM so they run in any browser tab.</p>
     </div>
-    <div class="feature-card">
-      <span class="feature-icon">🔗</span>
-      <div class="feature-title">Multiple Links per Game</div>
-      <div class="feature-desc">Store as many links as you want per game — each with its own label, URL, and price. Add them instantly without leaving the vault.</div>
-    </div>
-    <div class="feature-card">
-      <span class="feature-icon">💸</span>
-      <div class="feature-title">Sale Tracking</div>
-      <div class="feature-desc">Hit "+ Sold" every time you make a sale. Each link tracks its own sale count and cumulative revenue. Sell the same link unlimited times.</div>
-    </div>
-    <div class="feature-card">
-      <span class="feature-icon">🏷️</span>
-      <div class="feature-title">Status & Tags</div>
-      <div class="feature-desc">Mark games as Want, Playing, Played, or Selling. Tag everything and filter your entire vault in seconds.</div>
-    </div>
-    <div class="feature-card">
-      <span class="feature-icon">📋</span>
-      <div class="feature-title">Detail Panel</div>
-      <div class="feature-desc">Click any card to open a cinematic floating panel — box art on the left, all your links, notes, tags, and controls on the right.</div>
-    </div>
-    <div class="feature-card">
-      <span class="feature-icon">💾</span>
-      <div class="feature-title">Export & Import</div>
-      <div class="feature-desc">Your data lives in your browser. Export to JSON anytime for backups. Import to restore or merge collections across devices.</div>
+    <div class="about-stats reveal reveal-delay-2">
+      <div class="about-stat"><div class="as-val">10+</div><div class="as-lbl">Apps shipped</div></div>
+      <div class="about-stat"><div class="as-val">0</div><div class="as-lbl">Install required</div></div>
+      <div class="about-stat"><div class="as-val">1</div><div class="as-lbl">File per app</div></div>
+      <div class="about-stat"><div class="as-val">∞</div><div class="as-lbl">Ideas queued</div></div>
     </div>
   </div>
 </section>
 
-<!-- STATS -->
-<div class="stats-row">
-  <div class="stat-block">
-    <div class="stat-num p">∞</div>
-    <div class="stat-label">Games & Links</div>
-  </div>
-  <div class="stat-block">
-    <div class="stat-num g">100%</div>
-    <div class="stat-label">Offline — No Account</div>
-  </div>
-  <div class="stat-block">
-    <div class="stat-num a">Free</div>
-    <div class="stat-label">Forever</div>
+<div id="featured">
+  <div class="featured-inner">
+    <div class="featured-visual">
+      <div class="gv-mockup">
+        <div class="gv-hdr">
+          <div class="gv-dot" style="background:#ff5f57"></div>
+          <div class="gv-dot" style="background:#febc2e"></div>
+          <div class="gv-dot" style="background:#28c840"></div>
+          <div class="gv-logo">🎮 Game Vault</div>
+        </div>
+        <div class="gv-stats">
+          <div class="gv-st"><div class="gv-sv">33</div><div class="gv-sl">Games</div></div>
+          <div class="gv-st"><div class="gv-sv" style="color:#34d399">$42</div><div class="gv-sl">Revenue</div></div>
+          <div class="gv-st"><div class="gv-sv" style="color:#fbbf24">18</div><div class="gv-sl">For Sale</div></div>
+          <div class="gv-st"><div class="gv-sv" style="color:#60a5fa">67</div><div class="gv-sl">Links</div></div>
+        </div>
+        <div class="gv-cards">
+          <div class="gv-card"><div class="gv-ca c1">🎮</div><div class="gv-cb"><div class="gv-ct">Hollow Knight</div><div class="gv-cm">2 links</div></div></div>
+          <div class="gv-card"><div class="gv-ca c2">🦔</div><div class="gv-cb"><div class="gv-ct">Sonic Mania</div><div class="gv-cm">1 link</div></div></div>
+          <div class="gv-card"><div class="gv-ca c3">👾</div><div class="gv-cb"><div class="gv-ct">FNAF Bundle</div><div class="gv-cm">4 games</div></div></div>
+          <div class="gv-card"><div class="gv-ca c4">🧱</div><div class="gv-cb"><div class="gv-ct">Minecraft</div><div class="gv-cm">3 links</div></div></div>
+        </div>
+      </div>
+    </div>
+    <div class="featured-info">
+      <div class="featured-tag">Featured Project</div>
+      <h2 class="featured-h2">Game<br><em>Vault</em></h2>
+      <p class="featured-desc">A complete game selling platform — single HTML file. Manage your library, track sales and revenue, build bundles, run a customer kiosk, generate sale emails, and browse in Big Picture mode with full gamepad support. Zero server. Zero install.</p>
+      <div class="feature-pills">
+        <span class="feature-pill">Kiosk Mode</span>
+        <span class="feature-pill">Gamepad Support</span>
+        <span class="feature-pill">Sale Email Generator</span>
+        <span class="feature-pill">Big Picture UI</span>
+        <span class="feature-pill">CSV Export</span>
+        <span class="feature-pill">Bundle Builder</span>
+        <span class="feature-pill">Revenue Tracking</span>
+        <span class="feature-pill">SteamGridDB</span>
+      </div>
+      <div class="featured-actions">
+        <a href="https://heyitsheart.github.io/game-vault.html" class="btn-primary" target="_blank" rel="noopener">▶ Open Game Vault</a>
+        <a href="https://github.com/heyitsheart/heyitsheart.github.io" class="btn-ghost" target="_blank" rel="noopener">Source ↗</a>
+      </div>
+    </div>
   </div>
 </div>
 
-<!-- FINAL CTA -->
-<div class="final-cta">
-  <div class="final-cta-box">
-    <h2>Ready to build<br>your vault?</h2>
-    <p>No sign-up. No cloud. No ads. Just open it and start adding your games.</p>
-    <a href="game-vault.html" class="btn-launch" style="font-size:17px;padding:18px 40px;">
-      Open Game Vault <span class="arrow">→</span>
-    </a>
+<section>
+  <div id="projects">
+    <div class="reveal">
+      <div class="sec-label">All Projects</div>
+      <h2 class="sec-h2">Things I've<br><em>built &amp; shipped.</em></h2>
+    </div>
+    <div class="projects-grid">
+      <div class="project-card reveal reveal-delay-1">
+        <div class="pc-header"><div><div class="pc-icon">⚙️</div><div class="pc-name">WebEngine</div></div><span class="pc-status wip">In Dev</span></div>
+        <p class="pc-desc">Porting classic 3D game engines to WebAssembly. Xash3D (GoldSrc / Half-Life) is live. Vortex — a Source Engine WASM port — is in active development targeting WebGPU.</p>
+        <div class="pc-tags"><span class="pc-tag">WebAssembly</span><span class="pc-tag">Emscripten</span><span class="pc-tag">WebGPU</span><span class="pc-tag">C++</span></div>
+        <div class="pc-footer"><a href="https://heyitsheart.github.io/webengine.html" class="pc-link" target="_blank">View Project ↗</a><div class="pc-link-sep"></div><a href="https://pixelsuft.github.io/hl/xash.html#150" class="pc-link" target="_blank">Play Xash3D ↗</a></div>
+      </div>
+      <div class="project-card reveal reveal-delay-2">
+        <div class="pc-header"><div><div class="pc-icon">🖥️</div><div class="pc-name">Big Picture Mode</div></div><span class="pc-status live">Live</span></div>
+        <p class="pc-desc">A Steam Big Picture-inspired console UI for Game Vault. Full gamepad support, cinematic hero carousel, dynamic auto-generated rows, search overlay, and folder browsing.</p>
+        <div class="pc-tags"><span class="pc-tag">Gamepad API</span><span class="pc-tag">Cinematic UI</span><span class="pc-tag">localStorage</span></div>
+        <div class="pc-footer"><a href="https://heyitsheart.github.io/bigpicture.html" class="pc-link" target="_blank">Open ↗</a></div>
+      </div>
+      <div class="project-card reveal reveal-delay-3">
+        <div class="pc-header"><div><div class="pc-icon">🛍️</div><div class="pc-name">Order System</div></div><span class="pc-status live">Live</span></div>
+        <p class="pc-desc">A full customer order flow — storefront with cover art, cart, order form, and an internal dashboard with status tracking, email template generation, and order history.</p>
+        <div class="pc-tags"><span class="pc-tag">Storefront</span><span class="pc-tag">Dashboard</span><span class="pc-tag">Email Templates</span></div>
+        <div class="pc-footer"><a href="https://heyitsheart.github.io/order.html" class="pc-link" target="_blank">Order Form ↗</a><div class="pc-link-sep"></div><a href="https://heyitsheart.github.io/orders-dashboard.html" class="pc-link" target="_blank">Dashboard ↗</a></div>
+      </div>
+      <div class="project-card reveal reveal-delay-1">
+        <div class="pc-header"><div><div class="pc-icon">🕹️</div><div class="pc-name">Vault Games</div></div><span class="pc-status live">Live</span></div>
+        <p class="pc-desc">A companion browser game player that reads your Game Vault library and lets you launch and play any game directly in the browser. No downloads, no installs, no friction.</p>
+        <div class="pc-tags"><span class="pc-tag">Browser Games</span><span class="pc-tag">Game Library</span><span class="pc-tag">localStorage</span></div>
+        <div class="pc-footer"><a href="https://heyitsheart.github.io/vault-games.html" class="pc-link" target="_blank">Open ↗</a></div>
+      </div>
+    </div>
   </div>
-</div>
+</section>
 
-<!-- FOOTER -->
+<section id="skills">
+  <div class="skills-inner">
+    <div class="reveal"><div class="sec-label">Skills &amp; Stack</div><h2 class="sec-h2">What I work<br><em>with.</em></h2></div>
+    <div class="skills-grid">
+      <div class="skill-item reveal"><div class="skill-icon">🌐</div><div class="skill-name">HTML / CSS / JS</div><div class="skill-bar"><div class="skill-fill" style="width:98%"></div></div></div>
+      <div class="skill-item reveal reveal-delay-1"><div class="skill-icon">🎨</div><div class="skill-name">UI / UX Design</div><div class="skill-bar"><div class="skill-fill" style="width:88%"></div></div></div>
+      <div class="skill-item reveal reveal-delay-2"><div class="skill-icon">⚡</div><div class="skill-name">WebAssembly</div><div class="skill-bar"><div class="skill-fill" style="width:70%"></div></div></div>
+      <div class="skill-item reveal reveal-delay-3"><div class="skill-icon">🎮</div><div class="skill-name">Gamepad API</div><div class="skill-bar"><div class="skill-fill" style="width:82%"></div></div></div>
+      <div class="skill-item reveal"><div class="skill-icon">🗄️</div><div class="skill-name">localStorage / Data</div><div class="skill-bar"><div class="skill-fill" style="width:94%"></div></div></div>
+      <div class="skill-item reveal reveal-delay-1"><div class="skill-icon">🖥️</div><div class="skill-name">GitHub Pages</div><div class="skill-bar"><div class="skill-fill" style="width:96%"></div></div></div>
+      <div class="skill-item reveal reveal-delay-2"><div class="skill-icon">🔧</div><div class="skill-name">C / C++ (WASM)</div><div class="skill-bar"><div class="skill-fill" style="width:60%"></div></div></div>
+      <div class="skill-item reveal reveal-delay-3"><div class="skill-icon">✨</div><div class="skill-name">Animation / Motion</div><div class="skill-bar"><div class="skill-fill" style="width:86%"></div></div></div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div id="philosophy">
+    <div class="reveal"><div class="sec-label">How I Build</div><h2 class="sec-h2">The philosophy<br><em>behind it all.</em></h2></div>
+    <blockquote class="philo-quote reveal">"If it needs a server, a build step, or a README to run — <strong>it's already too complicated.</strong> The best tools disappear. They just work."</blockquote>
+    <div class="philo-points">
+      <div class="philo-point reveal reveal-delay-1"><div class="pp-num">01 —</div><div class="pp-title">Ship first, polish later</div><div class="pp-desc">A working app with rough edges beats a perfect design that never ships. Get it live, then make it beautiful.</div></div>
+      <div class="philo-point reveal reveal-delay-2"><div class="pp-num">02 —</div><div class="pp-title">Single-file discipline</div><div class="pp-desc">Constraints breed creativity. Everything in one file means every byte earns its place. No bloat, no dependencies, no excuses.</div></div>
+      <div class="philo-point reveal reveal-delay-1"><div class="pp-num">03 —</div><div class="pp-title">Feel matters as much as function</div><div class="pp-desc">Animations aren't decoration. Typography isn't optional. The way something feels to use is part of how it works.</div></div>
+      <div class="philo-point reveal reveal-delay-2"><div class="pp-num">04 —</div><div class="pp-title">Own your stack</div><div class="pp-desc">No framework lock-in. No npm. No cloud dependency. If I build it, I understand every line of it.</div></div>
+    </div>
+  </div>
+</section>
+
+<section id="contact">
+  <div class="contact-inner">
+    <div class="reveal">
+      <h2 class="contact-h2">Let's build<br><em>something.</em></h2>
+      <p class="contact-sub">Have a project idea, want to collaborate, or just want to talk about browser engines and WebAssembly? I'm always down.</p>
+      <div class="contact-links">
+        <a href="https://github.com/heyitsheart" class="btn-primary" target="_blank" rel="noopener"><span>↗</span> GitHub</a>
+        <a href="https://heyitsheart.github.io/game-vault.html" class="btn-ghost" target="_blank" rel="noopener"><span>🎮</span> Game Vault</a>
+      </div>
+    </div>
+  </div>
+</section>
+
 <footer>
-  <span>Game Vault · </span>
-  <a href="https://heyitsheart.github.io" target="_blank" rel="noopener">heyitsheart.github.io</a>
-  <span> · No data ever leaves your browser</span>
+  <div class="footer-logo">HeyItsHeart</div>
+  <div class="footer-mono">Built with HTML · CSS · JS — no frameworks, no build step</div>
 </footer>
 
+<script>
+window.addEventListener('scroll',function(){
+  document.getElementById('nav').classList.toggle('scrolled',window.scrollY>60);
+},{ passive:true });
+
+var observer=new IntersectionObserver(function(entries){
+  entries.forEach(function(e){if(e.isIntersecting)e.target.classList.add('visible');});
+},{threshold:0.1,rootMargin:'0px 0px -40px 0px'});
+document.querySelectorAll('.reveal').forEach(function(el){observer.observe(el);});
+</script>
 </body>
 </html>
