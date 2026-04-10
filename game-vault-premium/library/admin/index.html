@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Game Vault Admin</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900&family=DM+Sans:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --bg:#05030d;--bg2:#09061a;--bg3:#0d0920;
+  --gold:#f59e0b;--gold2:#fbbf24;
+  --purple:#7c3aed;--accent:#c4b5fd;
+  --green:#34d399;--red:#f43f5e;--blue:#60a5fa;
+  --text:#f0eaff;--muted:rgba(240,234,255,0.45);--dim:rgba(240,234,255,0.12);
+  --border:rgba(245,158,11,0.12);--border2:rgba(245,158,11,0.25);
+}
+body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min-height:100vh;}
+::-webkit-scrollbar{width:4px;}::-webkit-scrollbar-track{background:var(--bg);}::-webkit-scrollbar-thumb{background:#2d1a00;border-radius:2px;}
+
+/* HEADER */
+.adm-hdr{background:var(--bg2);border-bottom:1px solid var(--border);padding:14px 28px;display:flex;align-items:center;gap:16px;}
+.adm-logo{font-family:'Playfair Display',serif;font-size:18px;font-weight:900;color:var(--gold2);}
+.adm-badge{font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:0.12em;text-transform:uppercase;padding:3px 9px;border-radius:4px;background:rgba(245,158,11,0.1);border:1px solid var(--border2);color:var(--gold);}
+.adm-right{margin-left:auto;display:flex;gap:8px;align-items:center;}
+
+/* LAYOUT */
+.adm-body{display:grid;grid-template-columns:1fr 380px;gap:0;min-height:calc(100vh - 57px);}
+@media(max-width:900px){.adm-body{grid-template-columns:1fr;}}
+
+/* GAME LIST PANEL */
+.panel-left{padding:20px 24px;overflow-y:auto;border-right:1px solid var(--border);}
+.panel-toolbar{display:flex;gap:8px;align-items:center;margin-bottom:16px;flex-wrap:wrap;}
+.adm-search{flex:1;min-width:140px;padding:9px 12px;background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:12px;font-family:'DM Sans',sans-serif;outline:none;}
+.adm-search:focus{border-color:var(--gold);}
+.adm-search::placeholder{color:var(--dim);}
+.btn-sm{padding:8px 14px;border-radius:8px;font-size:12px;font-weight:700;font-family:'DM Sans',sans-serif;cursor:pointer;transition:all 0.15s;border:none;white-space:nowrap;}
+.btn-green{background:rgba(52,211,153,0.12);border:1px solid rgba(52,211,153,0.25);color:var(--green);}
+.btn-green:hover{background:rgba(52,211,153,0.22);}
+.btn-gold{background:linear-gradient(135deg,var(--gold),var(--gold2));color:#0d0900;}
+.btn-gold:hover{opacity:0.9;}
+.btn-blue{background:rgba(96,165,250,0.1);border:1px solid rgba(96,165,250,0.2);color:var(--blue);}
+.btn-blue:hover{background:rgba(96,165,250,0.2);}
+.btn-red{background:rgba(244,63,94,0.1);border:1px solid rgba(244,63,94,0.2);color:var(--red);}
+.btn-red:hover{background:rgba(244,63,94,0.18);}
+.game-count-lbl{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--dim);}
+
+.game-list{display:flex;flex-direction:column;gap:5px;}
+.gl-item{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:9px;background:rgba(255,255,255,0.02);border:1px solid rgba(245,158,11,0.05);cursor:pointer;transition:all 0.12s;}
+.gl-item:hover{border-color:var(--border);background:rgba(245,158,11,0.04);}
+.gl-item.active{border-color:var(--border2);background:rgba(245,158,11,0.08);}
+.gl-thumb{width:30px;height:40px;border-radius:5px;overflow:hidden;flex-shrink:0;background:#1a1005;display:flex;align-items:center;justify-content:center;font-size:16px;}
+.gl-thumb img{width:100%;height:100%;object-fit:cover;display:block;}
+.gl-name{flex:1;font-size:12px;font-weight:600;color:var(--accent);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.gl-links-count{font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--dim);}
+.gl-del{background:none;border:none;color:rgba(244,63,94,0.3);cursor:pointer;font-size:13px;transition:color 0.12s;padding:2px 4px;flex-shrink:0;}
+.gl-del:hover{color:var(--red);}
+
+/* EDIT PANEL */
+.panel-right{padding:20px 24px;overflow-y:auto;background:var(--bg3);}
+.edit-empty{text-align:center;padding:60px 20px;color:var(--dim);}
+.edit-empty-icon{font-size:36px;margin-bottom:10px;opacity:0.4;}
+.edit-empty h3{font-family:'Playfair Display',serif;font-size:18px;color:var(--muted);}
+.form-section{margin-bottom:20px;}
+.form-section-title{font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:0.15em;text-transform:uppercase;color:var(--gold);margin-bottom:10px;}
+.fg{margin-bottom:10px;}
+.fg label{display:block;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--muted);margin-bottom:4px;font-family:'IBM Plex Mono',monospace;}
+.finput{width:100%;padding:9px 11px;background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:12px;font-family:'DM Sans',sans-serif;outline:none;transition:border-color 0.15s;}
+.finput:focus{border-color:var(--gold);}
+.finput::placeholder{color:var(--dim);}
+textarea.finput{resize:vertical;min-height:52px;line-height:1.55;}
+
+/* Cover preview */
+.cover-preview-row{display:flex;gap:10px;align-items:flex-start;}
+.cover-preview{width:60px;height:80px;border-radius:7px;overflow:hidden;background:#1a1005;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:20px;border:1px solid var(--border);}
+.cover-preview img{width:100%;height:100%;object-fit:cover;display:block;}
+
+/* Link rows */
+.link-list{display:flex;flex-direction:column;gap:7px;margin-bottom:10px;}
+.link-row{background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:9px;padding:10px 12px;display:flex;flex-direction:column;gap:6px;}
+.link-row-top{display:grid;grid-template-columns:1fr 1fr;gap:6px;}
+.link-row-url{display:grid;grid-template-columns:1fr auto;gap:6px;align-items:center;}
+.lr-del{background:none;border:none;color:rgba(244,63,94,0.35);cursor:pointer;font-size:14px;transition:color 0.12s;padding:4px;}
+.lr-del:hover{color:var(--red);}
+.btn-add-link{width:100%;padding:8px;background:rgba(255,255,255,0.03);border:1px dashed var(--border);border-radius:8px;color:var(--dim);font-size:12px;font-weight:600;font-family:'DM Sans',sans-serif;cursor:pointer;transition:all 0.12s;}
+.btn-add-link:hover{border-color:var(--border2);color:var(--gold);}
+
+/* Actions */
+.edit-actions{display:flex;gap:8px;padding-top:12px;border-top:1px solid var(--border);margin-top:8px;}
+.edit-actions button{flex:1;}
+
+/* Export section */
+.export-box{background:rgba(255,255,255,0.02);border:1px solid var(--border);border-radius:12px;padding:18px;margin-top:12px;}
+.export-box h3{font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:0.15em;text-transform:uppercase;color:var(--gold);margin-bottom:8px;}
+.export-box p{font-size:12px;color:var(--muted);line-height:1.6;margin-bottom:12px;}
+.export-steps{display:flex;flex-direction:column;gap:6px;margin-bottom:14px;}
+.export-step{font-size:11px;color:var(--muted);display:flex;gap:8px;align-items:flex-start;}
+.export-step-num{font-family:'IBM Plex Mono',monospace;color:var(--gold);font-weight:700;flex-shrink:0;}
+.export-textarea{width:100%;min-height:80px;background:rgba(0,0,0,0.3);border:1px solid var(--border);border-radius:7px;padding:8px;color:var(--dim);font-size:10px;font-family:'IBM Plex Mono',monospace;resize:vertical;outline:none;}
+
+/* TOAST */
+#toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(10px);background:#09061a;border:1px solid var(--border2);border-radius:9px;padding:9px 18px;font-size:12px;color:var(--gold2);font-family:'IBM Plex Mono',monospace;opacity:0;transition:opacity 0.18s,transform 0.18s;z-index:999;pointer-events:none;white-space:nowrap;}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+</style>
+</head>
+<body>
+
+<div class="adm-hdr">
+  <div class="adm-logo">🎮 Game Vault</div>
+  <div class="adm-badge">Admin Panel</div>
+  <div class="adm-right">
+    <button class="btn-sm btn-green" id="btnImportVault">📥 Import from Vault JSON</button>
+    <button class="btn-sm btn-gold" id="btnExport">💾 Export games-data.json</button>
+  </div>
+</div>
+
+<div class="adm-body">
+  <!-- LEFT: game list -->
+  <div class="panel-left">
+    <div class="panel-toolbar">
+      <input class="adm-search" id="listSearch" placeholder="🔍 Search games...">
+      <div class="game-count-lbl" id="gameCountLbl"></div>
+      <button class="btn-sm btn-green" id="btnAddGame">+ Add Game</button>
+    </div>
+    <div class="game-list" id="gameList"></div>
+  </div>
+
+  <!-- RIGHT: edit form -->
+  <div class="panel-right" id="editPanel">
+    <div class="edit-empty">
+      <div class="edit-empty-icon">🎮</div>
+      <h3>Select a game to edit<br>or click + Add Game</h3>
+    </div>
+  </div>
+</div>
+
+<!-- hidden file input -->
+<input type="file" id="vaultImportInput" accept=".json" style="display:none">
+<div id="toast"></div>
+
+<script>
+var games = [];
+var editingIdx = null;
+var toastTimer;
+
+function save() { try { localStorage.setItem('gvp-admin', JSON.stringify(games)); } catch(e) {} }
+function load() { try { var d = localStorage.getItem('gvp-admin'); if(d) games = JSON.parse(d); } catch(e) {} }
+
+function toast(msg, type) {
+  var el = document.getElementById('toast');
+  el.textContent = msg;
+  el.style.color = type === 'error' ? '#f43f5e' : type === 'green' ? '#34d399' : '#fbbf24';
+  el.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(function() { el.classList.remove('show'); }, 2600);
+}
+
+function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2); }
+
+/* ── GAME LIST ── */
+function renderList() {
+  var q = (document.getElementById('listSearch').value || '').toLowerCase();
+  var filtered = games.filter(function(g, i) {
+    g._idx = i;
+    return !q || g.title.toLowerCase().includes(q);
+  });
+  document.getElementById('gameCountLbl').textContent = filtered.length + ' / ' + games.length + ' games';
+  var EMOJIS = ['🎮','⚔️','🏰','🚀','🧙','🐉','👾','🎯'];
+  document.getElementById('gameList').innerHTML = filtered.map(function(g) {
+    var i = g._idx;
+    return '<div class="gl-item' + (editingIdx === i ? ' active' : '') + '" data-idx="' + i + '">' +
+      '<div class="gl-thumb">' + (g.cover ? '<img src="' + g.cover + '" onerror="this.style.display=\'none\'">' : EMOJIS[i % EMOJIS.length]) + '</div>' +
+      '<div class="gl-name">' + g.title + '</div>' +
+      '<div class="gl-links-count">' + (g.links || []).length + ' link' + ((g.links||[]).length !== 1 ? 's' : '') + '</div>' +
+      '<button class="gl-del" data-del="' + i + '">✕</button>' +
+    '</div>';
+  }).join('');
+
+  document.querySelectorAll('.gl-item').forEach(function(el) {
+    el.addEventListener('click', function(e) {
+      if (e.target.closest('[data-del]')) return;
+      editingIdx = parseInt(this.dataset.idx);
+      renderList();
+      renderEditForm();
+    });
+  });
+  document.querySelectorAll('[data-del]').forEach(function(btn) {
+    btn.addEventListener('click', function(e) {
+      e.stopPropagation();
+      var i = parseInt(this.dataset.del);
+      if (!confirm('Delete "' + games[i].title + '"?')) return;
+      games.splice(i, 1);
+      if (editingIdx === i) { editingIdx = null; document.getElementById('editPanel').innerHTML = '<div class="edit-empty"><div class="edit-empty-icon">🎮</div><h3>Select a game to edit<br>or click + Add Game</h3></div>'; }
+      else if (editingIdx > i) editingIdx--;
+      save(); renderList();
+      toast('Deleted', 'error');
+    });
+  });
+}
+
+/* ── EDIT FORM ── */
+function renderEditForm() {
+  var g = editingIdx !== null ? games[editingIdx] : null;
+  if (!g) return;
+  var links = g.links || [];
+
+  document.getElementById('editPanel').innerHTML =
+    '<div class="form-section">' +
+      '<div class="form-section-title">Game Info</div>' +
+      '<div class="fg"><label>Title</label><input class="finput" id="eTitle" value="' + esc(g.title) + '" placeholder="Game title"></div>' +
+      '<div class="fg"><label>Cover Art URL</label>' +
+        '<div class="cover-preview-row">' +
+          '<div class="cover-preview" id="coverPreview">' + (g.cover ? '<img src="' + g.cover + '" id="coverImg" onerror="this.style.display=\'none\'">' : '🎮') + '</div>' +
+          '<input class="finput" id="eCover" value="' + esc(g.cover || '') + '" placeholder="https://..." style="flex:1;">' +
+        '</div>' +
+      '</div>' +
+      '<div class="fg"><label>Tags (comma separated)</label><input class="finput" id="eTags" value="' + esc((g.tags||[]).join(', ')) + '" placeholder="e.g. nintendo, rpg, indie"></div>' +
+      '<div class="fg"><label>Notes</label><textarea class="finput" id="eNotes" placeholder="Notes about this game...">' + esc(g.notes || '') + '</textarea></div>' +
+    '</div>' +
+
+    '<div class="form-section">' +
+      '<div class="form-section-title">Links</div>' +
+      '<div class="link-list" id="linkList">' +
+        links.map(function(l, i) { return renderLinkRow(l, i); }).join('') +
+      '</div>' +
+      '<button class="btn-add-link" id="btnAddLink">+ Add Link</button>' +
+    '</div>' +
+
+    '<div class="edit-actions">' +
+      '<button class="btn-sm btn-red" id="btnDiscardEdit">Discard</button>' +
+      '<button class="btn-sm btn-gold" id="btnSaveGame" style="flex:2;">Save Game</button>' +
+    '</div>' +
+
+    '<div class="export-box">' +
+      '<h3>How to update subscribers</h3>' +
+      '<p>After saving, export <code style="color:var(--gold2)">games-data.json</code> and upload it to your GitHub repo. All subscribers will see the new games within seconds.</p>' +
+      '<div class="export-steps">' +
+        '<div class="export-step"><span class="export-step-num">1.</span>Save your changes above</div>' +
+        '<div class="export-step"><span class="export-step-num">2.</span>Click Export games-data.json (top right)</div>' +
+        '<div class="export-step"><span class="export-step-num">3.</span>Upload the file to your GitHub repo, replacing the old one</div>' +
+        '<div class="export-step"><span class="export-step-num">4.</span>Done — subscribers see updates instantly</div>' +
+      '</div>' +
+    '</div>';
+
+  wireCoverPreview();
+  wireLinkRows();
+
+  document.getElementById('btnAddLink').addEventListener('click', function() {
+    var g2 = collectForm();
+    games[editingIdx] = g2;
+    games[editingIdx].links.push({ label: '', url: '', price: 0 });
+    save();
+    renderEditForm();
+    toast('Link added');
+  });
+
+  document.getElementById('btnSaveGame').addEventListener('click', function() {
+    var g2 = collectForm();
+    games[editingIdx] = g2;
+    save(); renderList();
+    toast('Saved!', 'green');
+  });
+
+  document.getElementById('btnDiscardEdit').addEventListener('click', function() {
+    editingIdx = null;
+    document.getElementById('editPanel').innerHTML = '<div class="edit-empty"><div class="edit-empty-icon">🎮</div><h3>Select a game to edit</h3></div>';
+    renderList();
+  });
+}
+
+function renderLinkRow(l, i) {
+  return '<div class="link-row" data-li="' + i + '">' +
+    '<div class="link-row-top">' +
+      '<input class="finput lr-label" placeholder="Label (e.g. Main Link)" value="' + esc(l.label || '') + '">' +
+      '<input class="finput lr-price" placeholder="Price (e.g. 4.99)" value="' + esc(l.price || '') + '">' +
+    '</div>' +
+    '<div class="link-row-url">' +
+      '<input class="finput lr-url" placeholder="https://..." value="' + esc(l.url || '') + '">' +
+      '<button class="lr-del" data-lrdel="' + i + '">✕</button>' +
+    '</div>' +
+  '</div>';
+}
+
+function wireLinkRows() {
+  document.querySelectorAll('[data-lrdel]').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      var i = parseInt(this.dataset.lrdel);
+      var g2 = collectForm();
+      g2.links.splice(i, 1);
+      games[editingIdx] = g2;
+      save();
+      renderEditForm();
+    });
+  });
+}
+
+function wireCoverPreview() {
+  var coverInput = document.getElementById('eCover');
+  if (!coverInput) return;
+  coverInput.addEventListener('input', function() {
+    var url = this.value.trim();
+    var prev = document.getElementById('coverPreview');
+    if (url) {
+      prev.innerHTML = '<img src="' + url + '" id="coverImg" onerror="this.style.display=\'none\'">';
+    } else {
+      prev.innerHTML = '🎮';
+    }
+  });
+}
+
+function collectForm() {
+  var title = document.getElementById('eTitle').value.trim();
+  var cover = document.getElementById('eCover').value.trim();
+  var tagsRaw = document.getElementById('eTags').value;
+  var notes = document.getElementById('eNotes').value.trim();
+  var tags = tagsRaw.split(',').map(function(t) { return t.trim(); }).filter(Boolean);
+
+  var linkEls = document.querySelectorAll('.link-row');
+  var links = Array.from(linkEls).map(function(row) {
+    return {
+      label: row.querySelector('.lr-label').value.trim(),
+      url: row.querySelector('.lr-url').value.trim(),
+      price: parseFloat(row.querySelector('.lr-price').value) || 0
+    };
+  }).filter(function(l) { return l.url; });
+
+  return { title: title || 'Untitled', cover: cover, tags: tags, notes: notes, links: links };
+}
+
+/* ── ADD GAME ── */
+document.getElementById('btnAddGame').addEventListener('click', function() {
+  games.push({ title: 'New Game', cover: '', tags: [], notes: '', links: [] });
+  editingIdx = games.length - 1;
+  save(); renderList(); renderEditForm();
+  setTimeout(function() { document.getElementById('eTitle').focus(); document.getElementById('eTitle').select(); }, 50);
+});
+
+/* ── SEARCH ── */
+document.getElementById('listSearch').addEventListener('input', renderList);
+
+/* ── IMPORT FROM VAULT JSON ── */
+document.getElementById('btnImportVault').addEventListener('click', function() {
+  document.getElementById('vaultImportInput').click();
+});
+document.getElementById('vaultImportInput').addEventListener('change', function() {
+  var file = this.files[0]; if (!file) return;
+  var reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      var data = JSON.parse(e.target.result);
+      if (!Array.isArray(data)) throw new Error('Expected array');
+      var imported = 0;
+      data.forEach(function(g) {
+        if (!g.title) return;
+        var existing = games.findIndex(function(x) { return x.title.toLowerCase() === g.title.toLowerCase(); });
+        var entry = {
+          title: g.title,
+          cover: g.cover || '',
+          tags: g.tags || [],
+          notes: g.notes || '',
+          links: (g.links || []).map(function(l) { return { label: l.label || 'Link', url: l.url || '', price: parseFloat(l.price) || 0 }; }).filter(function(l) { return l.url; })
+        };
+        if (existing >= 0) { games[existing] = entry; } else { games.push(entry); imported++; }
+      });
+      save(); renderList();
+      toast('Imported ' + data.length + ' games (' + imported + ' new)', 'green');
+    } catch(err) { toast('Import failed: ' + err.message, 'error'); }
+  };
+  reader.readAsText(file);
+  this.value = '';
+});
+
+/* ── EXPORT ── */
+document.getElementById('btnExport').addEventListener('click', function() {
+  var out = games.map(function(g) {
+    return { title: g.title, cover: g.cover || '', tags: g.tags || [], notes: g.notes || '', links: g.links || [] };
+  });
+  var json = JSON.stringify(out, null, 2);
+  var a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([json], { type: 'application/json' }));
+  a.download = 'games-data.json';
+  a.click();
+  URL.revokeObjectURL(a.href);
+  toast('Exported games-data.json — upload to GitHub!', 'green');
+});
+
+function esc(s) { return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+load(); renderList();
+</script>
+</body>
+</html>
