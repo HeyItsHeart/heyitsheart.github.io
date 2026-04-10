@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Vault Games</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700&family=DM+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --bg:#080511;--panel:#0d0720;--border:rgba(167,139,250,0.1);--border-hover:rgba(167,139,250,0.32);
+  --purple:#7c3aed;--purple2:#9333ea;--text:#e9d5ff;--muted:#4c1d95;--dim:#2d1554;
+  --green:#34d399;--gold:#fbbf24;--blue:#60a5fa;--red:#f87171;
+}
+html,body{height:100%;overflow:hidden;}
+body{background:var(--bg);font-family:'DM Sans',sans-serif;color:var(--text);display:flex;flex-direction:column;}
+::-webkit-scrollbar{width:4px;}::-webkit-scrollbar-track{background:var(--bg);}::-webkit-scrollbar-thumb{background:#3b1f6b;border-radius:3px;}
+
+/* ── HEADER ── */
+.hdr{flex-shrink:0;background:rgba(8,5,17,0.97);backdrop-filter:blur(20px);border-bottom:1px solid var(--border);padding:10px 20px;display:flex;align-items:center;gap:14px;z-index:100;}
+.back-btn{background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:8px;padding:6px 12px;color:#9f7aea;font-size:12px;font-weight:600;font-family:inherit;cursor:pointer;text-decoration:none;display:flex;align-items:center;gap:5px;transition:background 0.12s,color 0.12s;white-space:nowrap;}
+.back-btn:hover{background:rgba(124,58,237,0.15);color:#c4b5fd;}
+.hdr-logo{font-family:'Playfair Display',serif;font-size:18px;font-weight:900;background:linear-gradient(90deg,#c4b5fd,#a78bfa);-webkit-background-clip:text;-webkit-text-fill-color:transparent;white-space:nowrap;}
+.hdr-sep{width:1px;height:22px;background:var(--border);flex-shrink:0;}
+.now-playing{flex:1;min-width:0;display:flex;align-items:center;gap:10px;}
+.np-label{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:0.12em;color:var(--muted);white-space:nowrap;}
+.np-title{font-size:14px;font-weight:700;color:#f0e8ff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.np-link{font-size:10px;color:var(--muted);font-family:'IBM Plex Mono',monospace;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:240px;}
+.hdr-actions{display:flex;gap:7px;align-items:center;flex-shrink:0;}
+.btn-hdr{background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:8px;padding:6px 12px;color:#9f7aea;font-size:12px;font-weight:600;font-family:inherit;cursor:pointer;transition:background 0.12s,color 0.12s;white-space:nowrap;}
+.btn-hdr:hover{background:rgba(124,58,237,0.15);color:#c4b5fd;}
+.btn-open{background:linear-gradient(135deg,var(--purple),var(--purple2));border:none;border-radius:8px;padding:6px 14px;color:#fff;font-size:12px;font-weight:700;font-family:inherit;cursor:pointer;box-shadow:0 3px 12px rgba(124,58,237,0.35);transition:opacity 0.12s;white-space:nowrap;}
+.btn-open:hover{opacity:0.88;}
+
+/* ── LAYOUT ── */
+.layout{flex:1;display:flex;min-height:0;overflow:hidden;}
+
+/* ── SIDEBAR ── */
+.sidebar{width:260px;flex-shrink:0;background:rgba(8,5,17,0.8);border-right:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden;}
+.sidebar.collapsed{width:0;border-right:none;}
+.sb-head{padding:12px 14px 8px;flex-shrink:0;border-bottom:1px solid var(--border);}
+.sb-search{width:100%;background:rgba(255,255,255,0.04);border:1px solid rgba(167,139,250,0.12);border-radius:8px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;transition:border-color 0.12s;}
+.sb-search:focus{border-color:var(--purple);}
+.sb-search::placeholder{color:var(--dim);}
+.sb-filter{display:flex;gap:5px;margin-top:7px;flex-wrap:wrap;}
+.sb-f{font-size:10px;padding:3px 9px;border-radius:20px;border:1px solid var(--border);color:var(--muted);cursor:pointer;transition:all 0.1s;font-family:inherit;background:none;}
+.sb-f.active{background:rgba(124,58,237,0.2);border-color:rgba(167,139,250,0.3);color:#c4b5fd;}
+.sb-list{flex:1;overflow-y:auto;padding:8px 8px;}
+.sb-empty{padding:30px 14px;text-align:center;font-size:12px;color:var(--muted);}
+.sb-game{display:flex;align-items:center;gap:9px;padding:7px 9px;border-radius:10px;cursor:pointer;transition:background 0.12s;border:1px solid transparent;}
+.sb-game:hover{background:rgba(167,139,250,0.06);border-color:var(--border);}
+.sb-game.active{background:rgba(124,58,237,0.14);border-color:rgba(167,139,250,0.25);}
+.sb-thumb{width:32px;height:42px;border-radius:5px;object-fit:cover;flex-shrink:0;background:rgba(124,58,237,0.12);display:flex;align-items:center;justify-content:center;font-size:16px;overflow:hidden;}
+.sb-thumb img{width:100%;height:100%;object-fit:cover;border-radius:5px;}
+.sb-info{flex:1;min-width:0;}
+.sb-name{font-size:12px;font-weight:700;color:#e0d0ff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.sb-meta{font-size:10px;color:var(--muted);font-family:'IBM Plex Mono',monospace;margin-top:1px;}
+.sb-badge{font-size:9px;font-weight:700;text-transform:uppercase;padding:1px 5px;border-radius:3px;flex-shrink:0;}
+.sb-badge.selling{background:rgba(251,191,36,0.12);color:var(--gold);border:1px solid rgba(251,191,36,0.2);}
+.sb-badge.playing{background:rgba(52,211,153,0.12);color:var(--green);border:1px solid rgba(52,211,153,0.2);}
+.sb-badge.want{background:rgba(96,165,250,0.12);color:var(--blue);border:1px solid rgba(96,165,250,0.2);}
+.sb-badge.played{background:rgba(167,139,250,0.12);color:#a78bfa;border:1px solid rgba(167,139,250,0.2);}
+.sb-section-label{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:0.12em;color:var(--dim);padding:10px 9px 4px;margin-top:4px;}
+
+/* ── PLAYER AREA ── */
+.player-area{flex:1;display:flex;flex-direction:column;min-width:0;overflow:hidden;}
+
+/* LINK PICKER */
+.link-picker{flex-shrink:0;background:rgba(13,7,32,0.95);border-bottom:1px solid var(--border);padding:10px 16px;display:flex;align-items:center;gap:8px;overflow-x:auto;min-height:50px;}
+.link-picker::-webkit-scrollbar{height:3px;}
+.lp-label{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:0.12em;color:var(--muted);white-space:nowrap;flex-shrink:0;}
+.lp-chip{display:flex;align-items:center;gap:6px;background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:8px;padding:5px 12px;cursor:pointer;transition:all 0.12s;flex-shrink:0;}
+.lp-chip:hover{border-color:var(--border-hover);background:rgba(124,58,237,0.1);}
+.lp-chip.active{background:rgba(124,58,237,0.2);border-color:rgba(167,139,250,0.4);}
+.lp-chip-label{font-size:12px;font-weight:700;color:#c4b5fd;white-space:nowrap;}
+.lp-chip-price{font-size:10px;color:var(--green);font-family:'IBM Plex Mono',monospace;white-space:nowrap;}
+.lp-fav{width:14px;height:14px;border-radius:3px;background:rgba(124,58,237,0.15);display:flex;align-items:center;justify-content:center;font-size:8px;overflow:hidden;flex-shrink:0;}
+.lp-fav img{width:12px;height:12px;object-fit:contain;}
+.lp-none{font-size:12px;color:var(--dim);font-style:italic;}
+
+/* IFRAME WRAPPER */
+.iframe-wrap{flex:1;position:relative;background:#000;overflow:hidden;}
+.iframe-wrap iframe{width:100%;height:100%;border:none;display:block;}
+
+/* BLOCKED / STATES */
+.player-state{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:40px;gap:16px;background:radial-gradient(ellipse at center,rgba(124,58,237,0.08) 0%,transparent 70%);}
+.ps-icon{font-size:56px;line-height:1;}
+.ps-title{font-family:'Playfair Display',serif;font-size:24px;font-weight:900;color:#c4b5fd;}
+.ps-sub{font-size:14px;color:var(--muted);line-height:1.7;max-width:420px;}
+.ps-sub a{color:#7c5cbf;text-decoration:none;}
+.ps-sub a:hover{color:#c4b5fd;}
+.ps-btn{background:linear-gradient(135deg,var(--purple),var(--purple2));border:none;border-radius:10px;padding:11px 24px;color:#fff;font-size:14px;font-weight:700;font-family:inherit;cursor:pointer;box-shadow:0 4px 16px rgba(124,58,237,0.4);transition:transform 0.12s;}
+.ps-btn:hover{transform:translateY(-2px);}
+.ps-btn-s{background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:10px;padding:10px 20px;color:#9f7aea;font-size:13px;font-weight:600;font-family:inherit;cursor:pointer;transition:background 0.12s;}
+.ps-btn-s:hover{background:rgba(124,58,237,0.15);}
+
+/* Blocked notice ribbon */
+.blocked-ribbon{position:absolute;top:0;left:0;right:0;background:rgba(248,113,113,0.12);border-bottom:1px solid rgba(248,113,113,0.2);padding:7px 16px;display:flex;align-items:center;gap:10px;z-index:10;display:none;}
+.blocked-ribbon.show{display:flex;}
+.br-text{flex:1;font-size:12px;color:#fca5a5;}
+.br-open{background:rgba(248,113,113,0.15);border:1px solid rgba(248,113,113,0.25);border-radius:6px;padding:4px 12px;color:var(--red);font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap;}
+.br-open:hover{background:rgba(248,113,113,0.25);}
+
+/* Sidebar toggle */
+.sb-toggle{position:absolute;left:260px;top:50%;transform:translateY(-50%);width:18px;height:40px;background:rgba(13,7,32,0.9);border:1px solid var(--border);border-left:none;border-radius:0 6px 6px 0;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:11px;z-index:20;transition:left 0.25s,color 0.12s;}
+.sb-toggle:hover{color:#c4b5fd;}
+
+/* Sell button floating */
+.sell-float{position:absolute;bottom:18px;right:18px;background:rgba(52,211,153,0.12);border:1px solid rgba(52,211,153,0.25);border-radius:10px;padding:8px 16px;color:var(--green);font-size:12px;font-weight:700;font-family:inherit;cursor:pointer;backdrop-filter:blur(8px);transition:background 0.12s,transform 0.12s;z-index:20;display:none;}
+.sell-float.show{display:block;}
+.sell-float:hover{background:rgba(52,211,153,0.22);transform:translateY(-2px);}
+
+/* Toast */
+#toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%) translateY(18px);background:#130a28;border:1px solid rgba(167,139,250,0.25);border-radius:10px;padding:9px 18px;font-size:12px;color:#c4b5fd;opacity:0;transition:opacity 0.18s,transform 0.18s;z-index:500;pointer-events:none;white-space:nowrap;}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+
+/* Responsive */
+@media(max-width:700px){
+  .sidebar{width:220px;}
+  .np-link{display:none;}
+}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="hdr">
+  <a class="back-btn" href="game-vault.html">← Vault</a>
+  <div class="hdr-sep"></div>
+  <div class="hdr-logo">🕹 Vault Games</div>
+  <div class="hdr-sep"></div>
+  <div class="now-playing" id="nowPlayingBar" style="display:none">
+    <span class="np-label">Playing</span>
+    <span class="np-title" id="npTitle">—</span>
+    <span class="np-link" id="npLink"></span>
+  </div>
+  <div class="hdr-actions">
+    <button class="btn-hdr" id="btnSbToggle">☰ Library</button>
+    <button class="btn-open" id="btnOpenNew" style="display:none">↗ Open in Tab</button>
+  </div>
+</div>
+
+<!-- LAYOUT -->
+<div class="layout" id="layout">
+
+  <!-- SIDEBAR -->
+  <div class="sidebar" id="sidebar">
+    <div class="sb-head">
+      <input class="sb-search" id="sbSearch" placeholder="Search your vault…">
+      <div class="sb-filter" id="sbFilter">
+        <button class="sb-f active" data-f="">All</button>
+        <button class="sb-f" data-f="selling">Selling</button>
+        <button class="sb-f" data-f="playing">Playing</button>
+        <button class="sb-f" data-f="want">Want</button>
+        <button class="sb-f" data-f="played">Played</button>
+      </div>
+    </div>
+    <div class="sb-list" id="sbList"></div>
+  </div>
+
+  <!-- PLAYER -->
+  <div class="player-area" id="playerArea">
+
+    <!-- LINK PICKER BAR -->
+    <div class="link-picker" id="linkPicker" style="display:none">
+      <span class="lp-label">Links</span>
+      <div id="lpChips" style="display:flex;gap:7px;align-items:center;flex-wrap:nowrap;"></div>
+    </div>
+
+    <!-- BLOCKED RIBBON -->
+    <div class="blocked-ribbon" id="blockedRibbon">
+      <span class="br-text">⚠ This site blocks embedding. Open it in a new tab instead.</span>
+      <button class="br-open" id="brOpen">Open in Tab ↗</button>
+    </div>
+
+    <!-- IFRAME / STATES -->
+    <div class="iframe-wrap" id="iframeWrap">
+      <!-- default empty state -->
+      <div class="player-state" id="emptyState">
+        <div class="ps-icon">🕹</div>
+        <div class="ps-title">Pick a game to play</div>
+        <div class="ps-sub">Select any game from your vault library on the left. Games with links will load right here in the player.</div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Sell floating button -->
+  <button class="sell-float" id="sellFloat">+ Record Sale</button>
+
+</div>
+
+<div id="toast"></div>
+
+<script>
+(function(){
+  var GK='gv9';
+  var games=[], activeGame=null, activeLink=null, activeIdx=0;
+  var sbFilter='', sbQuery='';
+  var sidebarOpen=true;
+
+  /* ── HELPERS ── */
+  function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+  function save(){try{localStorage.setItem(GK,JSON.stringify(games));}catch(e){}}
+  function dom(url){try{return new URL(url).hostname;}catch(e){return null;}}
+  function maxP(g){return Math.max.apply(null,[0].concat((g.links||[]).map(function(l){return parseFloat(l.price)||0;})));}
+  var tt;
+  function toast(m){var el=document.getElementById('toast');el.textContent=m;el.classList.add('show');clearTimeout(tt);tt=setTimeout(function(){el.classList.remove('show');},2600);}
+
+  /* ── LOAD DATA ── */
+  function load(){
+    try{var d=localStorage.getItem(GK);if(d)games=JSON.parse(d);}catch(e){}
+    renderSidebar();
+  }
+
+  /* ── SIDEBAR ── */
+  function renderSidebar(){
+    var q=sbQuery.toLowerCase();
+    var list=games.filter(function(g){
+      if(sbFilter&&g.status!==sbFilter)return false;
+      if(q&&!g.title.toLowerCase().includes(q)&&!(g.tags||[]).some(function(t){return t.toLowerCase().includes(q);}))return false;
+      return true;
+    });
+    var el=document.getElementById('sbList');
+    if(!games.length){
+      el.innerHTML='<div class="sb-empty">Your Game Vault is empty.<br>Add games in <a href="game-vault.html" style="color:#7c5cbf">Game Vault</a> first.</div>';
+      return;
+    }
+    if(!list.length){
+      el.innerHTML='<div class="sb-empty">No games match your filter.</div>';
+      return;
+    }
+    var EMOJIS=['🎮','⚔️','🏰','🚀','🧙','🐉','🌌','🔫','🎯','🌊'];
+    var html='';
+    // Group: with links first
+    var withLinks=list.filter(function(g){return(g.links||[]).length>0;});
+    var noLinks=list.filter(function(g){return!(g.links||[]).length;});
+    if(withLinks.length){
+      html+='<div class="sb-section-label">Playable ('+withLinks.length+')</div>';
+      html+=withLinks.map(function(g,i){return renderSbGame(g,i,EMOJIS);}).join('');
+    }
+    if(noLinks.length){
+      html+='<div class="sb-section-label">No Links ('+noLinks.length+')</div>';
+      html+=noLinks.map(function(g,i){return renderSbGame(g,i+withLinks.length,EMOJIS);}).join('');
+    }
+    el.innerHTML=html;
+    el.querySelectorAll('.sb-game').forEach(function(el){
+      el.addEventListener('click',function(){
+        var gid=this.dataset.gid;
+        var g=games.find(function(x){return x.id===gid;});
+        if(g)selectGame(g);
+      });
+    });
+  }
+
+  function renderSbGame(g,i,EMOJIS){
+    var active=activeGame&&activeGame.id===g.id;
+    var emoji=EMOJIS[i%EMOJIS.length];
+    var thumb=g.cover
+      ?'<div class="sb-thumb"><img src="'+esc(g.cover)+'" alt="" onerror="this.style.display=\'none\'"></div>'
+      :'<div class="sb-thumb" style="background:linear-gradient(160deg,'+(g.color||'#2d1554')+'33,#0a0514)">'+emoji+'</div>';
+    var badge=g.status?'<span class="sb-badge '+g.status+'">'+g.status+'</span>':'';
+    var lc=(g.links||[]).length;
+    return '<div class="sb-game'+(active?' active':'')+'" data-gid="'+g.id+'">'
+      +thumb+'<div class="sb-info"><div class="sb-name">'+esc(g.title)+'</div>'
+      +'<div class="sb-meta">'+lc+' link'+(lc!==1?'s':'')+(maxP(g)>0?' · $'+maxP(g).toFixed(2):'')+'</div></div>'
+      +badge+'</div>';
+  }
+
+  /* ── SELECT GAME ── */
+  function selectGame(g){
+    activeGame=g;
+    activeLink=null;
+    // Update sidebar highlight
+    document.querySelectorAll('.sb-game').forEach(function(el){
+      el.classList.toggle('active',el.dataset.gid===g.id);
+    });
+    // Update header
+    document.getElementById('npTitle').textContent=g.title;
+    document.getElementById('nowPlayingBar').style.display='flex';
+    // Build link picker
+    var links=g.links||[];
+    var lp=document.getElementById('linkPicker');
+    var chips=document.getElementById('lpChips');
+    if(!links.length){
+      lp.style.display='none';
+      showState('no-links',g);
+      document.getElementById('btnOpenNew').style.display='none';
+      document.getElementById('sellFloat').classList.remove('show');
+      return;
+    }
+    lp.style.display='flex';
+    chips.innerHTML=links.map(function(l,i){
+      var d=dom(l.url);
+      var fav=d?'<div class="lp-fav"><img src="https://www.google.com/s2/favicons?domain='+d+'&sz=32" alt="" onerror="this.style.display=\'none\'"></div>':'';
+      var price=l.price?'<span class="lp-chip-price">$'+esc(l.price)+'</span>':'';
+      return '<div class="lp-chip'+(i===0?' active':'')+'" data-idx="'+i+'" data-gid="'+g.id+'">'
+        +fav+'<span class="lp-chip-label">'+esc(l.label||d||'Link '+(i+1))+'</span>'+price+'</div>';
+    }).join('');
+    chips.querySelectorAll('.lp-chip').forEach(function(chip){
+      chip.addEventListener('click',function(){
+        chips.querySelectorAll('.lp-chip').forEach(function(c){c.classList.remove('active');});
+        this.classList.add('active');
+        loadLink(g,parseInt(this.dataset.idx));
+      });
+    });
+    // Load first link
+    loadLink(g,0);
+  }
+
+  /* ── LOAD LINK IN IFRAME ── */
+  function loadLink(g,idx){
+    var l=(g.links||[])[idx];
+    if(!l)return;
+    activeLink=l;
+    activeIdx=idx;
+    document.getElementById('npLink').textContent=l.url;
+    document.getElementById('btnOpenNew').style.display='block';
+    document.getElementById('btnOpenNew').onclick=function(){window.open(l.url,'_blank','noopener');};
+    document.getElementById('brOpen').onclick=function(){window.open(l.url,'_blank','noopener');};
+    document.getElementById('sellFloat').classList.add('show');
+
+    // Clear and rebuild iframe area
+    var wrap=document.getElementById('iframeWrap');
+    // Remove existing iframe/state
+    var old=wrap.querySelector('iframe');
+    var oldState=wrap.querySelector('.player-state');
+    if(old)old.remove();
+    if(oldState)oldState.remove();
+    document.getElementById('blockedRibbon').classList.remove('show');
+
+    var iframe=document.createElement('iframe');
+    iframe.src=l.url;
+    iframe.setAttribute('allowfullscreen','');
+    iframe.setAttribute('allow','autoplay; fullscreen; clipboard-write');
+    iframe.setAttribute('sandbox','allow-scripts allow-same-origin allow-popups allow-forms allow-pointer-lock allow-top-navigation-by-user-activation');
+    iframe.style.width='100%';
+    iframe.style.height='100%';
+    iframe.style.border='none';
+    iframe.style.display='block';
+
+    // Detect load error / X-Frame-Options block
+    var loadTimer=setTimeout(function(){
+      // If it loaded without error we wouldn't know from same-origin policy
+      // Just show blocked ribbon as a hint for common sites that block iframes
+      document.getElementById('blockedRibbon').classList.add('show');
+    },6000);
+
+    iframe.addEventListener('load',function(){
+      clearTimeout(loadTimer);
+      // Try to detect blank/blocked — if contentDocument is null, blocked
+      try{
+        var cd=iframe.contentDocument||iframe.contentWindow.document;
+        if(!cd||cd.body===null){
+          document.getElementById('blockedRibbon').classList.add('show');
+        }
+      }catch(e){
+        // Cross-origin — normal, page loaded fine
+        clearTimeout(loadTimer);
+        document.getElementById('blockedRibbon').classList.remove('show');
+      }
+    });
+    iframe.addEventListener('error',function(){
+      document.getElementById('blockedRibbon').classList.add('show');
+    });
+
+    wrap.appendChild(iframe);
+  }
+
+  /* ── STATES ── */
+  function showState(type, g){
+    var wrap=document.getElementById('iframeWrap');
+    var old=wrap.querySelector('iframe');
+    var oldState=wrap.querySelector('.player-state');
+    if(old)old.remove();
+    if(oldState)oldState.remove();
+    document.getElementById('blockedRibbon').classList.remove('show');
+    var div=document.createElement('div');
+    div.className='player-state';
+    if(type==='no-links'){
+      div.innerHTML='<div class="ps-icon">🔗</div>'
+        +'<div class="ps-title">No links for '+esc(g.title)+'</div>'
+        +'<div class="ps-sub">This game has no links yet. Add some in <a href="game-vault.html">Game Vault</a>.</div>'
+        +'<button class="ps-btn" onclick="window.location.href=\'game-vault.html\'">Open Game Vault</button>';
+    }
+    wrap.appendChild(div);
+  }
+
+  /* ── SELL BUTTON ── */
+  document.getElementById('sellFloat').addEventListener('click',function(){
+    if(!activeGame||!activeLink)return;
+    activeLink.soldCount=(activeLink.soldCount||0)+1;
+    var p=parseFloat(activeLink.price)||0;
+    save();
+    toast('Sale #'+activeLink.soldCount+' — +$'+p.toFixed(2)+' for '+activeGame.title);
+  });
+
+  /* ── SIDEBAR TOGGLE ── */
+  document.getElementById('btnSbToggle').addEventListener('click',function(){
+    sidebarOpen=!sidebarOpen;
+    var sb=document.getElementById('sidebar');
+    sb.classList.toggle('collapsed',!sidebarOpen);
+    this.textContent=sidebarOpen?'☰ Library':'☰ Library';
+  });
+
+  /* ── SEARCH / FILTER ── */
+  document.getElementById('sbSearch').addEventListener('input',function(){sbQuery=this.value;renderSidebar();});
+  document.querySelectorAll('.sb-f').forEach(function(btn){
+    btn.addEventListener('click',function(){
+      sbFilter=this.dataset.f;
+      document.querySelectorAll('.sb-f').forEach(function(b){b.classList.remove('active');});
+      this.classList.add('active');
+      renderSidebar();
+    });
+  });
+
+  /* ── KEYBOARD ── */
+  document.addEventListener('keydown',function(e){
+    if(e.target.tagName==='INPUT'||e.target.tagName==='TEXTAREA')return;
+    if(e.key==='ArrowUp'||e.key==='ArrowDown'){
+      if(!activeGame)return;
+      var filtered=games.filter(function(g){return(g.links||[]).length>0;});
+      var ci=filtered.indexOf(activeGame);
+      var ni=e.key==='ArrowUp'?ci-1:ci+1;
+      if(ni>=0&&ni<filtered.length)selectGame(filtered[ni]);
+    }
+    if((e.key==='ArrowLeft'||e.key==='ArrowRight')&&activeGame){
+      var links=activeGame.links||[];
+      var ni=e.key==='ArrowLeft'?activeIdx-1:activeIdx+1;
+      if(ni>=0&&ni<links.length){
+        var chips=document.getElementById('lpChips').querySelectorAll('.lp-chip');
+        chips.forEach(function(c){c.classList.remove('active');});
+        if(chips[ni])chips[ni].classList.add('active');
+        loadLink(activeGame,ni);
+      }
+    }
+  });
+
+  /* ── INIT ── */
+  load();
+
+  // Storage change listener (if Game Vault is open in another tab)
+  window.addEventListener('storage',function(e){
+    if(e.key===GK){
+      try{if(e.newValue)games=JSON.parse(e.newValue);}catch(ex){}
+      renderSidebar();
+    }
+  });
+})();
+</script>
+</body>
+</html>
