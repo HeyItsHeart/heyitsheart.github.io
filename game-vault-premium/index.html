@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Game Vault Premium — Every Game. One Price.</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700;1,900&family=DM+Sans:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --bg:#05030d;--bg2:#09061a;--bg3:#0d0920;
+  --gold:#f59e0b;--gold2:#fbbf24;--gold3:#fde68a;
+  --purple:#7c3aed;--accent:#c4b5fd;
+  --green:#34d399;--text:#f0eaff;
+  --muted:rgba(240,234,255,0.45);--dim:rgba(240,234,255,0.12);
+  --border:rgba(245,158,11,0.15);--border2:rgba(245,158,11,0.28);
+}
+html{scroll-behavior:smooth;}
+body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;overflow-x:hidden;}
+::-webkit-scrollbar{width:4px;}::-webkit-scrollbar-track{background:var(--bg);}::-webkit-scrollbar-thumb{background:#2d1a00;border-radius:2px;}
+body::before{content:'';position:fixed;inset:0;z-index:1000;pointer-events:none;opacity:0.03;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");}
+
+/* NAV */
+nav{position:fixed;top:0;left:0;right:0;z-index:100;padding:18px 60px;display:flex;align-items:center;justify-content:space-between;transition:backdrop-filter 0.3s,background 0.3s;}
+nav.scrolled{backdrop-filter:blur(20px);background:rgba(5,3,13,0.9);border-bottom:1px solid var(--border);}
+.nav-logo{font-family:'Playfair Display',serif;font-size:18px;font-weight:900;color:var(--gold2);text-shadow:0 0 30px rgba(251,191,36,0.3);text-decoration:none;}
+.nav-cta{padding:9px 22px;background:linear-gradient(135deg,var(--gold),var(--gold2));border:none;border-radius:8px;color:#0d0900;font-size:13px;font-weight:800;font-family:'DM Sans',sans-serif;cursor:pointer;text-decoration:none;letter-spacing:0.03em;transition:transform 0.15s,box-shadow 0.15s;box-shadow:0 4px 20px rgba(245,158,11,0.3);}
+.nav-cta:hover{transform:translateY(-1px);box-shadow:0 8px 32px rgba(245,158,11,0.45);}
+@media(max-width:700px){nav{padding:16px 24px;}}
+
+/* HERO */
+#hero{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:120px 40px 80px;position:relative;overflow:hidden;}
+.hero-glow{position:absolute;top:20%;left:50%;transform:translateX(-50%);width:800px;height:800px;background:radial-gradient(circle,rgba(245,158,11,0.08) 0%,rgba(124,58,237,0.05) 40%,transparent 70%);pointer-events:none;}
+.hero-grid{position:absolute;inset:0;background-image:linear-gradient(rgba(245,158,11,0.03) 1px,transparent 1px),linear-gradient(90deg,rgba(245,158,11,0.03) 1px,transparent 1px);background-size:72px 72px;mask-image:radial-gradient(ellipse 80% 80% at 50% 50%,rgba(0,0,0,0.4) 0%,transparent 100%);}
+.hero-eyebrow{font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:0.25em;text-transform:uppercase;color:var(--gold);margin-bottom:20px;opacity:0;animation:fadeUp 0.6s 0.1s ease both;}
+.hero-h1{font-family:'Playfair Display',serif;font-size:clamp(48px,8vw,100px);font-weight:900;line-height:0.92;letter-spacing:-0.02em;color:#fff;margin-bottom:24px;opacity:0;animation:fadeUp 0.6s 0.2s ease both;}
+.hero-h1 em{font-style:italic;background:linear-gradient(135deg,var(--gold3),var(--gold2),var(--gold));-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+.hero-sub{font-size:18px;font-weight:300;color:var(--muted);line-height:1.75;max-width:540px;margin:0 auto 44px;opacity:0;animation:fadeUp 0.6s 0.3s ease both;}
+.hero-sub strong{color:var(--text);font-weight:600;}
+.hero-cta-group{display:flex;flex-direction:column;align-items:center;gap:16px;opacity:0;animation:fadeUp 0.6s 0.4s ease both;}
+.btn-gold{display:inline-flex;align-items:center;gap:10px;padding:18px 44px;background:linear-gradient(135deg,var(--gold),var(--gold2));border:none;border-radius:12px;color:#0d0900;font-size:16px;font-weight:800;font-family:'DM Sans',sans-serif;text-decoration:none;cursor:pointer;box-shadow:0 8px 40px rgba(245,158,11,0.4);transition:transform 0.15s,box-shadow 0.15s;letter-spacing:0.02em;}
+.btn-gold:hover{transform:translateY(-2px);box-shadow:0 14px 56px rgba(245,158,11,0.55);}
+.hero-note{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--dim);letter-spacing:0.05em;}
+.hero-scroll{position:absolute;bottom:40px;left:50%;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;gap:8px;opacity:0;animation:fadeIn 1s 1s ease both;}
+.hero-scroll-txt{font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:0.15em;text-transform:uppercase;color:var(--dim);}
+.hero-scroll-line{width:1px;height:40px;background:linear-gradient(to bottom,var(--dim),transparent);}
+
+/* GAME COUNT BANNER */
+.count-banner{background:linear-gradient(90deg,transparent,rgba(245,158,11,0.06),transparent);border-top:1px solid var(--border);border-bottom:1px solid var(--border);padding:28px 60px;display:flex;align-items:center;justify-content:center;gap:60px;flex-wrap:wrap;}
+@media(max-width:700px){.count-banner{padding:24px;gap:28px;}}
+.cb-stat{text-align:center;}
+.cb-val{font-family:'Playfair Display',serif;font-size:44px;font-weight:900;color:var(--gold2);line-height:1;}
+.cb-lbl{font-size:12px;color:var(--muted);font-family:'IBM Plex Mono',monospace;letter-spacing:0.08em;text-transform:uppercase;margin-top:4px;}
+.cb-sep{width:1px;height:60px;background:var(--border);}
+@media(max-width:700px){.cb-sep{display:none;}}
+
+/* GAME PREVIEW WALL */
+#preview{padding:80px 0;overflow:hidden;position:relative;}
+#preview::before{content:'';position:absolute;left:0;top:0;bottom:0;width:200px;background:linear-gradient(to right,var(--bg),transparent);z-index:2;pointer-events:none;}
+#preview::after{content:'';position:absolute;right:0;top:0;bottom:0;width:200px;background:linear-gradient(to left,var(--bg),transparent);z-index:2;pointer-events:none;}
+.preview-label{text-align:center;font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:0.2em;text-transform:uppercase;color:var(--gold);margin-bottom:32px;}
+.scroll-track{display:flex;gap:14px;width:max-content;animation:scrollLeft 40s linear infinite;}
+.scroll-track:hover{animation-play-state:paused;}
+.scroll-row{display:flex;gap:14px;}
+.preview-card{width:120px;flex-shrink:0;border-radius:10px;overflow:hidden;border:1px solid rgba(245,158,11,0.1);background:var(--bg2);opacity:0.7;transition:opacity 0.2s,border-color 0.2s;}
+.preview-card:hover{opacity:1;border-color:rgba(245,158,11,0.35);}
+.preview-card-art{aspect-ratio:3/4;background:#1a1005;display:flex;align-items:center;justify-content:center;font-size:26px;overflow:hidden;}
+.preview-card-art img{width:100%;height:100%;object-fit:cover;display:block;}
+.preview-card-name{font-size:9px;font-weight:700;color:var(--muted);padding:6px 7px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+
+/* PRICING */
+#pricing{padding:100px 60px;max-width:1000px;margin:0 auto;text-align:center;}
+@media(max-width:700px){#pricing{padding:80px 24px;}}
+.pricing-eyebrow{font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:0.2em;text-transform:uppercase;color:var(--gold);margin-bottom:16px;}
+.pricing-h2{font-family:'Playfair Display',serif;font-size:clamp(36px,5vw,60px);font-weight:900;color:#fff;margin-bottom:16px;}
+.pricing-h2 em{font-style:italic;color:var(--gold2);}
+.pricing-sub{font-size:16px;color:var(--muted);line-height:1.7;max-width:480px;margin:0 auto 56px;font-weight:300;}
+.pricing-cards{display:grid;grid-template-columns:1fr 1fr;gap:20px;max-width:720px;margin:0 auto;}
+@media(max-width:700px){.pricing-cards{grid-template-columns:1fr;}}
+.price-card{border-radius:20px;padding:36px 32px;border:1px solid var(--border);background:var(--bg2);text-align:left;position:relative;transition:border-color 0.2s,transform 0.2s;}
+.price-card:hover{transform:translateY(-3px);}
+.price-card.featured{border-color:var(--gold);background:linear-gradient(145deg,#1a1005,#0d0920);box-shadow:0 0 0 1px rgba(245,158,11,0.2),0 24px 80px rgba(245,158,11,0.12);}
+.pc-badge{position:absolute;top:-12px;left:50%;transform:translateX(-50%);background:linear-gradient(135deg,var(--gold),var(--gold2));color:#0d0900;font-size:10px;font-weight:800;letter-spacing:0.1em;text-transform:uppercase;padding:4px 16px;border-radius:20px;white-space:nowrap;}
+.pc-tier{font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:0.15em;text-transform:uppercase;color:var(--gold);margin-bottom:10px;}
+.pc-name{font-family:'Playfair Display',serif;font-size:26px;font-weight:700;color:#fff;margin-bottom:6px;}
+.pc-price{display:flex;align-items:baseline;gap:4px;margin-bottom:6px;}
+.pc-amount{font-family:'Playfair Display',serif;font-size:52px;font-weight:900;color:var(--gold2);line-height:1;}
+.pc-period{font-size:14px;color:var(--muted);}
+.pc-desc{font-size:13px;color:var(--muted);line-height:1.6;margin-bottom:24px;font-weight:300;}
+.pc-features{display:flex;flex-direction:column;gap:10px;margin-bottom:28px;}
+.pc-feat{display:flex;align-items:center;gap:10px;font-size:13px;color:var(--text);}
+.pc-feat::before{content:'✓';color:var(--gold);font-weight:800;flex-shrink:0;font-family:'IBM Plex Mono',monospace;}
+.btn-pc{width:100%;padding:14px;border-radius:10px;font-size:14px;font-weight:700;font-family:'DM Sans',sans-serif;cursor:pointer;text-align:center;text-decoration:none;display:block;transition:all 0.15s;letter-spacing:0.02em;}
+.btn-pc.gold{background:linear-gradient(135deg,var(--gold),var(--gold2));color:#0d0900;border:none;box-shadow:0 6px 24px rgba(245,158,11,0.35);}
+.btn-pc.gold:hover{transform:translateY(-1px);box-shadow:0 10px 36px rgba(245,158,11,0.5);}
+.btn-pc.outline{background:transparent;border:1px solid var(--border2);color:var(--gold2);}
+.btn-pc.outline:hover{background:rgba(245,158,11,0.08);}
+
+/* WHAT YOU GET */
+#features{padding:100px 60px;max-width:1100px;margin:0 auto;}
+@media(max-width:700px){#features{padding:80px 24px;}}
+.features-hdr{text-align:center;margin-bottom:56px;}
+.features-hdr h2{font-family:'Playfair Display',serif;font-size:clamp(32px,4vw,52px);font-weight:900;color:#fff;margin-bottom:14px;}
+.features-hdr h2 em{font-style:italic;color:var(--gold2);}
+.features-hdr p{font-size:15px;color:var(--muted);max-width:480px;margin:0 auto;line-height:1.7;font-weight:300;}
+.features-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px;}
+.feat-card{padding:28px;border:1px solid var(--border);border-radius:14px;background:var(--bg2);transition:border-color 0.2s,transform 0.2s;}
+.feat-card:hover{border-color:var(--border2);transform:translateY(-2px);}
+.feat-icon{font-size:28px;margin-bottom:14px;}
+.feat-title{font-size:16px;font-weight:700;color:#fff;margin-bottom:8px;}
+.feat-desc{font-size:13px;color:var(--muted);line-height:1.65;font-weight:300;}
+
+/* GAME LIST PREVIEW */
+#games-preview{padding:60px;background:var(--bg2);border-top:1px solid var(--border);border-bottom:1px solid var(--border);}
+@media(max-width:700px){#games-preview{padding:48px 24px;}}
+#games-preview h2{font-family:'Playfair Display',serif;font-size:clamp(28px,4vw,44px);font-weight:900;color:#fff;margin-bottom:8px;text-align:center;}
+#games-preview h2 em{font-style:italic;color:var(--gold2);}
+#games-preview p{text-align:center;color:var(--muted);font-size:14px;margin-bottom:36px;}
+.game-list-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:8px;max-height:480px;overflow:hidden;position:relative;}
+.game-list-grid::after{content:'';position:absolute;bottom:0;left:0;right:0;height:200px;background:linear-gradient(to top,var(--bg2) 0%,transparent 100%);}
+.gl-item{display:flex;align-items:center;gap:10px;padding:8px 12px;border-radius:8px;background:rgba(255,255,255,0.02);border:1px solid rgba(245,158,11,0.06);}
+.gl-thumb{width:28px;height:36px;border-radius:4px;overflow:hidden;flex-shrink:0;background:#1a1005;display:flex;align-items:center;justify-content:center;font-size:14px;}
+.gl-thumb img{width:100%;height:100%;object-fit:cover;display:block;}
+.gl-title{font-size:12px;font-weight:600;color:var(--accent);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.game-list-cta{text-align:center;margin-top:32px;}
+
+/* CTA SECTION */
+#cta{padding:120px 60px;text-align:center;position:relative;overflow:hidden;}
+@media(max-width:700px){#cta{padding:80px 24px;}}
+#cta::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 70% 60% at 50% 50%,rgba(245,158,11,0.07) 0%,transparent 70%);}
+.cta-inner{position:relative;z-index:1;}
+.cta-h2{font-family:'Playfair Display',serif;font-size:clamp(40px,6vw,80px);font-weight:900;line-height:0.95;color:#fff;margin-bottom:20px;}
+.cta-h2 em{font-style:italic;color:var(--gold2);}
+.cta-sub{font-size:16px;color:var(--muted);max-width:460px;margin:0 auto 40px;line-height:1.7;font-weight:300;}
+
+/* FOOTER */
+footer{border-top:1px solid var(--border);padding:28px 60px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;}
+@media(max-width:700px){footer{padding:24px;}}
+.footer-logo{font-family:'Playfair Display',serif;font-size:15px;font-weight:700;color:var(--gold);}
+.footer-mono{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--dim);}
+
+.reveal{opacity:0;transform:translateY(20px);transition:opacity 0.65s ease,transform 0.65s ease;}
+.reveal.visible{opacity:1;transform:translateY(0);}
+.rd1{transition-delay:0.1s;}.rd2{transition-delay:0.2s;}.rd3{transition-delay:0.3s;}
+@keyframes fadeUp{from{opacity:0;transform:translateY(16px);}to{opacity:1;transform:translateY(0);}}
+@keyframes fadeIn{from{opacity:0;}to{opacity:1;}}
+@keyframes scrollLeft{from{transform:translateX(0);}to{transform:translateX(-50%);}}
+</style>
+</head>
+<body>
+
+<nav id="nav">
+  <a href="#" class="nav-logo">🎮 Game Vault Premium</a>
+  <a href="#pricing" class="nav-cta">Get Access →</a>
+</nav>
+
+<section id="hero">
+  <div class="hero-glow"></div>
+  <div class="hero-grid"></div>
+  <div class="hero-eyebrow">The Ultimate Game Collection</div>
+  <h1 class="hero-h1">Every game.<br><em>One price.</em></h1>
+  <p class="hero-sub"><strong>61 browser-playable games</strong> — no downloads, no installs, no waiting. Play anything, anywhere, instantly. New games added regularly.</p>
+  <div class="hero-cta-group">
+    <a href="#pricing" class="btn-gold">⚡ Get Full Access</a>
+    <div class="hero-note">Starting at $10/month · Cancel anytime</div>
+  </div>
+  <div class="hero-scroll">
+    <span class="hero-scroll-txt">Scroll</span>
+    <div class="hero-scroll-line"></div>
+  </div>
+</section>
+
+<div class="count-banner">
+  <div class="cb-stat"><div class="cb-val">61</div><div class="cb-lbl">Games</div></div>
+  <div class="cb-sep"></div>
+  <div class="cb-stat"><div class="cb-val">0</div><div class="cb-lbl">Downloads</div></div>
+  <div class="cb-sep"></div>
+  <div class="cb-stat"><div class="cb-val">∞</div><div class="cb-lbl">Devices</div></div>
+  <div class="cb-sep"></div>
+  <div class="cb-stat"><div class="cb-val">24/7</div><div class="cb-lbl">Access</div></div>
+</div>
+
+<section id="preview">
+  <div class="preview-label">🎮 Your entire library — always growing</div>
+  <div class="scroll-track" id="scrollTrack"></div>
+</section>
+
+<section id="features">
+  <div class="features-hdr reveal">
+    <h2>Why go <em>Premium?</em></h2>
+    <p>This isn't a game store. It's your personal arcade — every game, every device, always.</p>
+  </div>
+  <div class="features-grid">
+    <div class="feat-card reveal rd1"><div class="feat-icon">⚡</div><div class="feat-title">Instant access, no installs</div><div class="feat-desc">Every game runs directly in your browser. Click and play — no setup, no downloads, no waiting.</div></div>
+    <div class="feat-card reveal rd2"><div class="feat-icon">🔄</div><div class="feat-title">Syncs across all devices</div><div class="feat-desc">Play on your laptop, then pick up on your phone. Your library is always up to date everywhere.</div></div>
+    <div class="feat-card reveal rd3"><div class="feat-icon">📦</div><div class="feat-title">New games added regularly</div><div class="feat-desc">The collection keeps growing. Every new title is automatically available to subscribers at no extra cost.</div></div>
+    <div class="feat-card reveal rd1"><div class="feat-icon">🎮</div><div class="feat-title">Every genre covered</div><div class="feat-desc">Horror, platformers, RPGs, survival, puzzles, classic consoles — there's something for every mood.</div></div>
+    <div class="feat-card reveal rd2"><div class="feat-icon">🔒</div><div class="feat-title">Private subscriber library</div><div class="feat-desc">Your own exclusive access page. Not public, not shared — just yours for the duration of your subscription.</div></div>
+    <div class="feat-card reveal rd3"><div class="feat-icon">💬</div><div class="feat-title">Direct support</div><div class="feat-desc">Game not working? Need help? Reach out directly and get a real response, not a bot.</div></div>
+  </div>
+</section>
+
+<section id="games-preview">
+  <h2>What's <em>included</em></h2>
+  <p>61 games and counting — here's a taste of what's in the collection.</p>
+  <div class="game-list-grid" id="gameListGrid"></div>
+  <div class="game-list-cta">
+    <a href="#pricing" class="btn-gold" style="display:inline-flex;padding:14px 36px;font-size:14px;">Get Access to See Everything →</a>
+  </div>
+</section>
+
+<section id="pricing">
+  <div class="pricing-eyebrow reveal">Simple pricing</div>
+  <h2 class="pricing-h2 reveal">Pick your <em>plan.</em></h2>
+  <p class="pricing-sub reveal">Both plans include every single game. The difference is just the commitment.</p>
+  <div class="pricing-cards reveal">
+    <div class="price-card">
+      <div class="pc-tier">Monthly</div>
+      <div class="pc-name">Basic Access</div>
+      <div class="pc-price"><span class="pc-amount">$15</span><span class="pc-period">/month</span></div>
+      <div class="pc-desc">Full access to all 61 games, paid month to month. Cancel whenever.</div>
+      <div class="pc-features">
+        <div class="pc-feat">All 61 browser games</div>
+        <div class="pc-feat">Works on any device</div>
+        <div class="pc-feat">New games included free</div>
+        <div class="pc-feat">Direct support</div>
+      </div>
+      <a href="mailto:?subject=Game Vault Premium - Monthly&body=Hi! I'd like to subscribe to Game Vault Premium for $15/month. Please let me know how to get started!" class="btn-pc outline">Get Monthly Access</a>
+    </div>
+    <div class="price-card featured">
+      <div class="pc-badge">Best Value</div>
+      <div class="pc-tier">Monthly — Save More</div>
+      <div class="pc-name">Premium Access</div>
+      <div class="pc-price"><span class="pc-amount">$10</span><span class="pc-period">/month</span></div>
+      <div class="pc-desc">Same full access, better deal when you commit to 3 months upfront.</div>
+      <div class="pc-features">
+        <div class="pc-feat">All 61 browser games</div>
+        <div class="pc-feat">Works on any device</div>
+        <div class="pc-feat">New games included free</div>
+        <div class="pc-feat">Priority support</div>
+        <div class="pc-feat">Early access to new titles</div>
+      </div>
+      <a href="mailto:?subject=Game Vault Premium - 3 Month Plan&body=Hi! I'd like to subscribe to Game Vault Premium for $10/month (3 months). Please let me know how to get started!" class="btn-pc gold">Get Premium Access</a>
+    </div>
+  </div>
+</section>
+
+<section id="cta">
+  <div class="cta-inner reveal">
+    <h2 class="cta-h2">Ready to play<br><em>everything?</em></h2>
+    <p class="cta-sub">61 games. Zero installs. One price. Your library is waiting.</p>
+    <a href="#pricing" class="btn-gold">⚡ Start Playing Today</a>
+  </div>
+</section>
+
+<footer>
+  <div class="footer-logo">🎮 Game Vault Premium</div>
+  <div class="footer-mono">by HeyItsHeart · heyitsheart.github.io</div>
+</footer>
+
+<script>
+// Nav scroll
+window.addEventListener('scroll',function(){document.getElementById('nav').classList.toggle('scrolled',window.scrollY>40);},{passive:true});
+
+// Scroll reveal
+var obs=new IntersectionObserver(function(entries){entries.forEach(function(e){if(e.isIntersecting)e.target.classList.add('visible');});},{threshold:0.1,rootMargin:'0px 0px -30px 0px'});
+document.querySelectorAll('.reveal').forEach(function(el){obs.observe(el);});
+
+// Game data for preview wall + list
+var GAMES_URL='games-data.json';
+fetch(GAMES_URL).then(function(r){return r.json();}).then(function(games){
+  buildScrollWall(games);
+  buildGameList(games);
+}).catch(function(){
+  // fallback static list
+  var fallback=[
+    {title:'Hollow Knight',cover:'https://images.launchbox-app.com//a3c8f8f4-4147-4f84-a5af-620557c1ea98.jpg'},
+    {title:'Sonic Mania',cover:'https://images.launchbox-app.com//d2ce16d5-90ca-49f4-9000-70da8cbba374.jpg'},
+    {title:'Cuphead',cover:'https://images.launchbox-app.com//c738bc45-ecbf-41d4-9467-e2ddf7f9b732.png'},
+    {title:'Portal',cover:''},
+    {title:'Celeste',cover:'https://images.launchbox-app.com//9f546676-2a2f-4744-b488-8a31e2a0f9cc.jpg'},
+  ];
+  buildScrollWall(fallback);
+  buildGameList(fallback);
+});
+
+function buildScrollWall(games){
+  var EMOJIS=['🎮','⚔️','🏰','🚀','🧙','🐉','👾','🎯'];
+  // double for seamless loop
+  var doubled=games.concat(games);
+  var html=doubled.map(function(g,i){
+    return'<div class="preview-card">'+
+      '<div class="preview-card-art">'+(g.cover?'<img src="'+g.cover+'" alt="" loading="lazy" onerror="this.style.display=\'none\'">':EMOJIS[i%EMOJIS.length])+'</div>'+
+      '<div class="preview-card-name">'+g.title+'</div>'+
+    '</div>';
+  }).join('');
+  document.getElementById('scrollTrack').innerHTML=html;
+}
+
+function buildGameList(games){
+  var EMOJIS=['🎮','⚔️','🏰','🚀','🧙','🐉','👾','🎯','🌊','🔫'];
+  document.getElementById('gameListGrid').innerHTML=games.map(function(g,i){
+    return'<div class="gl-item">'+
+      '<div class="gl-thumb">'+(g.cover?'<img src="'+g.cover+'" alt="" loading="lazy" onerror="this.style.display=\'none\'">':EMOJIS[i%EMOJIS.length])+'</div>'+
+      '<div class="gl-title">'+g.title+'</div>'+
+    '</div>';
+  }).join('');
+}
+</script>
+</body>
+</html>
