@@ -8,24 +8,14 @@
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
 :root{
-  --bg:#06040f;
-  --bg2:#0a0718;
-  --purple:#7c3aed;
-  --purple2:#9333ea;
-  --accent:#c4b5fd;
-  --green:#34d399;
-  --gold:#fbbf24;
-  --text:#e9e0ff;
-  --muted:rgba(196,181,253,0.45);
-  --dim:rgba(196,181,253,0.15);
-  --border:rgba(124,58,237,0.15);
+  --bg:#06040f;--bg2:#0a0718;--purple:#7c3aed;--purple2:#9333ea;--accent:#c4b5fd;
+  --green:#34d399;--gold:#fbbf24;--gold2:#f59e0b;
+  --text:#e9e0ff;--muted:rgba(196,181,253,0.45);--dim:rgba(196,181,253,0.15);--border:rgba(124,58,237,0.15);
 }
 html{scroll-behavior:smooth;}
 body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;overflow-x:hidden;}
 ::-webkit-scrollbar{width:4px;}::-webkit-scrollbar-track{background:var(--bg);}::-webkit-scrollbar-thumb{background:#3b1f6b;border-radius:2px;}
 body::before{content:'';position:fixed;inset:0;z-index:1000;pointer-events:none;opacity:0.025;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");}
-
-/* NAV */
 nav{position:fixed;top:0;left:0;right:0;z-index:100;padding:20px 60px;display:flex;align-items:center;justify-content:space-between;background:linear-gradient(to bottom,rgba(6,4,15,0.9) 0%,transparent 100%);transition:backdrop-filter 0.3s,background 0.3s;}
 nav.scrolled{backdrop-filter:blur(20px);background:rgba(6,4,15,0.88);}
 .nav-logo{font-family:'Playfair Display',serif;font-size:18px;font-weight:900;color:var(--accent);text-decoration:none;}
@@ -35,8 +25,6 @@ nav.scrolled{backdrop-filter:blur(20px);background:rgba(6,4,15,0.88);}
 .nav-cta{padding:8px 20px;border:1px solid var(--border);border-radius:8px;color:var(--accent)!important;background:rgba(124,58,237,0.06);transition:background 0.2s,border-color 0.2s!important;}
 .nav-cta:hover{background:rgba(124,58,237,0.15)!important;border-color:rgba(124,58,237,0.35)!important;}
 @media(max-width:700px){nav{padding:16px 24px;}.nav-links a:not(.nav-cta){display:none;}}
-
-/* HERO */
 #hero{position:relative;min-height:100vh;display:flex;flex-direction:column;justify-content:flex-end;padding:0 60px 100px;overflow:hidden;}
 @media(max-width:700px){#hero{padding:0 24px 80px;}}
 .hero-bg{position:absolute;inset:0;background:radial-gradient(ellipse 80% 60% at 70% 40%,rgba(124,58,237,0.12) 0%,transparent 70%),radial-gradient(ellipse 50% 50% at 20% 80%,rgba(147,51,234,0.08) 0%,transparent 60%);}
@@ -52,22 +40,18 @@ nav.scrolled{backdrop-filter:blur(20px);background:rgba(6,4,15,0.88);}
 .hero-actions{display:flex;gap:14px;flex-wrap:wrap;opacity:0;animation:fadeUp 0.7s 0.5s ease both;}
 .hero-scroll-hint{position:absolute;bottom:40px;right:60px;font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:0.15em;text-transform:uppercase;color:var(--dim);display:flex;flex-direction:column;align-items:center;gap:8px;opacity:0;animation:fadeIn 1s 1.2s ease both;}
 .scroll-line{width:1px;height:48px;background:linear-gradient(to bottom,var(--dim),transparent);}
-
-/* BUTTONS */
 .btn-primary{display:inline-flex;align-items:center;gap:10px;padding:14px 30px;background:linear-gradient(135deg,var(--purple),var(--purple2));border:none;border-radius:10px;color:#fff;font-size:14px;font-weight:700;font-family:'DM Sans',sans-serif;text-decoration:none;cursor:pointer;box-shadow:0 8px 32px rgba(124,58,237,0.4);transition:transform 0.15s,box-shadow 0.15s;letter-spacing:0.02em;}
 .btn-primary:hover{transform:translateY(-2px);box-shadow:0 14px 44px rgba(124,58,237,0.55);}
+.btn-gold{display:inline-flex;align-items:center;gap:10px;padding:14px 30px;background:linear-gradient(135deg,var(--gold2),var(--gold));border:none;border-radius:10px;color:#0d0900;font-size:14px;font-weight:800;font-family:'DM Sans',sans-serif;text-decoration:none;cursor:pointer;box-shadow:0 8px 32px rgba(245,158,11,0.35);transition:transform 0.15s,box-shadow 0.15s;letter-spacing:0.02em;}
+.btn-gold:hover{transform:translateY(-2px);box-shadow:0 14px 44px rgba(245,158,11,0.5);}
 .btn-ghost{display:inline-flex;align-items:center;gap:10px;padding:14px 28px;background:transparent;border:1px solid var(--border);border-radius:10px;color:var(--accent);font-size:14px;font-weight:600;font-family:'DM Sans',sans-serif;text-decoration:none;cursor:pointer;transition:background 0.15s,border-color 0.15s;letter-spacing:0.02em;}
 .btn-ghost:hover{background:rgba(124,58,237,0.1);border-color:rgba(124,58,237,0.4);}
-
-/* SECTION COMMON */
 section{padding:120px 60px;}
 @media(max-width:700px){section{padding:80px 24px;}}
 .sec-label{font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:0.2em;text-transform:uppercase;color:var(--purple2);margin-bottom:16px;display:flex;align-items:center;gap:8px;}
 .sec-label::before{content:'';display:block;width:24px;height:1px;background:var(--purple2);}
 .sec-h2{font-family:'Playfair Display',serif;font-size:clamp(36px,5vw,64px);font-weight:900;line-height:1;color:#f5f0ff;margin-bottom:20px;}
 .sec-h2 em{font-style:italic;color:var(--accent);}
-
-/* ABOUT */
 #about{display:grid;grid-template-columns:1fr 1fr;gap:80px;align-items:center;max-width:1200px;margin:0 auto;}
 @media(max-width:900px){#about{grid-template-columns:1fr;gap:40px;}}
 .about-text p{font-size:16px;color:var(--muted);line-height:1.85;margin-bottom:16px;font-weight:300;}
@@ -78,8 +62,6 @@ section{padding:120px 60px;}
 .about-stat:first-child{border-radius:14px 0 0 0;}.about-stat:nth-child(2){border-radius:0 14px 0 0;}.about-stat:nth-child(3){border-radius:0 0 0 14px;}.about-stat:last-child{border-radius:0 0 14px 0;}
 .as-val{font-family:'Playfair Display',serif;font-size:42px;font-weight:900;color:var(--accent);line-height:1;margin-bottom:6px;}
 .as-lbl{font-size:12px;color:var(--muted);letter-spacing:0.05em;}
-
-/* FEATURED */
 #featured{background:var(--bg2);padding:0;}
 .featured-inner{max-width:1200px;margin:0 auto;display:grid;grid-template-columns:1fr 1fr;min-height:600px;}
 @media(max-width:900px){.featured-inner{grid-template-columns:1fr;}}
@@ -105,7 +87,6 @@ section{padding:120px 60px;}
 .gv-cb{padding:5px 6px;}
 .gv-ct{font-size:7px;font-weight:700;color:#c4b5fd;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .gv-cm{font-size:6px;color:#4c1d95;font-family:'IBM Plex Mono',monospace;margin-top:1px;}
-
 .featured-info{padding:80px 60px;display:flex;flex-direction:column;justify-content:center;}
 @media(max-width:900px){.featured-info{padding:48px 28px;}}
 .featured-tag{display:inline-block;font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:0.15em;text-transform:uppercase;color:var(--purple2);background:rgba(124,58,237,0.1);border:1px solid rgba(124,58,237,0.2);border-radius:5px;padding:4px 12px;margin-bottom:20px;}
@@ -115,8 +96,6 @@ section{padding:120px 60px;}
 .feature-pills{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:32px;}
 .feature-pill{font-size:11px;font-weight:600;padding:5px 12px;border-radius:6px;background:rgba(124,58,237,0.08);border:1px solid rgba(124,58,237,0.18);color:var(--accent);font-family:'IBM Plex Mono',monospace;}
 .featured-actions{display:flex;gap:12px;flex-wrap:wrap;}
-
-/* PROJECTS */
 #projects{max-width:1200px;margin:0 auto;}
 .projects-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:18px;margin-top:48px;}
 .project-card{border:1px solid var(--border);border-radius:16px;background:var(--bg2);overflow:hidden;transition:border-color 0.2s,transform 0.2s,box-shadow 0.2s;}
@@ -135,7 +114,13 @@ section{padding:120px 60px;}
 .pc-link:hover{color:#fff;}
 .pc-link-sep{width:1px;height:12px;background:var(--border);}
 
-/* SKILLS */
+/* SM3DAS FEATURED CARD */
+.project-card.mario-card{border-color:rgba(239,68,68,0.2);background:linear-gradient(145deg,#1a0505,#0d0718);}
+.project-card.mario-card:hover{border-color:rgba(239,68,68,0.5);box-shadow:0 20px 60px rgba(239,68,68,0.12);}
+.mario-stars{position:absolute;top:0;right:0;width:120px;height:120px;overflow:hidden;pointer-events:none;}
+.mario-stars::before{content:'⭐';position:absolute;top:16px;right:20px;font-size:28px;animation:starSpin 4s linear infinite;}
+@keyframes starSpin{0%{transform:rotate(0deg) scale(1);}50%{transform:rotate(180deg) scale(1.2);}100%{transform:rotate(360deg) scale(1);}}
+
 #skills{background:var(--bg2);border-top:1px solid var(--border);border-bottom:1px solid var(--border);}
 .skills-inner{max-width:1200px;margin:0 auto;}
 .skills-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:2px;margin-top:48px;}
@@ -144,9 +129,7 @@ section{padding:120px 60px;}
 .skill-icon{font-size:22px;}
 .skill-name{font-size:13px;font-weight:700;color:var(--text);}
 .skill-bar{height:3px;border-radius:2px;background:rgba(124,58,237,0.12);overflow:hidden;}
-.skill-fill{height:100%;border-radius:2px;background:linear-gradient(90deg,var(--purple),var(--accent));transition:width 1s ease;}
-
-/* PHILOSOPHY */
+.skill-fill{height:100%;border-radius:2px;background:linear-gradient(90deg,var(--purple),var(--accent));}
 #philosophy{max-width:900px;margin:0 auto;}
 .philo-quote{font-family:'Playfair Display',serif;font-size:clamp(20px,3vw,34px);font-weight:400;font-style:italic;color:rgba(196,181,253,0.65);line-height:1.6;border-left:3px solid var(--purple);padding-left:36px;margin:48px 0;}
 .philo-quote strong{color:#f5f0ff;font-weight:700;font-style:normal;}
@@ -156,8 +139,6 @@ section{padding:120px 60px;}
 .pp-num{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--purple2);letter-spacing:0.15em;margin-bottom:8px;}
 .pp-title{font-size:15px;font-weight:700;color:var(--text);margin-bottom:6px;}
 .pp-desc{font-size:13px;color:var(--muted);line-height:1.65;font-weight:300;}
-
-/* CONTACT */
 #contact{text-align:center;padding:120px 60px;position:relative;overflow:hidden;}
 #contact::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 60% 50% at 50% 50%,rgba(124,58,237,0.1) 0%,transparent 70%);}
 .contact-inner{position:relative;z-index:1;max-width:600px;margin:0 auto;}
@@ -165,14 +146,10 @@ section{padding:120px 60px;}
 .contact-h2 em{font-style:italic;color:var(--accent);}
 .contact-sub{font-size:16px;color:var(--muted);line-height:1.7;margin-bottom:40px;font-weight:300;}
 .contact-links{display:flex;gap:14px;justify-content:center;flex-wrap:wrap;}
-
-/* FOOTER */
 footer{border-top:1px solid var(--border);padding:28px 60px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;}
 @media(max-width:700px){footer{padding:24px;}}
 .footer-logo{font-family:'Playfair Display',serif;font-size:16px;font-weight:700;color:var(--muted);}
 .footer-mono{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--dim);letter-spacing:0.04em;}
-
-/* ANIMATIONS */
 .reveal{opacity:0;transform:translateY(22px);transition:opacity 0.7s ease,transform 0.7s ease;}
 .reveal.visible{opacity:1;transform:translateY(0);}
 .reveal-delay-1{transition-delay:0.1s;}.reveal-delay-2{transition-delay:0.2s;}.reveal-delay-3{transition-delay:0.3s;}
@@ -181,7 +158,6 @@ footer{border-top:1px solid var(--border);padding:28px 60px;display:flex;align-i
 </style>
 </head>
 <body>
-
 <nav id="nav">
   <a href="#" class="nav-logo">HeyItsHeart</a>
   <div class="nav-links">
@@ -191,25 +167,18 @@ footer{border-top:1px solid var(--border);padding:28px 60px;display:flex;align-i
     <a href="#contact" class="nav-cta">Get in Touch</a>
   </div>
 </nav>
-
 <div id="hero">
   <div class="hero-bg"></div>
   <div class="hero-grid"></div>
   <div class="hero-eyebrow">Browser Developer · Game Vault Creator</div>
-  <h1 class="hero-h1">
-    Building things<br>
-    <em class="line2">worth playing with.</em>
-  </h1>
-  <p class="hero-sub">
-    I'm <strong>HeyItsHeart</strong> — a developer who builds <em>fast, polished, no-install web apps</em> that actually get used. Specializing in browser-native tools, game experiences, and WebAssembly engine ports.
-  </p>
+  <h1 class="hero-h1">Building things<br><em class="line2">worth playing with.</em></h1>
+  <p class="hero-sub">I'm <strong>HeyItsHeart</strong> — a developer who builds <em>fast, polished, no-install web apps</em> that actually get used. Specializing in browser-native tools, game experiences, and WebAssembly engine ports.</p>
   <div class="hero-actions">
     <a href="#featured" class="btn-primary"><span>🎮</span> See Game Vault</a>
     <a href="https://github.com/heyitsheart" class="btn-ghost" target="_blank" rel="noopener"><span>↗</span> GitHub</a>
   </div>
   <div class="hero-scroll-hint"><span>Scroll</span><div class="scroll-line"></div></div>
 </div>
-
 <section>
   <div id="about">
     <div class="about-text reveal">
@@ -227,7 +196,6 @@ footer{border-top:1px solid var(--border);padding:28px 60px;display:flex;align-i
     </div>
   </div>
 </section>
-
 <div id="featured">
   <div class="featured-inner">
     <div class="featured-visual">
@@ -267,13 +235,12 @@ footer{border-top:1px solid var(--border);padding:28px 60px;display:flex;align-i
       </div>
       <div class="featured-actions">
         <a href="https://heyitsheart.github.io/game-vault/" class="btn-primary" target="_blank" rel="noopener">▶ Open Game Vault</a>
-        <a href="https://heyitsheart.github.io/game-vault-premium/" class="btn-primary" target="_blank" rel="noopener">Game Vault Premium</a>
+        <a href="https://heyitsheart.github.io/game-vault-premium/" class="btn-gold" target="_blank" rel="noopener">⭐ Game Vault Premium</a>
         <a href="https://github.com/heyitsheart/heyitsheart.github.io" class="btn-ghost" target="_blank" rel="noopener">Source ↗</a>
       </div>
     </div>
   </div>
 </div>
-
 <section>
   <div id="projects">
     <div class="reveal">
@@ -281,22 +248,46 @@ footer{border-top:1px solid var(--border);padding:28px 60px;display:flex;align-i
       <h2 class="sec-h2">Things I've<br><em>built &amp; shipped.</em></h2>
     </div>
     <div class="projects-grid">
-      <div class="project-card reveal reveal-delay-1">
+
+      <!-- SM3DAS -->
+      <div class="project-card mario-card reveal reveal-delay-1" style="position:relative;overflow:hidden;">
+        <div class="mario-stars"></div>
+        <div class="pc-header">
+          <div>
+            <div class="pc-icon">⭐</div>
+            <div class="pc-name" style="color:#fde68a;">Super Mario 3D All-Stars Web</div>
+          </div>
+          <span class="pc-status wip">In Dev</span>
+        </div>
+        <p class="pc-desc" style="color:rgba(253,230,138,0.5);">A complete web port of all three 3D Mario classics — Super Mario 64, Super Mario Sunshine, and Super Mario Galaxy — running directly in the browser. No download. No emulator. Just Mario.</p>
+        <div class="pc-tags">
+          <span class="pc-tag" style="border-color:rgba(239,68,68,0.2);color:rgba(252,165,165,0.7);">WebAssembly</span>
+          <span class="pc-tag" style="border-color:rgba(239,68,68,0.2);color:rgba(252,165,165,0.7);">SM64</span>
+          <span class="pc-tag" style="border-color:rgba(239,68,68,0.2);color:rgba(252,165,165,0.7);">Sunshine</span>
+          <span class="pc-tag" style="border-color:rgba(239,68,68,0.2);color:rgba(252,165,165,0.7);">Galaxy</span>
+        </div>
+        <div class="pc-footer" style="border-color:rgba(239,68,68,0.1);">
+          <a href="https://heyitsheart.github.io/sm3das/" class="pc-link" style="color:#fbbf24;" target="_blank">View Project ↗</a>
+        </div>
+      </div>
+
+      <div class="project-card reveal reveal-delay-2">
         <div class="pc-header"><div><div class="pc-icon">⚙️</div><div class="pc-name">WebEngine</div></div><span class="pc-status wip">In Dev</span></div>
         <p class="pc-desc">Porting classic 3D game engines to WebAssembly. Xash3D (GoldSrc / Half-Life) is live. Vortex — a Source Engine WASM port — is in active development targeting WebGPU.</p>
         <div class="pc-tags"><span class="pc-tag">WebAssembly</span><span class="pc-tag">Emscripten</span><span class="pc-tag">WebGPU</span><span class="pc-tag">C++</span></div>
         <div class="pc-footer"><a href="https://heyitsheart.github.io/webengine.html" class="pc-link" target="_blank">View Project ↗</a><div class="pc-link-sep"></div><a href="https://pixelsuft.github.io/hl/xash.html#150" class="pc-link" target="_blank">Play Xash3D ↗</a></div>
       </div>
-      <div class="project-card reveal reveal-delay-1">
+
+      <div class="project-card reveal reveal-delay-3">
         <div class="pc-header"><div><div class="pc-icon">🕹️</div><div class="pc-name">Vault Games</div></div><span class="pc-status live">Live</span></div>
         <p class="pc-desc">A companion browser game player that reads your Game Vault library and lets you launch and play any game directly in the browser. No downloads, no installs, no friction.</p>
         <div class="pc-tags"><span class="pc-tag">Browser Games</span><span class="pc-tag">Game Library</span><span class="pc-tag">localStorage</span></div>
         <div class="pc-footer"><a href="https://heyitsheart.github.io/vault-games.html" class="pc-link" target="_blank">Open ↗</a></div>
       </div>
+
     </div>
   </div>
 </section>
-
 <section id="skills">
   <div class="skills-inner">
     <div class="reveal"><div class="sec-label">Skills &amp; Stack</div><h2 class="sec-h2">What I work<br><em>with.</em></h2></div>
@@ -312,7 +303,6 @@ footer{border-top:1px solid var(--border);padding:28px 60px;display:flex;align-i
     </div>
   </div>
 </section>
-
 <section>
   <div id="philosophy">
     <div class="reveal"><div class="sec-label">How I Build</div><h2 class="sec-h2">The philosophy<br><em>behind it all.</em></h2></div>
@@ -325,7 +315,6 @@ footer{border-top:1px solid var(--border);padding:28px 60px;display:flex;align-i
     </div>
   </div>
 </section>
-
 <section id="contact">
   <div class="contact-inner">
     <div class="reveal">
@@ -333,25 +322,18 @@ footer{border-top:1px solid var(--border);padding:28px 60px;display:flex;align-i
       <p class="contact-sub">Have a project idea, want to collaborate, or just want to talk about browser engines and WebAssembly? I'm always down.</p>
       <div class="contact-links">
         <a href="https://github.com/heyitsheart" class="btn-primary" target="_blank" rel="noopener"><span>↗</span> GitHub</a>
-        <a href="https://heyitsheart.github.io/game-vault.html" class="btn-ghost" target="_blank" rel="noopener"><span>🎮</span> Game Vault</a>
+        <a href="https://heyitsheart.github.io/game-vault/" class="btn-ghost" target="_blank" rel="noopener"><span>🎮</span> Game Vault</a>
       </div>
     </div>
   </div>
 </section>
-
 <footer>
   <div class="footer-logo">HeyItsHeart</div>
   <div class="footer-mono">Built with HTML · CSS · JS — no frameworks, no build step</div>
 </footer>
-
 <script>
-window.addEventListener('scroll',function(){
-  document.getElementById('nav').classList.toggle('scrolled',window.scrollY>60);
-},{ passive:true });
-
-var observer=new IntersectionObserver(function(entries){
-  entries.forEach(function(e){if(e.isIntersecting)e.target.classList.add('visible');});
-},{threshold:0.1,rootMargin:'0px 0px -40px 0px'});
+window.addEventListener('scroll',function(){document.getElementById('nav').classList.toggle('scrolled',window.scrollY>60);},{passive:true});
+var observer=new IntersectionObserver(function(entries){entries.forEach(function(e){if(e.isIntersecting)e.target.classList.add('visible');});},{threshold:0.1,rootMargin:'0px 0px -40px 0px'});
 document.querySelectorAll('.reveal').forEach(function(el){observer.observe(el);});
 </script>
 </body>
