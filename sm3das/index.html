@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Super Mario 3D All-Stars Web</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700;1,900&family=DM+Sans:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --bg:#0a0005;
+  --bg2:#120008;
+  --red:#ef4444;--red2:#dc2626;--red3:#fca5a5;
+  --gold:#fbbf24;--gold2:#f59e0b;--gold3:#fde68a;
+  --blue:#3b82f6;--blue2:#60a5fa;
+  --sun:#fb923c;--sun2:#f97316;
+  --galaxy:#818cf8;--galaxy2:#a5b4fc;
+  --text:#fff7ed;--muted:rgba(255,247,237,0.5);--dim:rgba(255,247,237,0.15);
+  --border:rgba(251,191,36,0.15);--border2:rgba(251,191,36,0.3);
+}
+html{scroll-behavior:smooth;}
+body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;overflow-x:hidden;}
+::-webkit-scrollbar{width:4px;}::-webkit-scrollbar-track{background:var(--bg);}::-webkit-scrollbar-thumb{background:#5c1a0a;border-radius:2px;}
+
+/* noise */
+body::before{content:'';position:fixed;inset:0;z-index:1000;pointer-events:none;opacity:0.03;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");}
+
+/* ── STARS BG ── */
+#stars{position:fixed;inset:0;z-index:0;overflow:hidden;pointer-events:none;}
+.star{position:absolute;border-radius:50%;background:#fff;animation:twinkle var(--d) ease-in-out infinite;}
+@keyframes twinkle{0%,100%{opacity:var(--op);transform:scale(1);}50%{opacity:calc(var(--op)*0.3);transform:scale(0.7);}}
+
+/* ── NAV ── */
+nav{position:fixed;top:0;left:0;right:0;z-index:100;padding:16px 60px;display:flex;align-items:center;justify-content:space-between;transition:backdrop-filter 0.3s,background 0.3s;}
+nav.scrolled{backdrop-filter:blur(20px);background:rgba(10,0,5,0.9);border-bottom:1px solid var(--border);}
+.nav-logo{display:flex;align-items:center;gap:10px;text-decoration:none;}
+.nav-logo-star{font-size:22px;animation:starSpin 3s linear infinite;}
+@keyframes starSpin{from{transform:rotate(0deg);}to{transform:rotate(360deg);}}
+.nav-logo-text{font-family:'Playfair Display',serif;font-size:16px;font-weight:900;color:var(--gold2);}
+.nav-right{display:flex;gap:12px;align-items:center;}
+.nav-back{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--muted);text-decoration:none;letter-spacing:0.05em;transition:color 0.2s;}
+.nav-back:hover{color:var(--gold2);}
+.nav-cta{padding:8px 20px;background:linear-gradient(135deg,var(--gold2),var(--gold));border:none;border-radius:8px;color:#0d0900;font-size:13px;font-weight:800;font-family:'DM Sans',sans-serif;cursor:pointer;text-decoration:none;letter-spacing:0.02em;transition:transform 0.15s,box-shadow 0.15s;box-shadow:0 4px 20px rgba(245,158,11,0.3);}
+.nav-cta:hover{transform:translateY(-1px);box-shadow:0 8px 32px rgba(245,158,11,0.45);}
+@media(max-width:700px){nav{padding:14px 24px;}}
+
+/* ── HERO ── */
+#hero{position:relative;min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:100px 40px 80px;overflow:hidden;z-index:1;}
+.hero-glow{position:absolute;top:30%;left:50%;transform:translate(-50%,-50%);width:900px;height:900px;background:radial-gradient(circle,rgba(239,68,68,0.1) 0%,rgba(251,191,36,0.06) 40%,transparent 70%);pointer-events:none;animation:glowPulse 4s ease-in-out infinite;}
+@keyframes glowPulse{0%,100%{transform:translate(-50%,-50%) scale(1);}50%{transform:translate(-50%,-50%) scale(1.1);}}
+
+/* floating stars deco */
+.deco-star{position:absolute;font-size:clamp(24px,4vw,56px);animation:floatStar var(--fd) ease-in-out infinite;opacity:0.15;pointer-events:none;user-select:none;}
+@keyframes floatStar{0%,100%{transform:translateY(0) rotate(0deg);}50%{transform:translateY(-20px) rotate(180deg);}}
+
+.hero-eyebrow{font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:0.25em;text-transform:uppercase;color:var(--gold);margin-bottom:20px;opacity:0;animation:fadeUp 0.6s 0.1s ease both;}
+.hero-h1{font-family:'Playfair Display',serif;font-size:clamp(38px,7vw,88px);font-weight:900;line-height:0.95;letter-spacing:-0.01em;color:#fff;margin-bottom:10px;opacity:0;animation:fadeUp 0.6s 0.2s ease both;}
+.hero-h1 .red{color:var(--red);}
+.hero-h1 .gold{background:linear-gradient(135deg,var(--gold3),var(--gold2),var(--gold));-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+.hero-sub-title{font-family:'Playfair Display',serif;font-size:clamp(18px,3vw,32px);font-weight:700;font-style:italic;color:rgba(255,247,237,0.55);margin-bottom:24px;opacity:0;animation:fadeUp 0.6s 0.3s ease both;}
+.hero-desc{font-size:17px;font-weight:300;color:var(--muted);line-height:1.75;max-width:560px;margin:0 auto 44px;opacity:0;animation:fadeUp 0.6s 0.4s ease both;}
+.hero-desc strong{color:var(--text);font-weight:600;}
+.hero-desc em{color:var(--gold2);font-style:italic;}
+.hero-actions{display:flex;gap:14px;justify-content:center;flex-wrap:wrap;opacity:0;animation:fadeUp 0.6s 0.5s ease both;}
+.btn-big-red{display:inline-flex;align-items:center;gap:10px;padding:16px 36px;background:linear-gradient(135deg,var(--red2),var(--red));border:none;border-radius:12px;color:#fff;font-size:16px;font-weight:800;font-family:'DM Sans',sans-serif;text-decoration:none;cursor:pointer;box-shadow:0 8px 32px rgba(239,68,68,0.45);transition:transform 0.15s,box-shadow 0.15s;letter-spacing:0.02em;}
+.btn-big-red:hover{transform:translateY(-2px);box-shadow:0 14px 48px rgba(239,68,68,0.6);}
+.btn-big-gold{display:inline-flex;align-items:center;gap:10px;padding:16px 34px;background:linear-gradient(135deg,var(--gold2),var(--gold));border:none;border-radius:12px;color:#0d0900;font-size:16px;font-weight:800;font-family:'DM Sans',sans-serif;text-decoration:none;cursor:pointer;box-shadow:0 8px 32px rgba(245,158,11,0.4);transition:transform 0.15s,box-shadow 0.15s;letter-spacing:0.02em;}
+.btn-big-gold:hover{transform:translateY(-2px);box-shadow:0 14px 48px rgba(245,158,11,0.55);}
+.btn-ghost{display:inline-flex;align-items:center;gap:10px;padding:16px 28px;background:transparent;border:1px solid var(--border2);border-radius:12px;color:var(--gold2);font-size:15px;font-weight:600;font-family:'DM Sans',sans-serif;text-decoration:none;cursor:pointer;transition:background 0.15s,border-color 0.15s;}
+.btn-ghost:hover{background:rgba(251,191,36,0.08);border-color:rgba(251,191,36,0.5);}
+
+/* badge row */
+.hero-badges{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:32px;opacity:0;animation:fadeUp 0.6s 0.6s ease both;}
+.h-badge{font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;padding:5px 13px;border-radius:20px;border:1px solid;}
+.h-badge.wasm{background:rgba(99,102,241,0.1);border-color:rgba(99,102,241,0.25);color:#a5b4fc;}
+.h-badge.nodownload{background:rgba(52,211,153,0.08);border-color:rgba(52,211,153,0.2);color:#6ee7b7;}
+.h-badge.free{background:rgba(251,191,36,0.08);border-color:rgba(251,191,36,0.2);color:var(--gold);}
+
+/* ── GAMES SECTION ── */
+#games{padding:100px 60px;position:relative;z-index:1;}
+@media(max-width:700px){#games{padding:80px 24px;}}
+.games-hdr{text-align:center;margin-bottom:64px;}
+.games-eyebrow{font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:0.2em;text-transform:uppercase;color:var(--gold);margin-bottom:14px;}
+.games-h2{font-family:'Playfair Display',serif;font-size:clamp(32px,5vw,58px);font-weight:900;color:#fff;margin-bottom:14px;}
+.games-h2 em{font-style:italic;}
+.games-sub{font-size:15px;color:var(--muted);max-width:480px;margin:0 auto;line-height:1.7;font-weight:300;}
+.games-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:20px;max-width:1100px;margin:0 auto;}
+.game-card{border-radius:20px;overflow:hidden;position:relative;cursor:pointer;transition:transform 0.25s,box-shadow 0.25s;}
+.game-card:hover{transform:translateY(-6px);}
+.gc-bg{padding:36px 32px 28px;position:relative;overflow:hidden;min-height:320px;display:flex;flex-direction:column;justify-content:flex-end;}
+
+/* SM64 */
+.gc-64{background:linear-gradient(160deg,#1a0a00,#0d0005);}
+.gc-64::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 80% 80% at 80% 20%,rgba(239,68,68,0.25) 0%,transparent 65%);}
+.game-card.card-64:hover{box-shadow:0 24px 80px rgba(239,68,68,0.25);}
+/* Sunshine */
+.gc-sun{background:linear-gradient(160deg,#0a0f1a,#050a0d);}
+.gc-sun::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 80% 80% at 70% 20%,rgba(59,130,246,0.2) 0%,rgba(251,146,60,0.15) 50%,transparent 70%);}
+.game-card.card-sun:hover{box-shadow:0 24px 80px rgba(59,130,246,0.2);}
+/* Galaxy */
+.gc-gal{background:linear-gradient(160deg,#050010,#080016);}
+.gc-gal::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 80% 80% at 60% 20%,rgba(129,140,248,0.22) 0%,rgba(167,139,250,0.1) 50%,transparent 70%);}
+.game-card.card-gal:hover{box-shadow:0 24px 80px rgba(129,140,248,0.25);}
+
+.gc-deco{position:absolute;top:20px;right:24px;font-size:clamp(48px,6vw,80px);opacity:0.18;transition:opacity 0.25s,transform 0.25s;}
+.game-card:hover .gc-deco{opacity:0.35;transform:scale(1.1) rotate(10deg);}
+.gc-num{font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:0.15em;text-transform:uppercase;margin-bottom:10px;opacity:0.6;}
+.gc-title{font-family:'Playfair Display',serif;font-size:clamp(24px,3.5vw,36px);font-weight:900;line-height:1;margin-bottom:12px;}
+.gc-desc{font-size:13px;color:var(--muted);line-height:1.65;font-weight:300;margin-bottom:20px;max-width:280px;}
+.gc-status{display:inline-flex;align-items:center;gap:6px;font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;padding:5px 12px;border-radius:20px;border:1px solid;}
+.gc-status.progress{background:rgba(251,191,36,0.1);border-color:rgba(251,191,36,0.25);color:var(--gold);}
+.gc-status.progress::before{content:'';width:6px;height:6px;border-radius:50%;background:var(--gold);animation:blink 1.2s step-end infinite;}
+@keyframes blink{0%,100%{opacity:1;}50%{opacity:0;}}
+.gc-status.planned{background:rgba(255,255,255,0.04);border-color:rgba(255,255,255,0.1);color:rgba(255,255,255,0.35);}
+
+/* progress bar */
+.gc-progress{margin-top:16px;}
+.gc-progress-lbl{display:flex;justify-content:space-between;font-family:'IBM Plex Mono',monospace;font-size:9px;margin-bottom:5px;opacity:0.5;}
+.gc-progress-bar{height:3px;border-radius:2px;background:rgba(255,255,255,0.08);overflow:hidden;}
+.gc-progress-fill{height:100%;border-radius:2px;transition:width 1.2s ease;}
+
+/* ── TECH ── */
+#tech{padding:80px 60px;background:rgba(255,255,255,0.015);border-top:1px solid var(--border);border-bottom:1px solid var(--border);position:relative;z-index:1;}
+@media(max-width:700px){#tech{padding:60px 24px;}}
+.tech-inner{max-width:1000px;margin:0 auto;}
+.tech-hdr{display:flex;align-items:baseline;gap:20px;margin-bottom:40px;flex-wrap:wrap;}
+.tech-h2{font-family:'Playfair Display',serif;font-size:clamp(28px,4vw,46px);font-weight:900;color:#fff;}
+.tech-h2 em{font-style:italic;color:var(--gold2);}
+.tech-sub{font-size:14px;color:var(--muted);line-height:1.7;max-width:600px;margin-bottom:32px;}
+.tech-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px;}
+.tech-item{padding:20px 22px;border:1px solid var(--border);border-radius:12px;background:rgba(255,255,255,0.02);transition:border-color 0.2s,background 0.2s;}
+.tech-item:hover{border-color:var(--border2);background:rgba(251,191,36,0.04);}
+.ti-icon{font-size:22px;margin-bottom:10px;}
+.ti-name{font-size:13px;font-weight:700;color:var(--text);margin-bottom:4px;}
+.ti-desc{font-size:12px;color:var(--muted);line-height:1.5;font-weight:300;}
+
+/* ── ROADMAP ── */
+#roadmap{padding:100px 60px;position:relative;z-index:1;}
+@media(max-width:700px){#roadmap{padding:80px 24px;}}
+.roadmap-inner{max-width:700px;margin:0 auto;}
+.rm-hdr{text-align:center;margin-bottom:52px;}
+.rm-hdr h2{font-family:'Playfair Display',serif;font-size:clamp(28px,4vw,48px);font-weight:900;color:#fff;margin-bottom:10px;}
+.rm-hdr h2 em{font-style:italic;color:var(--gold2);}
+.rm-hdr p{font-size:14px;color:var(--muted);line-height:1.7;}
+.rm-list{display:flex;flex-direction:column;gap:0;}
+.rm-item{display:flex;gap:20px;padding:20px 0;border-bottom:1px solid rgba(255,255,255,0.04);}
+.rm-item:last-child{border-bottom:none;}
+.rm-dot-col{display:flex;flex-direction:column;align-items:center;padding-top:4px;}
+.rm-dot{width:12px;height:12px;border-radius:50%;flex-shrink:0;}
+.rm-dot.done{background:var(--gold);box-shadow:0 0 12px rgba(251,191,36,0.5);}
+.rm-dot.active{background:var(--red);box-shadow:0 0 12px rgba(239,68,68,0.5);animation:rmPulse 1.5s ease-in-out infinite;}
+@keyframes rmPulse{0%,100%{box-shadow:0 0 6px rgba(239,68,68,0.4);}50%{box-shadow:0 0 20px rgba(239,68,68,0.7);}}
+.rm-dot.todo{background:rgba(255,255,255,0.1);border:2px solid rgba(255,255,255,0.15);}
+.rm-vline{width:1px;flex:1;min-height:16px;background:rgba(255,255,255,0.05);margin-top:5px;}
+.rm-item:last-child .rm-vline{display:none;}
+.rm-content{flex:1;padding-bottom:4px;}
+.rm-phase{font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:0.15em;text-transform:uppercase;margin-bottom:4px;}
+.rm-phase.done{color:var(--gold);}
+.rm-phase.active{color:var(--red);}
+.rm-phase.todo{color:var(--dim);}
+.rm-title{font-size:15px;font-weight:700;color:var(--text);margin-bottom:5px;}
+.rm-desc{font-size:12px;color:var(--muted);line-height:1.6;font-weight:300;}
+
+/* ── CTA ── */
+#cta{padding:100px 60px;text-align:center;position:relative;z-index:1;overflow:hidden;}
+#cta::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 70% 60% at 50% 50%,rgba(239,68,68,0.08) 0%,rgba(251,191,36,0.05) 50%,transparent 70%);}
+.cta-inner{position:relative;z-index:1;}
+.cta-h2{font-family:'Playfair Display',serif;font-size:clamp(38px,6vw,76px);font-weight:900;line-height:0.95;color:#fff;margin-bottom:18px;}
+.cta-h2 em{font-style:italic;color:var(--gold2);}
+.cta-h2 .red{color:var(--red);}
+.cta-sub{font-size:16px;color:var(--muted);max-width:480px;margin:0 auto 40px;line-height:1.7;font-weight:300;}
+.cta-actions{display:flex;gap:14px;justify-content:center;flex-wrap:wrap;}
+
+/* FOOTER */
+footer{border-top:1px solid var(--border);padding:24px 60px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;position:relative;z-index:1;}
+@media(max-width:700px){footer{padding:20px 24px;}}
+.footer-logo{font-family:'Playfair Display',serif;font-size:15px;font-weight:700;color:var(--gold);}
+.footer-back{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--dim);text-decoration:none;transition:color 0.2s;}
+.footer-back:hover{color:var(--gold2);}
+
+.reveal{opacity:0;transform:translateY(20px);transition:opacity 0.65s ease,transform 0.65s ease;}
+.reveal.visible{opacity:1;transform:translateY(0);}
+.rd1{transition-delay:0.08s;}.rd2{transition-delay:0.16s;}.rd3{transition-delay:0.24s;}
+@keyframes fadeUp{from{opacity:0;transform:translateY(16px);}to{opacity:1;transform:translateY(0);}}
+@keyframes fadeIn{from{opacity:0;}to{opacity:1;}}
+</style>
+</head>
+<body>
+
+<!-- Stars -->
+<div id="stars"></div>
+
+<nav id="nav">
+  <a href="#" class="nav-logo">
+    <span class="nav-logo-star">⭐</span>
+    <span class="nav-logo-text">SM3DAS Web</span>
+  </a>
+  <div class="nav-right">
+    <a href="https://heyitsheart.github.io" class="nav-back">← heyitsheart</a>
+    <a href="#roadmap" class="nav-cta">View Roadmap</a>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section id="hero">
+  <div class="hero-glow"></div>
+  <!-- floating star decos -->
+  <div class="deco-star" style="top:15%;left:8%;--fd:5s;">⭐</div>
+  <div class="deco-star" style="top:25%;right:10%;--fd:6.5s;">🌟</div>
+  <div class="deco-star" style="bottom:30%;left:5%;--fd:4s;">✨</div>
+  <div class="deco-star" style="bottom:20%;right:7%;--fd:7s;">⭐</div>
+  <div class="deco-star" style="top:60%;left:15%;--fd:8s;">🌟</div>
+  <div class="deco-star" style="top:40%;right:5%;--fd:3.5s;">✨</div>
+
+  <div class="hero-eyebrow">A HeyItsHeart Web Port Project</div>
+  <h1 class="hero-h1">
+    <span class="red">Super Mario</span><br>
+    <span class="gold">3D All-Stars</span><br>
+    Web
+  </h1>
+  <div class="hero-sub-title">Three classics. One browser tab.</div>
+  <p class="hero-desc">
+    <strong>Super Mario 64, Sunshine, and Galaxy</strong> — all three iconic 3D Mario adventures ported to run <em>natively in your browser</em> via WebAssembly. No download. No emulator. No install. Just play.
+  </p>
+  <div class="hero-actions">
+    <a href="#games" class="btn-big-red">⭐ See the Games</a>
+    <a href="#roadmap" class="btn-big-gold">View Roadmap</a>
+    <a href="https://heyitsheart.github.io" class="btn-ghost">← Back to Portfolio</a>
+  </div>
+  <div class="hero-badges">
+    <span class="h-badge wasm">WebAssembly</span>
+    <span class="h-badge nodownload">Zero Downloads</span>
+    <span class="h-badge free">Browser Native</span>
+  </div>
+</section>
+
+<!-- GAMES -->
+<section id="games">
+  <div class="games-hdr reveal">
+    <div class="games-eyebrow">The Collection</div>
+    <h2 class="games-h2">Three <em>legends.</em></h2>
+    <p class="games-sub">Each game is a full, standalone WASM port — running the original game engine in your browser at native speed.</p>
+  </div>
+  <div class="games-grid">
+
+    <!-- SM64 -->
+    <div class="game-card card-64 reveal rd1">
+      <div class="gc-bg gc-64">
+        <div class="gc-deco">⭐</div>
+        <div class="gc-num">01 — Nintendo 64 · 1996</div>
+        <div class="gc-title" style="color:#fca5a5;">Super Mario<br>64</div>
+        <div class="gc-desc">The one that changed everything. Explore Peach's Castle, collect Power Stars, and defeat Bowser across 15 iconic worlds — all in your browser.</div>
+        <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+          <div class="gc-status progress">● In Progress</div>
+        </div>
+        <div class="gc-progress">
+          <div class="gc-progress-lbl"><span>Port progress</span><span>65%</span></div>
+          <div class="gc-progress-bar"><div class="gc-progress-fill" style="width:65%;background:linear-gradient(90deg,#dc2626,#ef4444);"></div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Sunshine -->
+    <div class="game-card card-sun reveal rd2">
+      <div class="gc-bg gc-sun">
+        <div class="gc-deco">🌊</div>
+        <div class="gc-num">02 — GameCube · 2002</div>
+        <div class="gc-title" style="color:#93c5fd;">Super Mario<br>Sunshine</div>
+        <div class="gc-desc">Isle Delfino awaits. Grab F.L.U.D.D. and clean up Bowser Jr.'s mess across one of the most vibrant and joyful Mario adventures ever made.</div>
+        <div class="gc-status planned">Planned — Q3 2026</div>
+      </div>
+    </div>
+
+    <!-- Galaxy -->
+    <div class="game-card card-gal reveal rd3">
+      <div class="gc-bg gc-gal">
+        <div class="gc-deco">🌌</div>
+        <div class="gc-num">03 — Wii · 2007</div>
+        <div class="gc-title" style="color:#c4b5fd;">Super Mario<br>Galaxy</div>
+        <div class="gc-desc">Defy gravity. Traverse the cosmos. Galaxy's revolutionary spherical platforming and orchestral soundtrack — coming to the browser for the first time.</div>
+        <div class="gc-status planned">Planned — 2027</div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- TECH -->
+<section id="tech">
+  <div class="tech-inner">
+    <div class="tech-hdr reveal">
+      <div>
+        <div class="games-eyebrow">Under the Hood</div>
+        <h2 class="tech-h2">How it <em>works.</em></h2>
+      </div>
+    </div>
+    <p class="tech-sub reveal">Each game is compiled from its decompiled C source to WebAssembly using Emscripten, then wrapped in a custom HTML5 shell that handles input, audio, and rendering via WebGL. The result runs at full speed with no plugin or download.</p>
+    <div class="tech-grid">
+      <div class="tech-item reveal rd1"><div class="ti-icon">⚡</div><div class="ti-name">WebAssembly (WASM)</div><div class="ti-desc">Game logic compiled from C to near-native WASM bytecode via Emscripten.</div></div>
+      <div class="tech-item reveal rd2"><div class="ti-icon">🎨</div><div class="ti-name">WebGL Renderer</div><div class="ti-desc">OpenGL calls translated to WebGL2 for hardware-accelerated 3D rendering.</div></div>
+      <div class="tech-item reveal rd3"><div class="ti-icon">🎮</div><div class="ti-name">Gamepad API</div><div class="ti-desc">Full controller support — plug in any gamepad and play with native feel.</div></div>
+      <div class="tech-item reveal rd1"><div class="ti-icon">🔊</div><div class="ti-name">Web Audio API</div><div class="ti-desc">Original audio streams routed through the Web Audio API for authentic sound.</div></div>
+      <div class="tech-item reveal rd2"><div class="ti-icon">📦</div><div class="ti-name">Decompiled Source</div><div class="ti-desc">Built on the sm64, Sunshine, and Galaxy decompilation projects.</div></div>
+      <div class="tech-item reveal rd3"><div class="ti-icon">🌐</div><div class="ti-name">GitHub Pages</div><div class="ti-desc">Hosted entirely on static GitHub Pages — zero server, zero cost, always on.</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ROADMAP -->
+<section id="roadmap">
+  <div class="roadmap-inner">
+    <div class="rm-hdr reveal">
+      <h2>Development <em>Roadmap</em></h2>
+      <p>Full transparency on where each game is in the porting process.</p>
+    </div>
+    <div class="rm-list">
+      <div class="rm-item reveal">
+        <div class="rm-dot-col"><div class="rm-dot done"></div><div class="rm-vline"></div></div>
+        <div class="rm-content">
+          <div class="rm-phase done">Phase 01 — Complete</div>
+          <div class="rm-title">SM64 — Core Engine Compilation</div>
+          <div class="rm-desc">Successfully compiled the sm64 decompilation project to WASM via Emscripten. Basic rendering and game loop running in browser.</div>
+        </div>
+      </div>
+      <div class="rm-item reveal">
+        <div class="rm-dot-col"><div class="rm-dot active"></div><div class="rm-vline"></div></div>
+        <div class="rm-content">
+          <div class="rm-phase active">Phase 02 — In Progress</div>
+          <div class="rm-title">SM64 — Input, Audio & Polish</div>
+          <div class="rm-desc">Wiring keyboard + gamepad input, fixing audio streaming, implementing save states via IndexedDB, and building the custom HTML5 shell UI.</div>
+        </div>
+      </div>
+      <div class="rm-item reveal">
+        <div class="rm-dot-col"><div class="rm-dot todo"></div><div class="rm-vline"></div></div>
+        <div class="rm-content">
+          <div class="rm-phase todo">Phase 03 — Upcoming</div>
+          <div class="rm-title">SM64 — Public Beta Launch</div>
+          <div class="rm-desc">Open beta of Super Mario 64 Web. Full playable from world 1 to Bowser. Performance tuning for mobile and lower-end devices.</div>
+        </div>
+      </div>
+      <div class="rm-item reveal">
+        <div class="rm-dot-col"><div class="rm-dot todo"></div><div class="rm-vline"></div></div>
+        <div class="rm-content">
+          <div class="rm-phase todo">Phase 04 — Planned Q3 2026</div>
+          <div class="rm-title">Sunshine — WASM Compilation</div>
+          <div class="rm-desc">Begin porting the Sunshine decompilation. GameCube architecture is more complex — targeting Dolphin-compatible rendering pipeline via WebGL.</div>
+        </div>
+      </div>
+      <div class="rm-item reveal">
+        <div class="rm-dot-col"><div class="rm-dot todo"></div><div class="rm-vline"></div></div>
+        <div class="rm-content">
+          <div class="rm-phase todo">Phase 05 — Planned 2027</div>
+          <div class="rm-title">Galaxy — Wii Port Research</div>
+          <div class="rm-desc">Galaxy's Wii architecture and motion controls make it the most ambitious port. Research phase to determine feasibility of WebGL + pointer events.</div>
+        </div>
+      </div>
+      <div class="rm-item reveal">
+        <div class="rm-dot-col"><div class="rm-dot todo"></div><div class="rm-vline"></div></div>
+        <div class="rm-content">
+          <div class="rm-phase todo">Phase 06 — The Dream</div>
+          <div class="rm-title">SM3DAS Web — Full Launch</div>
+          <div class="rm-desc">All three games playable in the browser. Unified launcher. Save states. Gamepad support. The full All-Stars experience, browser-native.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section id="cta">
+  <div class="cta-inner reveal">
+    <h2 class="cta-h2">Three worlds.<br><em>One</em> <span class="red">browser tab.</span></h2>
+    <p class="cta-sub">Super Mario 64 is in active development. Follow the project and be first to play when the beta drops.</p>
+    <div class="cta-actions">
+      <a href="https://github.com/heyitsheart" class="btn-big-red" target="_blank" rel="noopener">⭐ Follow on GitHub</a>
+      <a href="https://heyitsheart.github.io" class="btn-ghost">← Back to Portfolio</a>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="footer-logo">⭐ SM3DAS Web</div>
+  <a href="https://heyitsheart.github.io" class="footer-back">← heyitsheart.github.io</a>
+</footer>
+
+<script>
+/* Stars */
+(function(){
+  var c=document.getElementById('stars');
+  for(var i=0;i<120;i++){
+    var s=document.createElement('div');
+    s.className='star';
+    var size=Math.random()*2+0.5;
+    var op=Math.random()*0.4+0.1;
+    s.style.cssText='width:'+size+'px;height:'+size+'px;top:'+Math.random()*100+'%;left:'+Math.random()*100+'%;--op:'+op+';--d:'+(Math.random()*4+2)+'s;animation-delay:'+(Math.random()*4)+'s;';
+    c.appendChild(s);
+  }
+})();
+
+/* Nav */
+window.addEventListener('scroll',function(){document.getElementById('nav').classList.toggle('scrolled',window.scrollY>50);},{passive:true});
+
+/* Reveal */
+var obs=new IntersectionObserver(function(entries){entries.forEach(function(e){if(e.isIntersecting)e.target.classList.add('visible');});},{threshold:0.08,rootMargin:'0px 0px -30px 0px'});
+document.querySelectorAll('.reveal').forEach(function(el){obs.observe(el);});
+
+/* Animate progress bars on scroll */
+var barObs=new IntersectionObserver(function(entries){
+  entries.forEach(function(e){
+    if(e.isIntersecting){
+      var bar=e.target.querySelector('.gc-progress-fill');
+      if(bar){var w=bar.style.width;bar.style.width='0';setTimeout(function(){bar.style.width=w;},100);}
+    }
+  });
+},{threshold:0.3});
+document.querySelectorAll('.game-card').forEach(function(c){barObs.observe(c);});
+</script>
+</body>
+</html>
