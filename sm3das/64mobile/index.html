@@ -164,102 +164,130 @@
     </div>
 
     <script>
-      var Module = {
-        canvas: document.getElementById("canvas")
-      };
+var Module = {
+  canvas: document.getElementById("canvas")
+};
 
-      const canvas = Module.canvas;
+const canvas = Module.canvas;
 
-      function key(code, type) {
-        const evt = new KeyboardEvent(type, {
-          code: code,
-          key: code,
-          bubbles: true,
-          cancelable: true
-        });
+/* Force focus so input is accepted */
+canvas.setAttribute("tabindex", "0");
+canvas.focus();
 
-        window.dispatchEvent(evt);
-      }
+/* KEY STATE SYSTEM (this is the real fix) */
+const keysDown = new Set();
 
-      /* Prevent touch from breaking input */
-      document.body.addEventListener("touchstart", e => e.preventDefault(), { passive: false });
-      document.body.addEventListener("touchmove", e => e.preventDefault(), { passive: false });
+function sendKey(code, keyCode, type) {
+  const event = new KeyboardEvent(type, {
+    code: code,
+    key: code,
+    keyCode: keyCode,
+    which: keyCode,
+    bubbles: true
+  });
 
-      function bind(selector, code) {
-        const el = document.querySelector(selector);
+  document.dispatchEvent(event);
+  window.dispatchEvent(event);
+  canvas.dispatchEvent(event);
+}
 
-        el.addEventListener("touchstart", (e) => {
-          e.preventDefault();
-          key(code, "keydown");
-        });
+function press(code, keyCode) {
+  if (keysDown.has(code)) return;
+  keysDown.add(code);
+  sendKey(code, keyCode, "keydown");
+}
 
-        el.addEventListener("touchend", (e) => {
-          e.preventDefault();
-          key(code, "keyup");
-        });
-      }
+function release(code, keyCode) {
+  keysDown.delete(code);
+  sendKey(code, keyCode, "keyup");
+}
 
-      /* BUTTON MAP */
-      bind(".a", "KeyX");
-      bind(".b", "KeyZ");
+/* Prevent scrolling */
+document.body.addEventListener("touchstart", e => e.preventDefault(), { passive: false });
+document.body.addEventListener("touchmove", e => e.preventDefault(), { passive: false });
 
-      bind(".start", "Enter");
+function bind(selector, code, keyCode) {
+  const el = document.querySelector(selector);
 
-      bind(".l", "KeyQ");
-      bind(".r", "KeyE");
-      bind(".z", "ShiftLeft");
+  el.addEventListener("touchstart", (e) => {
+    e.preventDefault();
+    press(code, keyCode);
+  });
 
-      bind(".c-up", "KeyI");
-      bind(".c-down", "KeyK");
-      bind(".c-left", "KeyJ");
-      bind(".c-right", "KeyL");
+  el.addEventListener("touchend", (e) => {
+    e.preventDefault();
+    release(code, keyCode);
+  });
+}
 
-      bind(".d-up", "ArrowUp");
-      bind(".d-down", "ArrowDown");
-      bind(".d-left", "ArrowLeft");
-      bind(".d-right", "ArrowRight");
+/* BUTTON MAP (WITH keyCodes!) */
+bind(".a", "KeyX", 88);
+bind(".b", "KeyZ", 90);
 
-      /* JOYSTICK */
-      const joy = document.getElementById("joystick");
-      const stick = document.getElementById("stick");
+bind(".start", "Enter", 13);
 
-      let active = false;
+bind(".l", "KeyQ", 81);
+bind(".r", "KeyE", 69);
+bind(".z", "ShiftLeft", 16);
 
-      joy.addEventListener("touchstart", (e) => {
-        e.preventDefault();
-        active = true;
-      });
+bind(".c-up", "KeyI", 73);
+bind(".c-down", "KeyK", 75);
+bind(".c-left", "KeyJ", 74);
+bind(".c-right", "KeyL", 76);
 
-      joy.addEventListener("touchend", (e) => {
-        e.preventDefault();
-        active = false;
-        stick.style.transform = `translate(0,0)`;
-        ["ArrowUp","ArrowDown","ArrowLeft","ArrowRight"].forEach(k => key(k,"keyup"));
-      });
+bind(".d-up", "ArrowUp", 38);
+bind(".d-down", "ArrowDown", 40);
+bind(".d-left", "ArrowLeft", 37);
+bind(".d-right", "ArrowRight", 39);
 
-      joy.addEventListener("touchmove", (e) => {
-        if (!active) return;
+/* JOYSTICK */
+const joy = document.getElementById("joystick");
+const stick = document.getElementById("stick");
 
-        const rect = joy.getBoundingClientRect();
-        const t = e.touches[0];
+let active = false;
 
-        let x = t.clientX - rect.left - rect.width/2;
-        let y = t.clientY - rect.top - rect.height/2;
+joy.addEventListener("touchstart", (e) => {
+  e.preventDefault();
+  active = true;
+});
 
-        const max = 40;
-        x = Math.max(-max, Math.min(max, x));
-        y = Math.max(-max, Math.min(max, y));
+joy.addEventListener("touchend", (e) => {
+  e.preventDefault();
+  active = false;
+  stick.style.transform = `translate(0,0)`;
 
-        stick.style.transform = `translate(${x}px, ${y}px)`;
+  ["ArrowUp","ArrowDown","ArrowLeft","ArrowRight"].forEach((k, i) => {
+    const codes = [38,40,37,39];
+    release(k, codes[i]);
+  });
+});
 
-        ["ArrowUp","ArrowDown","ArrowLeft","ArrowRight"].forEach(k => key(k,"keyup"));
+joy.addEventListener("touchmove", (e) => {
+  if (!active) return;
 
-        if (y < -10) key("ArrowUp","keydown");
-        if (y > 10) key("ArrowDown","keydown");
-        if (x < -10) key("ArrowLeft","keydown");
-        if (x > 10) key("ArrowRight","keydown");
-      });
-    </script>
+  const rect = joy.getBoundingClientRect();
+  const t = e.touches[0];
+
+  let x = t.clientX - rect.left - rect.width/2;
+  let y = t.clientY - rect.top - rect.height/2;
+
+  const max = 40;
+  x = Math.max(-max, Math.min(max, x));
+  y = Math.max(-max, Math.min(max, y));
+
+  stick.style.transform = `translate(${x}px, ${y}px)`;
+
+  release("ArrowUp", 38);
+  release("ArrowDown", 40);
+  release("ArrowLeft", 37);
+  release("ArrowRight", 39);
+
+  if (y < -10) press("ArrowUp", 38);
+  if (y > 10) press("ArrowDown", 40);
+  if (x < -10) press("ArrowLeft", 37);
+  if (x > 10) press("ArrowRight", 39);
+});
+</script>
 
     <script async src="sm64.us.f3dex2e.js"></script>
   </body>
