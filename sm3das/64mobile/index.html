@@ -10,6 +10,7 @@
         margin: 0;
         background: black;
         overflow: hidden;
+        touch-action: none;
       }
 
       canvas {
@@ -32,7 +33,7 @@
         border-radius: 50%;
         font-weight: bold;
         color: white;
-        opacity: 0.8;
+        opacity: 0.85;
       }
 
       /* Joystick */
@@ -57,16 +58,34 @@
         left: 35px;
       }
 
-      /* A B */
-      .a { right: 40px; bottom: 80px; width: 70px; height: 70px; background: green; }
-      .b { right: 110px; bottom: 40px; width: 60px; height: 60px; background: red; }
+      /* A B buttons (fixed spacing) */
+      .a {
+        right: 30px;
+        bottom: 110px;
+        width: 70px;
+        height: 70px;
+        background: green;
+      }
 
-      /* C buttons */
-      .c { width: 45px; height: 45px; background: gold; }
-      .c-up { right: 100px; bottom: 160px; }
-      .c-down { right: 100px; bottom: 20px; }
-      .c-left { right: 150px; bottom: 90px; }
-      .c-right { right: 50px; bottom: 90px; }
+      .b {
+        right: 110px;
+        bottom: 60px;
+        width: 60px;
+        height: 60px;
+        background: red;
+      }
+
+      /* C buttons ABOVE A/B */
+      .c {
+        width: 45px;
+        height: 45px;
+        background: gold;
+      }
+
+      .c-up { right: 100px; bottom: 200px; }
+      .c-down { right: 100px; bottom: 140px; }
+      .c-left { right: 150px; bottom: 170px; }
+      .c-right { right: 50px; bottom: 170px; }
 
       /* D-pad */
       .d { width: 40px; height: 40px; background: gray; }
@@ -87,9 +106,33 @@
       }
 
       /* L R Z */
-      .l { left: 20px; top: 20px; width: 60px; height: 40px; background: purple; border-radius: 10px; }
-      .r { right: 20px; top: 20px; width: 60px; height: 40px; background: purple; border-radius: 10px; }
-      .z { left: 50%; top: 20px; transform: translateX(-50%); width: 80px; height: 40px; background: orange; border-radius: 10px; }
+      .l {
+        left: 20px;
+        top: 20px;
+        width: 60px;
+        height: 40px;
+        background: purple;
+        border-radius: 10px;
+      }
+
+      .r {
+        right: 20px;
+        top: 20px;
+        width: 60px;
+        height: 40px;
+        background: purple;
+        border-radius: 10px;
+      }
+
+      .z {
+        left: 50%;
+        top: 20px;
+        transform: translateX(-50%);
+        width: 80px;
+        height: 40px;
+        background: orange;
+        border-radius: 10px;
+      }
     </style>
   </head>
 
@@ -125,14 +168,35 @@
         canvas: document.getElementById("canvas")
       };
 
+      const canvas = Module.canvas;
+
       function key(code, type) {
-        document.dispatchEvent(new KeyboardEvent(type, { code }));
+        const evt = new KeyboardEvent(type, {
+          code: code,
+          key: code,
+          bubbles: true,
+          cancelable: true
+        });
+
+        canvas.dispatchEvent(evt);
       }
 
-      function bind(btn, code) {
-        const el = document.querySelector(btn);
-        el.ontouchstart = () => key(code, "keydown");
-        el.ontouchend = () => key(code, "keyup");
+      /* Prevent touch from breaking input */
+      document.body.addEventListener("touchstart", e => e.preventDefault(), { passive: false });
+      document.body.addEventListener("touchmove", e => e.preventDefault(), { passive: false });
+
+      function bind(selector, code) {
+        const el = document.querySelector(selector);
+
+        el.addEventListener("touchstart", (e) => {
+          e.preventDefault();
+          key(code, "keydown");
+        });
+
+        el.addEventListener("touchend", (e) => {
+          e.preventDefault();
+          key(code, "keyup");
+        });
       }
 
       /* BUTTON MAP */
@@ -161,15 +225,19 @@
 
       let active = false;
 
-      joy.addEventListener("touchstart", () => active = true);
+      joy.addEventListener("touchstart", (e) => {
+        e.preventDefault();
+        active = true;
+      });
 
-      joy.addEventListener("touchend", () => {
+      joy.addEventListener("touchend", (e) => {
+        e.preventDefault();
         active = false;
         stick.style.transform = `translate(0,0)`;
         ["ArrowUp","ArrowDown","ArrowLeft","ArrowRight"].forEach(k => key(k,"keyup"));
       });
 
-      joy.addEventListener("touchmove", e => {
+      joy.addEventListener("touchmove", (e) => {
         if (!active) return;
 
         const rect = joy.getBoundingClientRect();
