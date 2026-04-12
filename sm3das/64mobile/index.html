@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+    <title>Super Mario 64</title>
+
+    <style>
+      body, html {
+        margin: 0;
+        background: black;
+        overflow: hidden;
+      }
+
+      canvas {
+        width: 100vw;
+        height: 100vh;
+      }
+
+      /* ===== MOBILE CONTROLS ===== */
+      #controls {
+        position: fixed;
+        inset: 0;
+        z-index: 10;
+        pointer-events: none;
+      }
+
+      button {
+        pointer-events: auto;
+        position: absolute;
+        border: none;
+        border-radius: 50%;
+        font-weight: bold;
+        color: white;
+        opacity: 0.8;
+      }
+
+      /* Joystick */
+      #joystick {
+        position: absolute;
+        bottom: 20px;
+        left: 20px;
+        width: 120px;
+        height: 120px;
+        background: rgba(255,255,255,0.1);
+        border-radius: 50%;
+        pointer-events: auto;
+      }
+
+      #stick {
+        width: 50px;
+        height: 50px;
+        background: rgba(255,255,255,0.5);
+        border-radius: 50%;
+        position: absolute;
+        top: 35px;
+        left: 35px;
+      }
+
+      /* A B */
+      .a { right: 40px; bottom: 80px; width: 70px; height: 70px; background: green; }
+      .b { right: 110px; bottom: 40px; width: 60px; height: 60px; background: red; }
+
+      /* C buttons */
+      .c { width: 45px; height: 45px; background: gold; }
+      .c-up { right: 100px; bottom: 160px; }
+      .c-down { right: 100px; bottom: 20px; }
+      .c-left { right: 150px; bottom: 90px; }
+      .c-right { right: 50px; bottom: 90px; }
+
+      /* D-pad */
+      .d { width: 40px; height: 40px; background: gray; }
+      .d-up { left: 160px; bottom: 140px; }
+      .d-down { left: 160px; bottom: 40px; }
+      .d-left { left: 120px; bottom: 90px; }
+      .d-right { left: 200px; bottom: 90px; }
+
+      /* Start */
+      .start {
+        left: 50%;
+        bottom: 60px;
+        transform: translateX(-50%);
+        width: 80px;
+        height: 40px;
+        border-radius: 10px;
+        background: blue;
+      }
+
+      /* L R Z */
+      .l { left: 20px; top: 20px; width: 60px; height: 40px; background: purple; border-radius: 10px; }
+      .r { right: 20px; top: 20px; width: 60px; height: 40px; background: purple; border-radius: 10px; }
+      .z { left: 50%; top: 20px; transform: translateX(-50%); width: 80px; height: 40px; background: orange; border-radius: 10px; }
+    </style>
+  </head>
+
+  <body>
+    <canvas id="canvas"></canvas>
+
+    <!-- CONTROLS -->
+    <div id="controls">
+      <div id="joystick"><div id="stick"></div></div>
+
+      <button class="a">A</button>
+      <button class="b">B</button>
+
+      <button class="c c-up">C↑</button>
+      <button class="c c-down">C↓</button>
+      <button class="c c-left">C←</button>
+      <button class="c c-right">C→</button>
+
+      <button class="d d-up">↑</button>
+      <button class="d d-down">↓</button>
+      <button class="d d-left">←</button>
+      <button class="d d-right">→</button>
+
+      <button class="start">START</button>
+
+      <button class="l">L</button>
+      <button class="r">R</button>
+      <button class="z">Z</button>
+    </div>
+
+    <script>
+      var Module = {
+        canvas: document.getElementById("canvas")
+      };
+
+      function key(code, type) {
+        document.dispatchEvent(new KeyboardEvent(type, { code }));
+      }
+
+      function bind(btn, code) {
+        const el = document.querySelector(btn);
+        el.ontouchstart = () => key(code, "keydown");
+        el.ontouchend = () => key(code, "keyup");
+      }
+
+      /* BUTTON MAP */
+      bind(".a", "KeyX");
+      bind(".b", "KeyZ");
+
+      bind(".start", "Enter");
+
+      bind(".l", "KeyQ");
+      bind(".r", "KeyE");
+      bind(".z", "ShiftLeft");
+
+      bind(".c-up", "KeyI");
+      bind(".c-down", "KeyK");
+      bind(".c-left", "KeyJ");
+      bind(".c-right", "KeyL");
+
+      bind(".d-up", "ArrowUp");
+      bind(".d-down", "ArrowDown");
+      bind(".d-left", "ArrowLeft");
+      bind(".d-right", "ArrowRight");
+
+      /* JOYSTICK */
+      const joy = document.getElementById("joystick");
+      const stick = document.getElementById("stick");
+
+      let active = false;
+
+      joy.addEventListener("touchstart", () => active = true);
+
+      joy.addEventListener("touchend", () => {
+        active = false;
+        stick.style.transform = `translate(0,0)`;
+        ["ArrowUp","ArrowDown","ArrowLeft","ArrowRight"].forEach(k => key(k,"keyup"));
+      });
+
+      joy.addEventListener("touchmove", e => {
+        if (!active) return;
+
+        const rect = joy.getBoundingClientRect();
+        const t = e.touches[0];
+
+        let x = t.clientX - rect.left - rect.width/2;
+        let y = t.clientY - rect.top - rect.height/2;
+
+        const max = 40;
+        x = Math.max(-max, Math.min(max, x));
+        y = Math.max(-max, Math.min(max, y));
+
+        stick.style.transform = `translate(${x}px, ${y}px)`;
+
+        ["ArrowUp","ArrowDown","ArrowLeft","ArrowRight"].forEach(k => key(k,"keyup"));
+
+        if (y < -10) key("ArrowUp","keydown");
+        if (y > 10) key("ArrowDown","keydown");
+        if (x < -10) key("ArrowLeft","keydown");
+        if (x > 10) key("ArrowRight","keydown");
+      });
+    </script>
+
+    <script async src="sm64.us.f3dex2e.js"></script>
+  </body>
+</html>
