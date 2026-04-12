@@ -163,7 +163,7 @@
       <button class="z">Z</button>
     </div>
 
-    <script>
+<script>
 var Module = {
   canvas: document.getElementById("canvas")
 };
@@ -174,7 +174,7 @@ const canvas = Module.canvas;
 canvas.setAttribute("tabindex", "0");
 canvas.focus();
 
-/* KEY STATE SYSTEM (this is the real fix) */
+/* KEY STATE SYSTEM */
 const keysDown = new Set();
 
 function sendKey(code, keyCode, type) {
@@ -220,15 +220,16 @@ function bind(selector, code, keyCode) {
   });
 }
 
-/* BUTTON MAP (WITH keyCodes!) */
-bind(".a", "KeyX", 88);
-bind(".b", "KeyZ", 90);
+/* ✅ UPDATED BUTTON MAP */
+bind(".a", "KeyX", 88);     // A = X
+bind(".b", "KeyC", 67);     // B = C
 
 bind(".start", "Enter", 13);
 
 bind(".l", "KeyQ", 81);
 bind(".r", "KeyE", 69);
-bind(".z", "ShiftLeft", 16);
+
+bind(".z", "Space", 32);    // Z = Space
 
 bind(".c-up", "KeyI", 73);
 bind(".c-down", "KeyK", 75);
@@ -288,7 +289,6 @@ joy.addEventListener("touchmove", (e) => {
   if (x > 10) press("ArrowRight", 39);
 });
 </script>
-
     <script async src="sm64.us.f3dex2e.js"></script>
   </body>
 </html>
