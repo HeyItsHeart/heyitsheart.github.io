@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>HOMEWORK-HELP</title>
+<style>
+  body {
+    margin: 0;
+    overflow-y: auto;
+    font-family: 'Arial', sans-serif;
+    background-color: #1e1e2f;
+    color: #f0f0f0;
+  }
+  #bgCanvas {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    z-index: -1;
+  }
+  #navMenu {
+    background:#2c2c3c; padding:10px; display:flex; justify-content:center; flex-wrap:wrap;
+  }
+  #navMenu button {
+    padding:8px 15px; margin:5px; border:none; border-radius:8px; cursor:pointer; font-weight:bold;
+    background:linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+    color: #fff;
+    font-size: 1rem;
+    transition: background 0.3s, transform 0.2s;
+  }
+  #navMenu button:hover {
+    background:linear-gradient(135deg, #fc5c7d 0%, #6a82fb 100%);
+    transform: scale(1.05);
+  }
+
+  /* Sections styling, hidden by default, shown with 'active' class */
+  #home, #addGame, #addApp {
+    display: none;
+    padding: 20px;
+  }
+  #home.active, #addGame.active, #addApp.active {
+    display: block;
+  }
+
+  #content {
+    max-width: 900px;
+    margin: auto;
+  }
+
+  h2 {
+    text-align: center;
+    margin-bottom: 20px;
+    color: #ff4b2b; /* Vibrant color for headings */
+    font-family: 'Arial', sans-serif;
+  }
+
+  /* Scrollable lists for Games and Apps */
+  #gamesContainer, #appsContainer {
+    display: flex;
+    flex-direction: column;
+    max-height: 250px;
+    overflow-y: auto;
+    gap: 10px;
+    margin-top: 10px;
+    padding-right: 10px;
+  }
+  /* Item box styling */
+  .itemBox {
+    position: relative;
+    padding: 12px 20px;
+    background: #3e3e5e; /* Slightly lighter than background */
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    cursor: pointer;
+    transition: background 0.3s, transform 0.2s;
+  }
+  .itemBox:hover {
+    background: #5a5a7d;
+    transform: scale(1.02);
+  }
+
+  /* Delete button styles */
+  .deleteBtn {
+    background-color: #e74c3c;
+    border: none;
+    border-radius: 4px;
+    padding: 4px 8px;
+    color: white;
+    font-weight: bold;
+    cursor: pointer;
+    font-size: 0.8rem;
+    transition: background 0.3s;
+  }
+  .deleteBtn:hover {
+    background-color: #c0392b;
+  }
+
+  /* Form styles for add game/app */
+  .addForm {
+    background:#2c2c3c;
+    padding:15px;
+    border-radius:10px;
+    max-width: 500px;
+    margin: 20px auto;
+  }
+  .addForm input, .addForm select, .addForm textarea {
+    width: 100%;
+    padding: 10px;
+    margin: 8px 0;
+    border-radius: 6px;
+    border: 2px solid #ff4b2b;
+    background: #1e1e2f;
+    color: #fff;
+  }
+  .addForm button {
+    width: 100%;
+    padding: 12px;
+    margin-top: 10px;
+    background: linear-gradient(135deg, #f7971e 0%, #ffd200 100%);
+    border: none;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background 0.3s, transform 0.2s;
+  }
+  .addForm button:hover {
+    background: linear-gradient(135deg, #f7971e 0%, #ffc107 100%);
+    transform: scale(1.02);
+  }
+
+</style>
+</head>
+<body>
+
+<canvas id="bgCanvas"></canvas>
+
+<!-- Navigation -->
+<div id="navMenu">
+  <button onclick="showSection('home')">Home</button>
+  <button onclick="showSection('addGame')">Add a Game</button>
+  <button onclick="showSection('addApp')">Add an App</button>
+</div>
+
+<!-- Home Section -->
+<div id="home" class="active">
+  <div id="content">
+    <h2>🌌 HOMEWORK-HELP 🌌</h2>
+    <p style="text-align:center;">Use the navigation above to switch sections.</p>
+    <!-- Search -->
+    <div style="margin-top:20px;">
+      <form onsubmit="performDareSearch(event)">
+        <input type="text" id="dareSearchInput" placeholder="SEARCH, WHY NOT" required />
+        <button type="submit" id="dareSearchButton">Search</button>
+      </form>
+    </div>
+    <!-- My Games -->
+    <h3 style="margin-top:30px;">My Games</h3>
+    <div id="homeGamesContainer"></div>
+    <!-- My Apps -->
+    <h3 style="margin-top:30px;">My Apps</h3>
+    <div id="homeAppsContainer"></div>
+  </div>
+</div>
+
+<!-- Add a Game -->
+<div id="addGame" style="display:none;">
+  <h2 style="text-align:center; color:#ff4b2b;">Add-a-Game</h2>
+  <div class="addForm">
+    <h3 style="color:#ff4b2b;">Fill out the form below:</h3>
+    <input type="text" id="gameNameInput" placeholder="Game Name" />
+    <select id="gameTypeSelect">
+      <option value="html">HTML Embed</option>
+      <option value="url">External URL</option>
+    </select>
+    <textarea id="gameCodeInput" placeholder="Paste HTML or URL here" rows="4"></textarea>
+    <button onclick="addGame()">Add to Games</button>
+  </div>
+</div>
+
+<!-- Add an App -->
+<div id="addApp" style="display:none;">
+  <h2 style="text-align:center; color:#ff4b2b;">Add an App</h2>
+  <div class="addForm">
+    <h3 style="color:#ff4b2b;">Fill out the form below:</h3>
+    <input type="text" id="appNameInput" placeholder="App Name" />
+    <select id="appTypeSelect">
+      <option value="html">HTML Embed</option>
+      <option value="url">External URL</option>
+    </select>
+    <textarea id="appCodeInput" placeholder="Paste HTML or URL here" rows="3"></textarea>
+    <button onclick="addApp()">Add an App</button>
+  </div>
+</div>
+
+<script>
+/* Canvas background animation (unchanged) */
+const canvas = document.getElementById('bgCanvas');
+const ctx = canvas.getContext('2d');
+function resizeCanvas() {
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+}
+window.addEventListener('resize', resizeCanvas);
+resizeCanvas();
+// create particles
+const particles = [];
+function createParticles() {
+  for (let i=0; i<300; i++) {
+    particles.push({
+      x: Math.random() * canvas.width,
+      y: Math.random() * canvas.height,
+      size: Math.random() * 2 + 1,
+      speed: Math.random() * 0.5 + 0.2,
+      angle: Math.random() * Math.PI * 2,
+      drift: Math.random() * 0.2 - 0.1
+    });
+  }
+}
+function animate() {
+  ctx.fillStyle = 'rgba(30,30,45,0.3)';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  for (let p of particles) {
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+    ctx.fillStyle = '#8e44ad';
+    ctx.fill();
+    p.y += p.speed;
+    p.x += p.drift;
+    if (p.y > canvas.height) {
+      p.y = 0;
+      p.x = Math.random() * canvas.width;
+    }
+    if (p.x > canvas.width || p.x < 0) {
+      p.x = Math.random() * canvas.width;
+    }
+  }
+  requestAnimationFrame(animate);
+}
+createParticles();
+animate();
+
+/* Show section function */
+function showSection(sectionId) {
+  document.querySelectorAll('#home, #addGame, #addApp').forEach(sec => sec.style.display='none');
+  document.getElementById(sectionId).style.display='block';
+}
+
+/* Initialize games and apps, with default "Library Lies" */
+let games = [
+  {
+    name: "Library Lies",
+    type: "html",
+    content: `<html><head><title>Library Lies</title></head><body style="margin:0;padding:0;overflow:hidden;background:#000;">
+    <iframe src="https://yourlibraryliesgame.html" style="width:100%;height:100%;border:none;"></iframe>
+    </body></html>`
+  }
+];
+
+const storedGames = JSON.parse(localStorage.getItem('games'));
+if (storedGames) { games = storedGames; }
+
+let apps = [];
+const storedApps = JSON.parse(localStorage.getItem('apps'));
+if (storedApps) { apps = storedApps; }
+
+function saveGames() {
+  localStorage.setItem('games', JSON.stringify(games));
+}
+function saveApps() {
+  localStorage.setItem('apps', JSON.stringify(apps));
+}
+
+/* Add a game */
+function addGame() {
+  const name = document.getElementById('gameNameInput').value.trim();
+  const type = document.getElementById('gameTypeSelect').value;
+  const content = document.getElementById('gameCodeInput').value.trim();
+  if (!name || !content) { alert('Fill all fields'); return; }
+  const g = {name, type, content};
+  games.push(g);
+  saveGames();
+  createItemBox('homeGamesContainer', name, content, type);
+  document.getElementById('gameNameInput').value='';
+  document.getElementById('gameCodeInput').value='';
+}
+
+/* Add an app */
+function addApp() {
+  const name = document.getElementById('appNameInput').value.trim();
+  const content = document.getElementById('appCodeInput').value.trim();
+  const type = document.getElementById('appTypeSelect').value;
+  if (!name || !content) { alert('Fill all fields'); return; }
+  createAppBox(name, content, type);
+  // Save to localStorage
+  apps.push({name, content, type});
+  localStorage.setItem('apps', JSON.stringify(apps));
+  document.getElementById('appNameInput').value='';
+  document.getElementById('appCodeInput').value='';
+}
+
+/* Load existing games and apps on page load */
+window.onload = () => {
+  // Load games
+  const gContainer = document.getElementById('homeGamesContainer');
+  games.forEach(g => createItemBox('homeGamesContainer', g.name, g.content, g.type));
+  // Load apps
+  const aContainer = document.getElementById('homeAppsContainer');
+  apps.forEach(a => createAppBox(a.name, a.content, a.type));
+};
+
+/* Open game/app in new window */
+function openGameInNewWindow(content, type) {
+  const newWin = window.open('about:blank', '_blank');
+  if (type==='html') {
+    newWin.document.write(content);
+  } else if (type==='url') {
+    newWin.location = content;
+  }
+  newWin.focus();
+}
+
+/* Create game box with delete button */
+function createItemBox(containerId, name, content, type) {
+  const container = document.getElementById(containerId);
+  const div = document.createElement('div');
+  div.className='itemBox';
+  div.innerHTML = `<button class="deleteBtn" onclick="deleteGame('${name}')">X</button>${name}`;
+  div.onclick=() => { openGameInNewWindow(content, type); };
+  container.appendChild(div);
+}
+
+/* Create app box with delete button */
+function createAppBox(name, content, type) {
+  const container = document.getElementById('homeAppsContainer');
+  const div = document.createElement('div');
+  div.className='itemBox';
+  div.innerHTML = `<button class="deleteBtn" onclick="deleteApp('${name}')">X</button>${name}`;
+  div.onclick=() => { openGameInNewWindow(content, type); };
+  container.appendChild(div);
+}
+
+/* Delete game */
+function deleteGame(name) {
+  games = games.filter(g => g.name !== name);
+  saveGames();
+  document.getElementById('homeGamesContainer').innerHTML='';
+  games.forEach(g => createItemBox('homeGamesContainer', g.name, g.content, g.type));
+}
+
+/* Delete app */
+function deleteApp(name) {
+  apps = apps.filter(a => a.name !== name);
+  localStorage.setItem('apps', JSON.stringify(apps));
+  document.getElementById('homeAppsContainer').innerHTML='';
+  apps.forEach(a => createAppBox(a.name, a.content, a.type));
+}
+</script>
+
+</body>
+</html>
