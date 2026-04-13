@@ -223,6 +223,59 @@
     if(x<-10)press("ArrowLeft",37);
     if(x> 10)press("ArrowRight",39);
   });
+
+    /* ───────────────────────────────────────────────
+   SWIPE → C-BUTTONS
+   Swipe Up    = C↑  (KeyW)
+   Swipe Down  = C↓  (KeyS)
+   Swipe Left  = C←  (KeyA)
+   Swipe Right = C→  (KeyD)
+──────────────────────────────────────────────── */
+let swipeStartX = 0;
+let swipeStartY = 0;
+let swipeActive = false;
+
+const SWIPE_THRESHOLD = 35; // minimum px distance to count as swipe
+
+document.body.addEventListener("touchstart", (e) => {
+  if (e.touches.length !== 1) return;
+  swipeActive = true;
+  swipeStartX = e.touches[0].clientX;
+  swipeStartY = e.touches[0].clientY;
+}, { passive: false });
+
+document.body.addEventListener("touchmove", (e) => {
+  if (!swipeActive) return;
+
+  const x = e.touches[0].clientX - swipeStartX;
+  const y = e.touches[0].clientY - swipeStartY;
+
+  // reset all C buttons
+  release("KeyW", 73);
+  release("KeyS", 75);
+  release("KeyA", 74);
+  release("KeyD", 76);
+
+  // Horizontal swipe?
+  if (Math.abs(x) > Math.abs(y)) {
+    if (x < -SWIPE_THRESHOLD) press("KeyA", 74);   // C-left
+    else if (x > SWIPE_THRESHOLD) press("KeyD", 76); // C-right
+  }
+  // Vertical swipe?
+  else {
+    if (y < -SWIPE_THRESHOLD) press("KeyW", 73);   // C-up
+    else if (y > SWIPE_THRESHOLD) press("KeyS", 75); // C-down
+  }
+}, { passive: false });
+
+document.body.addEventListener("touchend", () => {
+  swipeActive = false;
+  // Release all C buttons
+  release("KeyW", 73);
+  release("KeyS", 75);
+  release("KeyA", 74);
+  release("KeyD", 76);
+}, { passive: false });
   </script>
 
   <script async src="sm64.us.f3dex2e.js"></script>
