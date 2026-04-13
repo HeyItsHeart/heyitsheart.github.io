@@ -153,6 +153,14 @@ footer{border-top:1px solid var(--border);padding:24px 60px;display:flex;align-i
 .reveal.visible{opacity:1;transform:translateY(0);}
 .rd1{transition-delay:0.08s;}.rd2{transition-delay:0.16s;}.rd3{transition-delay:0.24s;}
 @keyframes fadeUp{from{opacity:0;transform:translateY(16px);}to{opacity:1;transform:translateY(0);}}
+#starshine{
+  padding:80px 60px;
+  position:relative;
+  z-index:1;
+}
+@media(max-width:700px){
+  #starshine{padding:60px 24px;}
+}
 </style>
 </head>
 <body>
@@ -236,6 +244,69 @@ footer{border-top:1px solid var(--border);padding:24px 60px;display:flex;align-i
         <div class="gc-title" style="color:#ddd6fe;">Super Mario<br>Galaxy 2</div>
         <div class="gc-desc">The sequel to the ground-breaking original. Yoshi, new power-ups, and even more cosmic madness — also coming to the browser.</div>
         <div class="gc-status planned">Coming — 2028</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="starshine">
+  <div class="tech-inner">
+    <div class="tech-hdr reveal">
+      <div class="games-eyebrow">Next-Gen Porting</div>
+      <h2 class="tech-h2">The <em>Starshine Engine.</em></h2>
+    </div>
+
+    <p class="tech-sub reveal">
+      A compatibility layer built to run the entirety of <strong>Sunshine</strong> and <strong>Galaxy</strong> in WebAssembly — without emulation. Starshine translates original engine behavior into a native browser runtime, enabling near-native performance, full control support, and a unified system powering multiple 3D Mario titles.
+    </p>
+
+    <div class="tech-grid">
+      <div class="tech-item reveal rd1">
+        <div class="ti-icon">🌊</div>
+        <div class="ti-name">Sunshine Compatibility</div>
+        <div class="ti-desc">
+          Recreates FLUDD physics, actor systems, and JSystem behavior to run Sunshine natively in the browser.
+        </div>
+      </div>
+
+      <div class="tech-item reveal rd2">
+        <div class="ti-icon">🌌</div>
+        <div class="ti-name">Galaxy Runtime</div>
+        <div class="ti-desc">
+          Supports Galaxy’s gravity, planet systems, and object-driven level architecture through a custom runtime layer.
+        </div>
+      </div>
+
+      <div class="tech-item reveal rd3">
+        <div class="ti-icon">⚡</div>
+        <div class="ti-name">No Emulation</div>
+        <div class="ti-desc">
+          Runs game logic directly in WebAssembly — no Dolphin, no interpreter slowdown, just raw execution.
+        </div>
+      </div>
+
+      <div class="tech-item reveal rd1">
+        <div class="ti-icon">🧠</div>
+        <div class="ti-name">Engine Translation</div>
+        <div class="ti-desc">
+          Converts original engine calls into modern Web APIs like WebGL and Web Audio.
+        </div>
+      </div>
+
+      <div class="tech-item reveal rd2">
+        <div class="ti-icon">🎮</div>
+        <div class="ti-name">Unified Controls</div>
+        <div class="ti-desc">
+          Shared input system across Sunshine and Galaxy with keyboard, mouse, and full gamepad support.
+        </div>
+      </div>
+
+      <div class="tech-item reveal rd3">
+        <div class="ti-icon">🚀</div>
+        <div class="ti-name">Multi-Game Engine</div>
+        <div class="ti-desc">
+          One engine powering multiple Mario titles — future-proof for Galaxy 2 and beyond.
+        </div>
       </div>
     </div>
   </div>
