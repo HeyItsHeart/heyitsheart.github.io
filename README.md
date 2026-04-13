@@ -2,7 +2,7 @@
 
 Explore your personal game link database here:
 
-👉 [https://heyitsheart.github.io/gamevault-landing.html](https://heyitsheart.github.io/gamevault-landing.html)
+👉 [GameVault](https://heyitsheart.github.io/game-vault)
 
 ## What **Game Vault** Is
 
@@ -14,15 +14,15 @@ It provides an interface to store games with details like cover art, game status
 
 **Game Vault** lets you:
 
-- 📚 **Add your games** with titles, cover art, status, tags, and related links. :contentReference[oaicite:2]{index=2}  
-- 🔍 **Search and filter** games by name or category. :contentReference[oaicite:3]{index=3}  
-- 📊 **Sort games** by name, price, or number of links. :contentReference[oaicite:4]{index=4}  
-- 📥 **Import and export** your entire game list as JSON data. :contentReference[oaicite:5]{index=5}  
-- 🔗 **Auto-fill game metadata** (like cover art) using the SteamGridDB API (if you provide a key). :contentReference[oaicite:6]{index=6}
+- 📚 **Add your games** with titles, cover art, status, tags, and related links.
+- 🔍 **Search and filter** games by name or category.
+- 📊 **Sort games** by name, price, or number of links.
+- 📥 **Import and export** your entire game list as JSON data.  
+- 🔗 **Auto-fill game metadata** (like cover art) using the SteamGridDB API (if you provide a key).
 
-This makes it perfect for gamers who want an **organized catalog of their games and related resources**, accessible from a simple browser interface. :contentReference[oaicite:7]{index=7}
+This makes it perfect for gamers who want an **organized catalog of their games and related resources**, accessible from a simple browser interface.
 
 ---
 
 Feel free to customize the text to match your vision or branding! Want a version with badges, screenshots, or instructions on how to use it? I can help with that too.
-::contentReference[oaicite:8]{index=8}
+
