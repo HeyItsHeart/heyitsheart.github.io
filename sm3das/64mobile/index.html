@@ -224,45 +224,54 @@
     if(x> 10)press("ArrowRight",39);
   });
 
-    /* ───────────────────────────────────────────────
-   SWIPE → C-BUTTONS
-   Swipe Up    = C↑  (KeyW)
-   Swipe Down  = C↓  (KeyS)
-   Swipe Left  = C←  (KeyA)
-   Swipe Right = C→  (KeyD)
-──────────────────────────────────────────────── */
+/* ───────────────────────────────────────────────
+   SWIPE → C-BUTTONS (RIGHT SIDE ONLY)
+────────────────────────────────────────────── */
+
 let swipeStartX = 0;
 let swipeStartY = 0;
 let swipeActive = false;
 
-const SWIPE_THRESHOLD = 35; // minimum px distance to count as swipe
+const SWIPE_THRESHOLD = 35;
+
+function isRightSide(x) {
+  return x > window.innerWidth / 2;
+}
 
 document.body.addEventListener("touchstart", (e) => {
   if (e.touches.length !== 1) return;
+
+  const x = e.touches[0].clientX;
+
+  // ONLY allow swipe control on right half of screen
+  if (!isRightSide(x)) {
+    swipeActive = false;
+    return;
+  }
+
   swipeActive = true;
-  swipeStartX = e.touches[0].clientX;
+  swipeStartX = x;
   swipeStartY = e.touches[0].clientY;
 }, { passive: false });
 
 document.body.addEventListener("touchmove", (e) => {
   if (!swipeActive) return;
 
-  const x = e.touches[0].clientX - swipeStartX;
-  const y = e.touches[0].clientY - swipeStartY;
+  const touch = e.touches[0];
+  const x = touch.clientX - swipeStartX;
+  const y = touch.clientY - swipeStartY;
 
-  // reset all C buttons
+  // reset C buttons each frame
   release("KeyW", 73);
   release("KeyS", 75);
   release("KeyA", 74);
   release("KeyD", 76);
 
-  // Horizontal swipe?
+  // determine swipe direction
   if (Math.abs(x) > Math.abs(y)) {
     if (x < -SWIPE_THRESHOLD) press("KeyA", 74);   // C-left
     else if (x > SWIPE_THRESHOLD) press("KeyD", 76); // C-right
-  }
-  // Vertical swipe?
-  else {
+  } else {
     if (y < -SWIPE_THRESHOLD) press("KeyW", 73);   // C-up
     else if (y > SWIPE_THRESHOLD) press("KeyS", 75); // C-down
   }
@@ -270,7 +279,7 @@ document.body.addEventListener("touchmove", (e) => {
 
 document.body.addEventListener("touchend", () => {
   swipeActive = false;
-  // Release all C buttons
+
   release("KeyW", 73);
   release("KeyS", 75);
   release("KeyA", 74);
