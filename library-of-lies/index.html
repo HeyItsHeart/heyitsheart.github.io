@@ -1,1 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>The Library Case: Files vs Books</title>
+    <style>
+        body { margin: 0; background: #050505; color: #eee; font-family: 'Courier New', monospace; overflow: hidden; display: flex; flex-direction: column; align-items: center; }
+        canvas { background: #120e0a; border: 10px solid #2a1b0f; display: none; margin-top: 20px; box-shadow: 0 0 100px #000; }
+        #ui { position: absolute; top: 30px; width: 750px; display: none; justify-content: space-between; font-size: 1rem; pointer-events: none; text-shadow: 2px 2px #000; z-index: 10; font-weight: bold; }
+        
+        #menu-system { width: 800px; height: 600px; background: #0a0a0a; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; padding: 40px; box-sizing: border-box; border: 4px solid #222; }
+        .shop-container { display: flex; gap: 15px; margin: 25px 0; }
+        .shop-item { border: 2px solid #444; padding: 10px; width: 180px; background: #111; cursor: pointer; transition: 0.2s; }
+        .shop-item:hover { border-color: #ffd700; }
+        .shop-item.selected { border-color: #0ff; background: #002222; }
+        .price-tag { background: #ffd700; color: #000; padding: 3px; font-weight: bold; font-size: 0.8rem; margin-top: 5px; }
+        .owned-tag { background: #00ff00; color: #000; padding: 3px; font-weight: bold; font-size: 0.8rem; margin-top: 5px; }
 
+        .main-btn { background: #4a0000; color: #fff; border: 1px solid #ff0000; padding: 15px 35px; cursor: pointer; font-family: inherit; font-size: 1.2rem; }
+        #charge-bar { width: 80px; height: 12px; background: #222; border: 1px solid #ffd700; display: inline-block; vertical-align: middle; }
+        #charge-fill { height: 100%; background: #0ff; width: 100%; }
+    </style>
+</head>
+<body>
+
+    <div id="ui">
+        <span>CASE FILE: #<span id="lvl">1</span></span>
+        <span>STUN: <div id="charge-bar"><div id="charge-fill"></div></div></span>
+        <span style="color: #ffd700">💰 BANK: <span id="totalBooks">0</span></span>
+        <span style="color: #0f0">FILES: <span id="bkCount">0</span></span>
+    </div>
+
+    <div id="menu-system">
+        <h1 style="color:#0ff; text-shadow: 0 0 10px #0ff;">CYBORG UPLINK LOBBY</h1>
+        <p>Wallet: <span id="lobbyBooks" style="color:#ffd700;">0</span> Books | Current File: #<span id="lobbyLvl">1</span></p>
+        <div class="shop-container">
+            <div id="shop-bolt" class="shop-item selected" onclick="buyItem('bolt', 0)">
+                <div>STD BOLT</div><p style="font-size:0.7rem">2s Stun</p><div class="owned-tag">OWNED</div>
+            </div>
+            <div id="shop-emp" class="shop-item" onclick="buyItem('emp', 15)">
+                <div>EMP BLAST</div><p style="font-size:0.7rem">4.5s Stun</p><div id="price-emp" class="price-tag">15 BOOKS</div>
+            </div>
+            <div id="shop-slug" class="shop-item" onclick="buyItem('slug', 40)">
+                <div>HYPER-SLUG</div><p style="font-size:0.7rem">7s Stun</p><div id="price-slug" class="price-tag">40 BOOKS</div>
+            </div>
+        </div>
+        <button id="actionBtn" class="main-btn" onclick="startGame()">START MISSION</button>
+    </div>
+
+    <canvas id="gameCanvas"></canvas>
+
+<script>
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+    canvas.width = 800; canvas.height = 600;
+
+    let gameActive = false, level = 1, bank = 0;
+    let inventory = ['bolt'], currentWeapon = 'bolt';
+    let shelves = [], evidence = [], currencyBooks = [], keys = {}, bullets = [];
+    
+    const weaponStats = {
+        bolt: { stun: 2000, cool: 3000, color: '#0ff', speed: 8 },
+        emp: { stun: 4500, cool: 6000, color: '#f0f', speed: 5 },
+        slug: { stun: 7000, cool: 8000, color: '#fff', speed: 12 }
+    };
+
+    let player = { x: 50, y: 300, r: 15, speed: 4.5, lastShot: 0, dir: {x: 1, y: 0} };
+    let enemy = { x: 750, y: 300, r: 24, speed: 1.6, stunned: 0 };
+
+    function buyItem(type, cost) {
+        if (inventory.includes(type)) { currentWeapon = type; updateShopUI(); return; }
+        if (bank >= cost) { bank -= cost; inventory.push(type); currentWeapon = type; updateShopUI(); }
+    }
+
+    function updateShopUI() {
+        document.getElementById('totalBooks').innerText = bank;
+        document.getElementById('lobbyBooks').innerText = bank;
+        document.getElementById('lobbyLvl').innerText = level;
+        document.querySelectorAll('.shop-item').forEach(el => el.classList.remove('selected'));
+        document.getElementById('shop-' + currentWeapon).classList.add('selected');
+        inventory.forEach(item => {
+            const priceTag = document.getElementById('price-' + item);
+            if (priceTag) { priceTag.innerText = "OWNED"; priceTag.className = "owned-tag"; }
+        });
+    }
+
+    function drawCyborg(x, y, r) {
+        let limb = Math.sin(Date.now()/150) * 10;
+        ctx.strokeStyle = "#555"; ctx.lineWidth = 4;
+        ctx.beginPath(); ctx.moveTo(x-5, y+10); ctx.lineTo(x-10+limb, y+25); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(x+5, y+10); ctx.lineTo(x+10-limb, y+25); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(x-12, y); ctx.lineTo(x-22, y+5+limb); ctx.stroke();
+        ctx.strokeStyle = weaponStats[currentWeapon].color;
+        ctx.beginPath(); ctx.moveTo(x+12, y); ctx.lineTo(x+25*player.dir.x, y+25*player.dir.y); ctx.stroke();
+        ctx.fillStyle = "#FFD700"; ctx.beginPath(); ctx.arc(x, y, r, 0, 7); ctx.fill();
+        ctx.fillStyle = "black"; ctx.beginPath(); ctx.arc(x-5, y-5, 2, 0, 7); ctx.fill(); ctx.beginPath(); ctx.arc(x+5, y-5, 2, 0, 7); ctx.fill();
+        ctx.strokeStyle = "black"; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(x, y+2, 7, 0.1*Math.PI, 0.9*Math.PI); ctx.stroke();
+    }
+
+    function drawGranny(x, y) {
+        let isStunned = enemy.stunned > Date.now();
+        ctx.strokeStyle = isStunned ? "#0ff" : "#1a1a1a"; ctx.lineWidth = 3;
+        for (let i = 0; i < 6; i++) {
+            let ang = (i/6)*Math.PI*2 + Math.sin(Date.now()/100+i)*0.5;
+            ctx.beginPath(); ctx.moveTo(x,y); ctx.quadraticCurveTo(x+Math.cos(ang)*30, y+Math.sin(ang)*30-20, x+Math.cos(ang)*45, y+Math.sin(ang)*45+15); ctx.stroke();
+        }
+        ctx.fillStyle = isStunned ? "#0af" : "#dcd3c1"; ctx.beginPath(); ctx.arc(x, y, 22, 0, 7); ctx.fill();
+        ctx.fillStyle = "white"; ctx.beginPath(); ctx.arc(x-8, y-4, 7, 0, 7); ctx.fill(); ctx.beginPath(); ctx.arc(x+8, y-4, 7, 0, 7); ctx.fill();
+        ctx.fillStyle = "black"; ctx.beginPath(); ctx.arc(x-8, y-4, 2, 0, 7); ctx.fill(); ctx.beginPath(); ctx.arc(x+8, y-4, 2, 0, 7); ctx.fill();
+        ctx.fillStyle = "#a66b6b"; ctx.beginPath(); ctx.ellipse(x, y+11, 10, 5, 0, 0, 7); ctx.fill();
+    }
+
+    function initLevel() {
+        shelves = [{x:180,y:50,w:40,h:200}, {x:180,y:350,w:40,h:200}, {x:380,y:100,w:40,h:400}, {x:610,y:50,w:40,h:200}, {x:610,y:350,w:40,h:200}];
+        player.x = 50; player.y = 50; enemy.x = 750; enemy.y = 550; enemy.stunned = 0;
+        enemy.speed = 1.4 + (level * 0.15);
+        
+        evidence = []; // Files (Required)
+        currencyBooks = []; // Money (Optional)
+        
+        // Spawn 6 Yellow Files
+        for(let i=0; i<6; i++) {
+            let bx, by, coll;
+            do { bx = 60+Math.random()*680; by = 60+Math.random()*480; coll = shelves.some(s => bx > s.x-25 && bx < s.x+s.w+25 && by > s.y-25 && by < s.y+s.h+25); } while(coll);
+            evidence.push({ x: bx, y: by, collected: false });
+        }
+        
+        // Spawn 5 Currency Books (Red, Blue, Green)
+        const colors = ['#f44', '#44f', '#4f4'];
+        for(let i=0; i<5; i++) {
+            let bx, by, coll;
+            do { bx = 60+Math.random()*680; by = 60+Math.random()*480; coll = shelves.some(s => bx > s.x-25 && bx < s.x+s.w+25 && by > s.y-25 && by < s.y+s.h+25); } while(coll);
+            currencyBooks.push({ x: bx, y: by, collected: false, color: colors[i%3] });
+        }
+        updateUI();
+    }
+
+    function update() {
+        if (!gameActive) return;
+        let px = player.x, py = player.y;
+        if (keys['w'] || keys['ArrowUp'] || keys['W']) { py -= player.speed; player.dir = {x:0, y:-1}; }
+        if (keys['s'] || keys['ArrowDown'] || keys['S']) { py += player.speed; player.dir = {x:0, y:1}; }
+        if (keys['a'] || keys['ArrowLeft'] || keys['A']) { px -= player.speed; player.dir = {x:-1, y:0}; }
+        if (keys['d'] || keys['ArrowRight'] || keys['D']) { px += player.speed; player.dir = {x:1, y:0}; }
+        const check = (tx, ty) => shelves.some(s => tx+12 > s.x && tx-12 < s.x+s.w && ty+12 > s.y && ty-12 < s.y+s.h) || tx<15 || tx>785 || ty<15 || ty>585;
+        if (!check(px, player.y)) player.x = px;
+        if (!check(player.x, py)) player.y = py;
+
+        if (keys[' ']) {
+            if (Date.now() - player.lastShot > weaponStats[currentWeapon].cool) {
+                bullets.push({ x: player.x, y: player.y, vx: player.dir.x * weaponStats[currentWeapon].speed, vy: player.dir.y * weaponStats[currentWeapon].speed, type: currentWeapon });
+                player.lastShot = Date.now();
+            }
+        }
+        if (enemy.stunned < Date.now()) {
+            let d = Math.hypot(player.x-enemy.x, player.y-enemy.y);
+            let vx = (player.x-enemy.x)/d * enemy.speed, vy = (player.y-enemy.y)/d * enemy.speed;
+            if (!check(enemy.x + vx, enemy.y)) enemy.x += vx; if (!check(enemy.x, enemy.y + vy)) enemy.y += vy;
+            if (d < 30) { gameActive = false; canvas.style.display = "none"; document.getElementById('menu-system').style.display = "flex"; updateShopUI(); }
+        }
+        bullets.forEach((b, i) => {
+            b.x += b.vx; b.y += b.vy;
+            if (Math.hypot(b.x - enemy.x, b.y - enemy.y) < 30) { enemy.stunned = Date.now() + weaponStats[b.type].stun; bullets.splice(i, 1); }
+            if (check(b.x, b.y)) bullets.splice(i, 1);
+        });
+        document.getElementById('charge-fill').style.width = Math.min(100, ((Date.now() - player.lastShot) / weaponStats[currentWeapon].cool) * 100) + "%";
+        
+        // Collect Currency (Red/Blue/Green)
+        currencyBooks.forEach(b => { if(!b.collected && Math.hypot(player.x-b.x, player.y-b.y) < 25) { b.collected=true; bank++; updateUI(); }});
+        
+        // Collect Mandatory Files (Yellow)
+        evidence.forEach(b => { if(!b.collected && Math.hypot(player.x-b.x, player.y-b.y) < 25) { b.collected=true; updateUI(); }});
+        
+        if(evidence.every(b => b.collected)) { level++; initLevel(); gameActive = false; canvas.style.display = "none"; document.getElementById('menu-system').style.display = "flex"; updateShopUI(); }
+    }
+
+    function draw() {
+        ctx.clearRect(0,0,800,600);
+        if (gameActive) {
+            ctx.fillStyle = "#120e0a"; ctx.fillRect(0,0,800,600);
+            shelves.forEach(s => { ctx.fillStyle = "#2a1b0f"; ctx.fillRect(s.x, s.y, s.w, s.h); });
+            
+            // Draw Money Books
+            currencyBooks.forEach(b => { if(!b.collected){ ctx.fillStyle = b.color; ctx.fillRect(b.x-8, b.y-10, 16, 22); }});
+            
+            // Draw Evidence Files
+            evidence.forEach(b => { if(!b.collected){ ctx.fillStyle = "#ffd700"; ctx.fillRect(b.x-10, b.y-8, 20, 16); ctx.fillStyle="#fff"; ctx.fillRect(b.x-8, b.y-5, 16, 2); }});
+            
+            bullets.forEach(b => { ctx.fillStyle = weaponStats[b.type].color; ctx.beginPath(); ctx.arc(b.x, b.y, 5, 0, 7); ctx.fill(); });
+            drawCyborg(player.x, player.y, 15); drawGranny(enemy.x, enemy.y);
+            update();
+        }
+        requestAnimationFrame(draw);
+    }
+
+    function startGame() { document.getElementById('menu-system').style.display = "none"; document.getElementById('ui').style.display = "flex"; canvas.style.display = "block"; gameActive = true; initLevel(); }
+    function updateUI() { document.getElementById('totalBooks').innerText = bank; document.getElementById('lobbyBooks').innerText = bank; document.getElementById('lvl').innerText = level; document.getElementById('bkCount').innerText = evidence.filter(b => b.collected).length + "/" + evidence.length; }
+    window.addEventListener('keydown', e => { keys[e.key] = true; });
+    window.addEventListener('keyup', e => { keys[e.key] = false; });
+    updateShopUI(); draw();
+</script>
+</body>
+</html>
