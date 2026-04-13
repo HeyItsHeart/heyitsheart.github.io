@@ -84,17 +84,6 @@
     .c-left {right:162px;bottom:190px;}
     .c-right{right:62px; bottom:190px;}
 
-    /* ── D-PAD — Gray ── */
-    .d{
-      width:40px;height:40px;
-      border-radius:8px;
-      background:linear-gradient(145deg,#4b5563,#1f2937);
-      font-size:16px;
-    }
-    .d-up   {left:174px;bottom:156px;}
-    .d-down {left:174px;bottom:52px;}
-    .d-left {left:122px;bottom:104px;}
-    .d-right{left:226px;bottom:104px;}
 
     /* ── START — Blue ── */
     .start{
@@ -159,11 +148,6 @@
     <button class="c c-left">C←</button>
     <button class="c c-right">C→</button>
 
-    <!-- D-pad -->
-    <button class="d d-up">↑</button>
-    <button class="d d-down">↓</button>
-    <button class="d d-left">←</button>
-    <button class="d d-right">→</button>
 
     <!-- Center -->
     <button class="start">START</button>
@@ -206,14 +190,10 @@
   bind(".l",       "KeyQ",     81);
   bind(".r",       "KeyE",     69);
   bind(".z",       "Space",    32);
-  bind(".c-up",    "KeyI",     73);
-  bind(".c-down",  "KeyK",     75);
-  bind(".c-left",  "KeyJ",     74);
-  bind(".c-right", "KeyL",     76);
-  bind(".d-up",    "ArrowUp",  38);
-  bind(".d-down",  "ArrowDown",40);
-  bind(".d-left",  "ArrowLeft",37);
-  bind(".d-right", "ArrowRight",39);
+  bind(".c-up",    "KeyW",     73);
+  bind(".c-down",  "KeyS",     75);
+  bind(".c-left",  "KeyA",     74);
+  bind(".c-right", "KeyD",     76);
 
   /* Joystick */
   const joy   = document.getElementById("joystick");
