@@ -1,0 +1,676 @@
+# StarShine Engine: WASD Galaxy Locomotion & 2M Actors
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>StarShine Engine v0.1 Tech-Demo</title>
+    <!-- Engine Core: Three.js r160 -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/0.160.0/three.min.js"></script>
+    <style>
+        :root {
+            --bg-color: #87CEEB; /* Sky Blue */
+            --panel-bg: rgba(255, 255, 255, 0.4);
+            --accent-color: #0055ff;
+            --code-bg: rgba(0, 0, 0, 0.85);
+            --text-color: #000000;
+            --border-color: rgba(0, 0, 0, 0.15);
+        }
+
+        body, html {
+
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background-color: var(--bg-color);
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            color: var(--text-color);
+        }
+
+        #starshine-viewport {
+            width: 100%;
+            height: 100%;
+            display: block;
+            touch-action: none;
+        }
+
+        .overlay {
+            position: absolute;
+
+            top: 20px;
+            left: 20px;
+            pointer-events: none;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .panel {
+            background: var(--panel-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 18px;
+            padding: 24px;
+            backdrop-filter: blur(40px);
+            pointer-events: auto;
+            min-width: 360px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.05);
+        }
+
+
+        .panel-header {
+            font-size: 0.75rem;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 0.3em;
+            color: var(--accent-color);
+            margin-bottom: 12px;
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .stat-row {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.95rem;
+            margin: 10px 0;
+            font-weight: 600;
+
+        }
+
+        .stat-value {
+            font-family: 'Fira Code', monospace;
+            font-weight: 800;
+            color: #000;
+        }
+
+        .script-panel {
+            background: var(--code-bg);
+            color: #00ff88;
+            font-family: 'Fira Code', monospace;
+            padding: 20px;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            line-height: 1.5;
+            margin-top: 10px;
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.5);
+            position: relative;
+
+            overflow: hidden;
+        }
+
+        .script-header {
+            color: #aaa;
+            font-size: 0.65rem;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .script-keyword { color: #ff79c6; }
+        .script-func { color: #50fa7b; }
+
+        .slider-container {
+            margin-top: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+
+        }
+
+        .slider-label {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.75rem;
+            font-weight: 900;
+            color: rgba(0,0,0,0.6);
+        }
+
+        input[type=range] {
+            width: 100%;
+            height: 10px;
+            background: rgba(0,0,0,0.08);
+            border-radius: 5px;
+            outline: none;
+            -webkit-appearance: none;
+        }
+
+
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 22px;
+            height: 22px;
+            background: var(--accent-color);
+            border-radius: 50%;
+            cursor: pointer;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+            border: 2px solid white;
+        }
+
+        .controls {
+            position: absolute;
+            bottom: 40px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 20px;
+        }
+
+
+        button {
+            background: #fff;
+            color: var(--accent-color);
+            border: 2px solid var(--accent-color);
+            padding: 14px 35px;
+            border-radius: 50px;
+            cursor: pointer;
+            font-size: 0.95rem;
+            font-weight: 900;
+            transition: all 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+        }
+
+        button:hover {
+            background: var(--accent-color);
+            color: #fff;
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0,85,255,0.3);
+        }
+
+
+        button.script-run {
+            background: #00ff88;
+            color: #000;
+            border: none;
+            width: 100%;
+            margin-top: 15px;
+            border-radius: 8px;
+            padding: 12px;
+        }
+
+        #msg-box {
+            position: fixed;
+            bottom: 40px;
+            right: 40px;
+            background: #fff;
+            border: 2px solid var(--accent-color);
+            padding: 22px 38px;
+            border-radius: 16px;
+            display: none;
+
+            font-weight: 900;
+            color: var(--accent-color);
+            box-shadow: 0 15px 45px rgba(0,0,0,0.1);
+            z-index: 1000;
+        }
+
+        .instructions {
+            position: absolute;
+            bottom: 40px;
+            right: 40px;
+            color: white;
+            background: rgba(0,0,0,0.5);
+            padding: 10px 20px;
+            border-radius: 10px;
+            font-size: 0.8rem;
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body>
+
+
+    <div id="starshine-viewport"></div>
+
+    <div class="overlay">
+        <div class="panel">
+            <div class="panel-header">
+                StarShine Engine v0.1
+                <span>WASD_LOCOMOTION_ACTIVE</span>
+            </div>
+            <div class="stat-row">
+                <span>Native FPS</span>
+                <span id="fps-val" class="stat-value">---</span>
+            </div>
+            <div class="stat-row">
+                <span>Active Actors</span>
+                <span id="obj-val" class="stat-value">0</span>
+            </div>
+            
+            <div class="slider-container">
+                <div class="slider-label">
+
+                    <span>BIOMASS (0 - 2,000,000)</span>
+                    <span id="slider-grass-val">500,000</span>
+                </div>
+                <input type="range" id="grass-density" min="1000" max="2000000" step="1000" value="500000">
+                
+                <div class="slider-label" style="margin-top:8px">
+                    <span>SEA STATE (WAVES)</span>
+                    <span id="slider-wave-val">1.2</span>
+                </div>
+                <input type="range" id="wave-intensity" min="0" max="6" step="0.1" value="1.2">
+            </div>
+        </div>
+
+        <div class="panel">
+            <div class="panel-header">ConstellationScript Console</div>
+            <div class="script-panel">
+                <div class="script-header">
+                    <span>galaxy_locomotion.cs</span>
+                    <span>ACTIVE</span>
+
+                </div>
+                <div><span class="script-keyword">engine</span>.<span class="script-func">onUpdate</span>(() => {</div>
+                <div style="padding-left:15px">  <span class="script-keyword">let</span> input = <span class="script-keyword">this</span>.<span class="script-func">getWASD</span>();</div>
+                <div style="padding-left:15px">  actor.<span class="script-func">moveRelative</span>(input);</div>
+                <div style="padding-left:15px">  actor.<span class="script-func">lockToSphere</span>(planet);</div>
+                <div>});</div>
+                <button class="script-run" onclick="runConstellationScript()">EXECUTE_PULSE</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="instructions">
+        WASD to Move Gravity Sphere<br>
+        Scroll to Zoom | Drag to Rotate Camera
+    </div>
+
+    <div class="controls">
+        <button onclick="spawnGravitySphere()">Spawn Gravity Sphere</button>
+        <button onclick="resetSim()">Reset Sim</button>
+
+    </div>
+
+    <div id="msg-box"></div>
+
+    <script>
+        // Engine Architecture Specs
+        const MAX_GRASS = 2000000;
+        const HEAP_BASE = 512.0;
+
+        let scene, camera, renderer, planet, clouds, meteors = [];
+        let gravityActors = []; 
+        let grassMesh;
+        let clock = new THREE.Clock();
+        let lastTimestamp = performance.now();
+        let framesCount = 0;
+        
+        let dragInProgress = false;
+        let lastPointer = { x: 0, y: 0 };
+        let zoomTarget = 850;
+
+        let zoomCurrent = 850;
+        let grassPopulation = 500000;
+        let currentWaveHeight = 1.2;
+        let scriptPulseTime = 0;
+
+        // Input Tracking
+        const keys = { w: false, a: false, s: false, d: false };
+        window.addEventListener('keydown', (e) => { if(keys.hasOwnProperty(e.key.toLowerCase())) keys[e.key.toLowerCase()] = true; });
+        window.addEventListener('keyup', (e) => { if(keys.hasOwnProperty(e.key.toLowerCase())) keys[e.key.toLowerCase()] = false; });
+
+        window.addEventListener('DOMContentLoaded', () => {
+            if (typeof THREE === 'undefined') return;
+            setTimeout(bootEngine, 100);
+        });
+
+        function bootEngine() {
+            const container = document.getElementById('starshine-viewport');
+            
+            scene = new THREE.Scene();
+
+            scene.background = new THREE.Color(0x87CEEB);
+            scene.fog = new THREE.Fog(0x87CEEB, 400, 18000);
+
+            camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 1, 60000);
+            camera.position.z = zoomCurrent;
+
+            renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: "high-performance" });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+            container.appendChild(renderer.domElement);
+
+            const sun = new THREE.DirectionalLight(0xffffff, 4.2);
+            sun.position.set(1500, 3000, 1000);
+            scene.add(sun);
+
+            const fill = new THREE.DirectionalLight(0xb0e8ff, 1.8);
+            fill.position.set(-1500, -500, -1000);
+            scene.add(fill);
+
+
+            scene.add(new THREE.AmbientLight(0xffffff, 1.3));
+
+            buildPlanet();
+            buildAtmosphere();
+            buildStarfield();
+            initControls();
+            
+            document.getElementById('grass-density').oninput = (e) => {
+                grassPopulation = parseInt(e.target.value);
+                document.getElementById('slider-grass-val').innerText = grassPopulation.toLocaleString();
+                if(grassMesh) grassMesh.count = grassPopulation;
+            };
+            document.getElementById('wave-intensity').oninput = (e) => {
+                currentWaveHeight = parseFloat(e.target.value);
+                document.getElementById('slider-wave-val').innerText = currentWaveHeight.toFixed(1);
+            };
+
+            notify("Galaxy Input Module Loaded. Use WASD.");
+            mainLoop();
+
+        }
+
+        function getLandNoise(v) {
+            const freq1 = 0.012, freq2 = 0.024, freq3 = 0.048;
+            const n1 = Math.sin(v.x * freq1) * Math.cos(v.y * freq1) * Math.sin(v.z * freq1);
+            const n2 = Math.cos(v.x * freq2 + 10) * Math.sin(v.y * freq2) * Math.cos(v.z * freq2 + 5);
+            const n3 = Math.sin(v.x * freq3 + 5) * Math.cos(v.y * freq3 + 12) * Math.sin(v.z * freq3);
+            return (n1 * 0.7 + n2 * 0.2 + n3 * 0.1);
+        }
+
+        function buildPlanet() {
+            const planetGeo = new THREE.SphereGeometry(200, 128, 128);
+            const planetMat = new THREE.MeshPhongMaterial({ shininess: 120, specular: 0xccffff });
+            
+            planetMat.onBeforeCompile = (shader) => {
+                shader.uniforms.uTime = { value: 0 };
+                shader.uniforms.uWave = { value: 1.0 };
+                shader.vertexShader = `
+                    uniform float uTime;
+
+                    uniform float uWave;
+                    varying vec3 vWorldPos;
+                    ${shader.vertexShader}
+                `.replace('#include <begin_vertex>', `
+                    #include <begin_vertex>
+                    vWorldPos = position;
+                    float freq = 0.012;
+                    float n = sin(position.x * freq) * cos(position.y * freq) * sin(position.z * freq);
+                    if(n < 0.06) {
+                        float d = sin(position.x * 0.22 + uTime * 3.2) * cos(position.z * 0.22 + uTime * 3.2) * 2.2 * uWave;
+                        transformed += normal * d;
+                    }
+                `);
+                shader.fragmentShader = `
+                    varying vec3 vWorldPos;
+                    ${shader.fragmentShader}
+                `.replace('#include <map_fragment>', `
+                    #include <map_fragment>
+                    float freq = 0.012;
+
+                    float noise = sin(vWorldPos.x * freq) * cos(vWorldPos.y * freq) * sin(vWorldPos.z * freq);
+                    vec3 landCol = vec3(0.1, 0.35, 0.15); 
+                    vec3 oceanCol = vec3(0.05, 0.4, 0.9);
+                    if(noise > 0.06) { diffuseColor.rgb = landCol; } else { diffuseColor.rgb = oceanCol; }
+                `);
+                planetMat.userData.shader = shader;
+            };
+
+            planet = new THREE.Mesh(planetGeo, planetMat);
+            scene.add(planet);
+
+            const gGeo = new THREE.PlaneGeometry(0.5, 3.0, 1, 1);
+            gGeo.translate(0, 1.5, 0);
+            const gMat = new THREE.MeshLambertMaterial({ color: 0x00a044, side: THREE.DoubleSide });
+
+            gMat.onBeforeCompile = (shader) => {
+                shader.uniforms.uTime = { value: 0 };
+                shader.uniforms.uPulse = { value: 0 };
+                shader.vertexShader = `uniform float uTime; uniform float uPulse;\n` + shader.vertexShader;
+
+                shader.vertexShader = shader.vertexShader.replace('#include <begin_vertex>', `
+                    #include <begin_vertex>
+                    float h = position.y / 3.0;
+                    float w = sin(uTime * 4.5 + (instanceMatrix[3][0] + instanceMatrix[3][2]) * 0.5) * 1.5 * h;
+                    transformed.x += w;
+                    transformed.y += uPulse * 5.0 * h;
+                `);
+                shader.fragmentShader = `uniform float uPulse;\n` + shader.fragmentShader.replace('#include <map_fragment>', `
+                    #include <map_fragment>
+                    diffuseColor.rgb = mix(diffuseColor.rgb, vec3(0.2, 1.0, 0.6), uPulse);
+                `);
+                gMat.userData.shader = shader;
+            };
+
+            grassMesh = new THREE.InstancedMesh(gGeo, gMat, MAX_GRASS);
+            
+            const indices = Array.from({length: MAX_GRASS}, (_, i) => i);
+            for (let i = indices.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+
+                [indices[i], indices[j]] = [indices[j], indices[i]];
+            }
+
+            const dummy = new THREE.Object3D();
+            const v = new THREE.Vector3();
+            for(let i=0; i<MAX_GRASS; i++) {
+                const phi = Math.acos(-1 + (2 * indices[i]) / MAX_GRASS);
+                const theta = Math.sqrt(MAX_GRASS * Math.PI) * phi;
+                v.setFromSphericalCoords(200, phi, theta);
+                
+                if(getLandNoise(v) > 0.06) {
+                    dummy.position.copy(v);
+                    dummy.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), v.clone().normalize());
+                    dummy.rotation.y += Math.random() * Math.PI;
+                    dummy.scale.set(1.5, 0.8 + Math.random() * 1.5, 1.5);
+                    dummy.updateMatrix();
+                    grassMesh.setMatrixAt(i, dummy.matrix);
+                } else {
+                    dummy.scale.set(0, 0, 0);
+
+                    dummy.updateMatrix();
+                    grassMesh.setMatrixAt(i, dummy.matrix);
+                }
+            }
+            grassMesh.count = grassPopulation;
+            planet.add(grassMesh);
+        }
+
+        function buildAtmosphere() {
+            const cGeo = new THREE.SphereGeometry(232, 64, 64);
+            const cMat = new THREE.MeshPhongMaterial({ color: 0xffffff, transparent: true, opacity: 0.6, side: THREE.DoubleSide });
+            cMat.onBeforeCompile = (shader) => {
+                shader.vertexShader = `varying vec2 vUv;\n` + shader.vertexShader.replace('#include <uv_vertex>', '#include <uv_vertex>\nvUv = uv;');
+                shader.fragmentShader = `varying vec2 vUv;\n` + shader.fragmentShader.replace('#include <map_fragment>', `
+                    #include <map_fragment>
+                    if(sin(vUv.x * 22.0) * cos(vUv.y * 22.0) < 0.28) discard;
+                `);
+            };
+            clouds = new THREE.Mesh(cGeo, cMat);
+
+            scene.add(clouds);
+        }
+
+        function buildStarfield() {
+            const geo = new THREE.BufferGeometry();
+            const pos = [];
+            for(let i=0; i<18000; i++) pos.push(THREE.MathUtils.randFloatSpread(60000), THREE.MathUtils.randFloatSpread(60000), -15000);
+            geo.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+            scene.add(new THREE.Points(geo, new THREE.PointsMaterial({ color: 0xffffff, size: 1.1 })));
+        }
+
+        function initControls() {
+            window.addEventListener('wheel', (e) => zoomTarget = Math.min(Math.max(zoomTarget + e.deltaY, 400), 20000), { passive: true });
+            const view = document.getElementById('starshine-viewport');
+            view.addEventListener('pointerdown', (e) => { dragInProgress = true; lastPointer = { x: e.clientX, y: e.clientY }; });
+            window.addEventListener('pointermove', (e) => {
+                if(!dragInProgress) return;
+                // Move Camera Pivot, not planet, to allow sphere movement
+                const dummy = new THREE.Object3D();
+
+                dummy.rotation.y += (e.clientX - lastPointer.x) * 0.007;
+                dummy.rotation.x += (e.clientY - lastPointer.y) * 0.007;
+                planet.rotation.y += (e.clientX - lastPointer.x) * 0.007;
+                planet.rotation.x += (e.clientY - lastPointer.y) * 0.007;
+                lastPointer = { x: e.clientX, y: e.clientY };
+            });
+            window.addEventListener('pointerup', () => dragInProgress = false);
+            window.addEventListener('resize', () => {
+                camera.aspect = window.innerWidth / window.innerHeight;
+                camera.updateProjectionMatrix();
+                renderer.setSize(window.innerWidth, window.innerHeight);
+            });
+        }
+
+        // Galaxy Gravity Sphere Actor
+        function spawnGravitySphere() {
+            const geo = new THREE.SphereGeometry(8, 16, 16);
+            const mat = new THREE.MeshPhongMaterial({ color: 0xffaa00, shininess: 100 });
+            const sphere = new THREE.Mesh(geo, mat);
+
+            
+            // Random orbital start
+            const phi = Math.random() * Math.PI;
+            const theta = Math.random() * Math.PI * 2;
+            const radius = 600;
+            sphere.position.setFromSphericalCoords(radius, phi, theta);
+            
+            const actor = {
+                mesh: sphere,
+                velocity: new THREE.Vector3(0, -2, 0),
+                grounded: false,
+                targetNormal: new THREE.Vector3(0, 1, 0),
+                moveSpeed: 1.2
+            };
+            
+            // PARENT TO PLANET: Sphere moves with the planet
+            planet.add(sphere);
+            gravityActors.push(actor);
+            notify("Gravity Actor Synchronized to Planet.");
+
+        }
+
+        function mainLoop() {
+            requestAnimationFrame(mainLoop);
+            const delta = clock.getDelta();
+            const time = performance.now() / 1000;
+
+            if (grassMesh.material.userData.shader) {
+                grassMesh.material.userData.shader.uniforms.uTime.value = time;
+                scriptPulseTime = Math.max(0, scriptPulseTime - delta * 2.0);
+                grassMesh.material.userData.shader.uniforms.uPulse.value = scriptPulseTime;
+            }
+            if (planet.material.userData.shader) {
+                planet.material.userData.shader.uniforms.uTime.value = time * 2.0;
+                planet.material.userData.shader.uniforms.uWave.value = currentWaveHeight;
+            }
+
+            if(clouds) clouds.rotation.y += 0.00035;
+            zoomCurrent = THREE.MathUtils.lerp(zoomCurrent, zoomTarget, 0.12);
+
+            camera.position.z = zoomCurrent;
+
+            // Update Galaxy Gravity Actors
+            gravityActors.forEach(actor => {
+                const center = new THREE.Vector3(0, 0, 0);
+                const gravityDir = new THREE.Vector3().subVectors(center, actor.mesh.position).normalize();
+                const distance = actor.mesh.position.length();
+                
+                // WASD LOCOMOTION
+                if (actor.grounded) {
+                    const localForward = actor.mesh.position.clone().normalize();
+                    const localUp = actor.targetNormal.clone();
+                    const localRight = new THREE.Vector3().crossVectors(localForward, localUp).normalize();
+                    const moveForward = new THREE.Vector3().crossVectors(localUp, localRight).normalize();
+
+                    if (keys.w) actor.mesh.position.addScaledVector(moveForward, actor.moveSpeed);
+                    if (keys.s) actor.mesh.position.addScaledVector(moveForward, -actor.moveSpeed);
+                    if (keys.a) actor.mesh.position.addScaledVector(localRight, actor.moveSpeed);
+                    if (keys.d) actor.mesh.position.addScaledVector(localRight, -actor.moveSpeed);
+
+                }
+
+                if (distance > 208) { // Planet radius (200) + sphere (8)
+                    actor.velocity.add(gravityDir.multiplyScalar(0.4));
+                    actor.mesh.position.add(actor.velocity);
+                    actor.grounded = false;
+                } else {
+                    actor.mesh.position.setLength(208);
+                    actor.velocity.set(0, 0, 0);
+                    if (!actor.grounded) {
+                        actor.grounded = true;
+                        actor.targetNormal.copy(gravityDir).negate();
+                    }
+                }
+                
+                // Interpolate rotation to surface normal
+                const targetQuat = new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 1, 0), gravityDir.clone().negate());
+                actor.mesh.quaternion.slerp(targetQuat, 0.15);
+            });
+
+
+            for(let i = meteors.length - 1; i >= 0; i--) {
+                const m = meteors[i];
+                m.obj.position.add(m.vel);
+                m.life -= delta;
+                m.obj.material.opacity = Math.min(1.0, m.life);
+                if(m.life <= 0) { scene.remove(m.obj); meteors.splice(i, 1); }
+            }
+
+            if(!dragInProgress) planet.rotation.y += 0.0012;
+            renderer.render(scene, camera);
+            refreshTelemetry();
+        }
+
+        function refreshTelemetry() {
+            framesCount++;
+            const now = performance.now();
+            if (now > lastTimestamp + 1000) {
+                const fps = (framesCount * 1000) / (now - lastTimestamp);
+                document.getElementById('fps-val').innerText = fps.toFixed(1);
+
+                const totalActors = 1 + grassPopulation + meteors.length + gravityActors.length + 80;
+                document.getElementById('obj-val').innerText = totalActors.toLocaleString();
+                lastTimestamp = now;
+                framesCount = 0;
+            }
+        }
+
+        function runConstellationScript() {
+            scriptPulseTime = 1.0;
+            notify("ConstellationScript: BIOMASS_SYNC_COMPLETE.");
+        }
+
+        function createMeteor() {
+            const geo = new THREE.CylinderGeometry(0.1, 18, 1800, 4);
+            geo.rotateX(Math.PI / 2);
+            const mat = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true });
+            const obj = new THREE.Mesh(geo, mat);
+            const pos = new THREE.Vector3(THREE.MathUtils.randFloatSpread(35000), THREE.MathUtils.randFloat(6000, 12000), -12000);
+            obj.position.copy(pos);
+
+            obj.lookAt(-pos.x, -pos.y * 0.25, pos.z);
+            const vel = new THREE.Vector3(0,0, THREE.MathUtils.randFloat(500, 800)).applyQuaternion(obj.quaternion);
+            meteors.push({ obj: obj, vel: vel, life: 2.8 });
+            scene.add(obj);
+        }
+
+        setInterval(() => { if(meteors.length < 50) createMeteor(); }, 300);
+
+        function resetSim() {
+            for(let m of meteors) scene.remove(m.obj);
+            meteors = [];
+            gravityActors.forEach(a => planet.remove(a.mesh));
+            gravityActors = [];
+            zoomTarget = 850;
+            notify("Simulator Synchronized.");
+        }
+
+        function notify(msg) {
+            const box = document.getElementById('msg-box');
+
+            box.innerText = msg;
+            box.style.display = 'block';
+            setTimeout(() => box.style.display = 'none', 3000);
+        }
+    </script>
+</body>
+</html>
+
+
