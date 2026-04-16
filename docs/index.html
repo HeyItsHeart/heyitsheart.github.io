@@ -1,0 +1,855 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Project Starshine | Luma Engine Specs</title>
+    <style>
+        :root {
+            --primary-purple: #7c3aed;
+            --dark-purple: #4c1d95;
+            --medium-purple: #8b5cf6;
+            --light-purple: #f5f3ff;
+            --accent-purple: #ddd6fe;
+            --sidebar-bg: #faf9ff;
+            --text-main: #1e1b4b;
+            --text-light: #4b5563;
+            --border-color: #e5e7eb;
+        }
+
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: white;
+            color: var(--text-main);
+            line-height: 1.6;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+        }
+
+        header {
+            background-color: var(--dark-purple);
+
+            color: white;
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .logo {
+            font-size: 1.25rem;
+            font-weight: 800;
+            letter-spacing: -0.025em;
+        }
+
+        .nav-buttons {
+            display: flex;
+
+            gap: 1rem;
+        }
+
+        .nav-btn {
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+        }
+
+        .btn-active {
+            background-color: var(--medium-purple);
+            color: white;
+        }
+
+        .btn-disabled {
+            background-color: #312e81;
+
+            color: #9ca3af;
+            cursor: not-allowed;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            font-size: 0.85rem;
+            padding: 0.2rem 1rem;
+        }
+
+        .btn-disabled span {
+            font-size: 0.65rem;
+            text-transform: uppercase;
+        }
+
+        .layout-body {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+        }
+
+
+        aside {
+            width: 300px;
+            background-color: var(--sidebar-bg);
+            border-right: 1px solid var(--border-color);
+            padding: 2rem 1.5rem;
+            overflow-y: auto;
+        }
+
+        aside h2 {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            color: var(--primary-purple);
+            letter-spacing: 0.1em;
+            margin-bottom: 1rem;
+        }
+
+        aside ul {
+            list-style: none;
+        }
+
+
+        aside li {
+            margin-bottom: 0.3rem;
+        }
+
+        aside a {
+            text-decoration: none;
+            color: var(--text-light);
+            font-size: 0.85rem;
+            display: block;
+            padding: 0.4rem 0.8rem;
+            border-radius: 4px;
+            transition: 0.2s;
+        }
+
+        aside a:hover {
+            background-color: var(--accent-purple);
+            color: var(--dark-purple);
+        }
+
+
+        main {
+            flex: 1;
+            padding: 3rem 4rem;
+            overflow-y: auto;
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        .doc-header {
+            margin-bottom: 3rem;
+            border-bottom: 2px solid var(--light-purple);
+            padding-bottom: 2rem;
+        }
+
+        .doc-header h1 {
+            font-size: 2.2rem;
+            color: var(--dark-purple);
+            margin-bottom: 0.5rem;
+            text-transform: uppercase;
+
+        }
+
+        .metadata {
+            font-family: monospace;
+            color: var(--text-light);
+            font-size: 0.85rem;
+            white-space: pre-wrap;
+        }
+
+        section {
+            margin-bottom: 4rem;
+        }
+
+        h2 {
+            color: var(--dark-purple);
+            font-size: 1.5rem;
+            margin-bottom: 1.5rem;
+            border-left: 4px solid var(--primary-purple);
+            padding-left: 1rem;
+
+            text-transform: uppercase;
+        }
+
+        h3 {
+            margin: 2rem 0 1rem 0;
+            color: var(--primary-purple);
+            font-size: 1.2rem;
+        }
+
+        p {
+            margin-bottom: 1rem;
+            white-space: pre-wrap;
+        }
+
+        .code-block {
+            background: #1e1e1e;
+            color: #d4d4d4;
+            padding: 1.5rem;
+            border-radius: 8px;
+
+            font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+            font-size: 0.85rem;
+            line-height: 1.4;
+            overflow-x: auto;
+            white-space: pre;
+            margin: 1.5rem 0;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1.5rem 0;
+            font-size: 0.85rem;
+        }
+
+        th, td {
+            text-align: left;
+            padding: 0.75rem;
+            border: 1px solid var(--border-color);
+
+            vertical-align: top;
+        }
+
+        th {
+            background-color: var(--light-purple);
+            color: var(--dark-purple);
+            font-weight: 600;
+        }
+
+        .status-implemented { color: #059669; font-weight: bold; }
+        .status-partial { color: #d97706; font-weight: bold; }
+        .status-stubbed { color: #dc2626; font-weight: bold; }
+
+        @media (max-width: 768px) {
+            .layout-body { flex-direction: column; }
+            aside { width: 100%; height: auto; border-right: none; border-bottom: 1px solid var(--border-color); }
+            main { padding: 2rem; }
+        }
+    </style>
+</head>
+<body>
+
+<header>
+
+    <div class="logo">PROJECT STARSHINE</div>
+    <div class="nav-buttons">
+        <a href="#" class="nav-btn btn-active">LUMA</a>
+        <div class="nav-btn btn-disabled">
+            DELFINO
+            <span>Coming Soon</span>
+        </div>
+    </div>
+</header>
+
+<div class="layout-body">
+    <aside>
+        <h2>Luma Engine Specs</h2>
+        <ul>
+            <li><a href="#s1">1. OVERVIEW</a></li>
+            <li><a href="#s2">2. ARCHITECTURE</a></li>
+            <li><a href="#s3">3. SOURCE FIDELITY POLICY</a></li>
+            <li><a href="#s4">4. FILE FORMAT SUPPORT</a></li>
+            <li><a href="#s46">4.6 STAGE / SCENARIO</a></li>
+
+            <li><a href="#s47">4.7 AUDIO FORMATS</a></li>
+            <li><a href="#s5">5. CLASS HIERARCHY</a></li>
+            <li><a href="#s_gravity">GRAVITY SUBSYSTEM</a></li>
+            <li><a href="#s_scenario">SCENARIO / STAGE LOADING</a></li>
+            <li><a href="#s6">6. JMAP / BCSV SYSTEM</a></li>
+            <li><a href="#s7">7. GRAVITY SYSTEM SPEC</a></li>
+            <li><a href="#s8">8. MARIO ACTOR CONSTANTS</a></li>
+            <li><a href="#s9">9. RENDERER SPEC</a></li>
+            <li><a href="#s10">10. AUDIO SYSTEM SPEC</a></li>
+            <li><a href="#s11">11. ASSET EXTRACTOR SPEC</a></li>
+            <li><a href="#s12">12. MODULE LIST</a></li>
+            <li><a href="#s13">13. RELATIONSHIP TO PETARI</a></li>
+            <li><a href="#s14">14. KNOWN GAPS</a></li>
+        </ul>
+    </aside>
+
+    <main>
+        <div class="doc-header">
+            <h1>LUMA ENGINE — Technical Specification</h1>
+
+            <div class="metadata">Project Starshine · Component 1 of 3
+Version 0.1.0-draft | Based on Petari (SMGCommunity/Petari) decomp of Super Mario Galaxy 1</div>
+        </div>
+
+        <section id="s1">
+            <h2>1. OVERVIEW</h2>
+            <p>Luma Engine is the Galaxy-compatible runtime layer of Project Starshine. It is a faithful re-implementation of Super Mario Galaxy 1's engine subsystems, informed directly by the Petari decompilation project and the SMGCommunity's accumulated reverse-engineering work on both Galaxy games.
+
+Its goal is to accept a user-supplied Galaxy 1 or Galaxy 2 ISO, extract assets on first run, and then execute the game's logic using re-implemented native subsystems — compiled to WebAssembly — with the GX render pipeline replaced by a WebGPU/WebGL2 backend.
+
+It is not a PC port. It is a clean-room re-implementation of documented behavior, in the same tradition as Ship of Harkinian for Ocarina of Time. No copyrighted code is included.</p>
+            
+            <h3>What Luma Engine covers</h3>
+            <p>Super Mario Galaxy 1 (RMGE01 / RMGK01 / RMGP01 — all regions)
+Super Mario Galaxy 2 (RMGE01 / RMGK01 — all regions, via Garigari decomp cross-reference)
+Delfino Engine (separate component) covers Super Mario Sunshine.</p>
+        </section>
+
+        <section id="s2">
+
+            <h2>2. ARCHITECTURE</h2>
+            <div class="code-block">┌─────────────────────────────────────────────────────────────┐
+│ LUMA ENGINE                                                 │
+│                                                             │
+│ ┌──────────────┐ ┌──────────────┐ ┌───────────────────┐     │
+│ │ ISO / WBFS   │ │ WonderMod    │ │ Constellation     │     │
+│ │ Extractor    │ │ (.wondermod) │ │ Editor Bridge     │     │
+│ └──────┬───────┘ └──────┬───────┘ └─────────┬─────────┘     │
+│        └─────────────────┼──────────────────┘               │
+│                          │                                  │
+│              ┌───────────▼────────────┐                     │
+│              │ Asset Layer            │                     │
+│              │ SZS/Yaz0 decompressor  │                     │
+│              │ RARC archive reader    │                     │
+│              │ BCSV / JMapInfo parser │                     │
+│              │ BTI texture decoder    │                     │
+│              │ BMD/BDL model reader   │                     │
+│              │ BCK/BCA/BTP anim reader│                     │
+│              │ BRSTM audio reader     │                     │
+
+│              └────────────┬───────────┘                     │
+│                           │                                 │
+│ ┌─────────────────────────▼─────────────────────────────┐   │
+│ │ Game Subsystems                                       │   │
+│ │                                                       │   │
+│ │ NameObj      LiveActor       GravityCreator           │   │
+│ │ hierarchy    system          (sphere/box/disk/cyl)    │   │
+│ │                                                       │   │
+│ │ ScenarioHolder     StageDataHolder    ZoneHolder      │   │
+│ │ (JMapInfo-driven scenario loading)                    │   │
+│ │                                                       │   │
+│ │ MarioActor         CameraController   EffectSystem    │   │
+│ │ (full move-        (GalaxyCam exact)  (JPA particles) │   │
+│ │ set reimpl)                                           │   │
+│ │                                                       │   │
+│ │ PhysicsHolder      CollisionDetector  WaterHolder     │   │
+│ │                                                       │   │
+│ │ AudioSystem (DSP ADPCM → WebAudio)                    │   │
+│ └────────────────────────┬──────────────────────────────┘   │
+
+│                          │                                 │
+│              ┌───────────▼────────────┐                     │
+│              │ Render Backend         │                     │
+│              │ GX TEV → WebGPU/WebGL2 │                     │
+│              │ BMD → GPU mesh upload  │                     │
+│              │ BTI → texture upload   │                     │
+│              │ Shadow/bloom/DoF       │                     │
+│              └────────────────────────┘                     │
+└─────────────────────────────────────────────────────────────┘</div>
+        </section>
+
+        <section id="s3">
+            <h2>3. SOURCE FIDELITY POLICY</h2>
+            <p>Luma Engine subsystems are implemented in priority order of fidelity:</p>
+            <table>
+                <thead>
+                    <tr><th>Priority</th><th>Behavior</th></tr>
+                </thead>
+                <tbody>
+
+                    <tr>
+                        <td>1 — Exact match</td>
+                        <td>Physics integration, gravity sampling, collision response, actor movement speeds, jump arcs. These are bit-for-bit matched against documented Petari values.</td>
+                    </tr>
+                    <tr>
+                        <td>2 — Behavioral match</td>
+                        <td>Camera follow curves, audio playback timing, particle emission. Correct feel, not necessarily identical floating-point math.</td>
+                    </tr>
+                    <tr>
+                        <td>3 — Approximated</td>
+                        <td>Lighting/shading (GX TEV → PBR approximation), texture filtering, post-processing. Visually similar, not identical.</td>
+                    </tr>
+                    <tr>
+                        <td>4 — Stubbed</td>
+                        <td>Features not yet fully reverse-engineered (certain NPC AI, some boss phases). Stubs log warnings.</td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+
+
+        <section id="s4">
+            <h2>4. FILE FORMAT SUPPORT</h2>
+            <p>All formats are big-endian (PowerPC byte order). The asset extractor converts to little-endian native format on first run and caches to IndexedDB / OPFS.</p>
+            
+            <h3>4.1 Archive Formats</h3>
+            <table>
+                <thead><tr><th>Format</th><th>Extension</th><th>Description</th><th>Status</th></tr></thead>
+                <tbody>
+                    <tr><td>Yaz0</td><td>.szs</td><td>LZ-family compression wrapper. Nearly all game files are Yaz0-compressed.</td><td class="status-implemented">Implemented</td></tr>
+                    <tr><td>RARC</td><td>.arc inside .szs</td><td>Nintendo Revolution Archive. Hierarchical file container.</td><td class="status-implemented">Implemented</td></tr>
+                    <tr><td>U8</td><td>.arc</td><td>Older GameCube archive format (some Galaxy 1 files).</td><td class="status-implemented">Implemented</td></tr>
+                </tbody>
+            </table>
+
+            <h3>4.2 Model / Geometry</h3>
+            <table>
+                <thead><tr><th>Format</th><th>Extension</th><th>Description</th><th>Status</th></tr></thead>
+                <tbody>
+                    <tr><td>BMD</td><td>.bmd</td><td>J3D Binary Model. Contains geometry, material data (TEV stages), vertex attributes.</td><td class="status-partial">Core implemented</td></tr>
+
+                    <tr><td>BDL</td><td>.bdl</td><td>BMD + precomputed display list data.</td><td class="status-implemented">Implemented</td></tr>
+                    <tr><td>KCL</td><td>.kcl</td><td>Collision mesh. Triangle-soup with surface type attributes (ice, sand, water, etc.).</td><td class="status-implemented">Implemented</td></tr>
+                    <tr><td>PA</td><td>.pa</td><td>Path data (splines for cameras and moving objects).</td><td class="status-partial">Partial</td></tr>
+                </tbody>
+            </table>
+
+            <h3>4.3 Animation</h3>
+            <table>
+                <thead><tr><th>Format</th><th>Extension</th><th>Description</th><th>Status</th></tr></thead>
+                <tbody>
+                    <tr><td>BCK</td><td>.bck</td><td>J3D Bone (joint) animation. Used for skeletal animation.</td><td class="status-implemented">Implemented</td></tr>
+                    <tr><td>BCA</td><td>.bca</td><td>J3D Character animation (alternate bone format).</td><td class="status-implemented">Implemented</td></tr>
+                    <tr><td>BTP</td><td>.btp</td><td>J3D Texture pattern animation (frame-by-frame texture swap).</td><td class="status-implemented">Implemented</td></tr>
+                    <tr><td>BTK</td><td>.btk</td><td>J3D Texture SRT animation (UV scrolling, scaling).</td><td class="status-implemented">Implemented</td></tr>
+                    <tr><td>BRK</td><td>.brk</td><td>J3D Color register animation (material color over time).</td><td class="status-partial">Partial</td></tr>
+                    <tr><td>BPK</td><td>.bpk</td><td>J3D Palette animation.</td><td class="status-stubbed">Stubbed</td></tr>
+                    <tr><td>BVA</td><td>.bva</td><td>J3D Mesh visibility animation.</td><td class="status-partial">Partial</td></tr>
+                </tbody>
+            </table>
+
+
+            <h3>4.4 Texture</h3>
+            <table>
+                <thead><tr><th>Format</th><th>Extension</th><th>Description</th><th>Status</th></tr></thead>
+                <tbody>
+                    <tr><td>BTI</td><td>.bti</td><td>Binary Texture Image. Embedded in BMD or standalone. Supports: CMPR (DXT1 variant), RGB5A3, RGBA8, I4, I8, IA4, IA8, CI4, CI8, RGB565.</td><td class="status-implemented">All formats</td></tr>
+                </tbody>
+            </table>
+
+            <h3>4.5 Data Tables</h3>
+            <table>
+                <thead><tr><th>Format</th><th>Extension</th><th>Description</th><th>Status</th></tr></thead>
+                <tbody>
+                    <tr><td>BCSV</td><td>.bcsv</td><td>Binary CSV. JMap data tables. Fixed-width rows, FNV-1a hashed column names. Used for everything — object placement, scenario config, galaxy lists, camera zones, sound cues.</td><td class="status-implemented">Implemented</td></tr>
+                    <tr><td>MSBT</td><td>.msbt</td><td>Message Studio Binary Text. Game dialogue/UI text.</td><td class="status-implemented">Implemented</td></tr>
+                    <tr><td>MSBF</td><td>.msbf</td><td>Message Studio Binary Flow. Text branching logic.</td><td class="status-partial">Partial</td></tr>
+                </tbody>
+            </table>
+        </section>
+
+
+        <section id="s46">
+            <h2>4.6 STAGE / SCENARIO</h2>
+            <table>
+                <thead><tr><th>File Path</th><th>Description</th></tr></thead>
+                <tbody>
+                    <tr><td>*Map.arc StageData/[Galaxy]/</td><td>Main stage geometry, object placement JMap tables</td></tr>
+                    <tr><td>*Scenario.arc StageData/[Galaxy]/</td><td>Per-scenario (star mission) configuration</td></tr>
+                    <tr><td>*Zone.arc StageData/[Galaxy]/</td><td>Sub-zone data (areas within a galaxy)</td></tr>
+                    <tr><td>GalaxyDataTable.bcsv SystemData/</td><td>Master galaxy list with world assignments</td></tr>
+                    <tr><td>ObjInfo.bcsv ObjectData/SystemDataTable.arc</td><td>Actor class → model mapping</td></tr>
+                    <tr><td>PlanetMapDataTable.bcsv ObjectData/</td><td>Planet LOD model assignments</td></tr>
+                </tbody>
+            </table>
+        </section>
+
+        <section id="s47">
+            <h2>4.7 AUDIO</h2>
+            <table>
+                <thead><tr><th>Format</th><th>Extension</th><th>Description</th><th>Status</th></tr></thead>
+
+                <tbody>
+                    <tr><td>BRSTM</td><td>.brstm</td><td>Binary Revolution Stream. Looping BGM. Stereo/multi-channel PCM.</td><td class="status-implemented">Implemented</td></tr>
+                    <tr><td>BRSAR</td><td>.brsar</td><td>Binary Revolution Sound ARchive. SFX container.</td><td class="status-partial">Partial</td></tr>
+                    <tr><td>BRWAV</td><td>.brwav</td><td>Binary Revolution WAV. Individual sound effect.</td><td class="status-implemented">Implemented</td></tr>
+                    <tr><td>DSP ADPCM embedded in BRSAR</td><td>—</td><td>GC DSP 4-bit ADPCM codec. Decodes to 16-bit PCM.</td><td class="status-implemented">Implemented</td></tr>
+                </tbody>
+            </table>
+        </section>
+
+        <section id="s5">
+            <h2>5. CLASS HIERARCHY (from Petari)</h2>
+            <p>These class names are taken directly from Petari's decompilation and the SMG1 Korean symbol map. Luma Engine reimplements each.</p>
+            <div class="code-block">NameObj — Base object. Has name, flags, executor index.
+│
+├── LiveActor — Base for all in-world objects (actors).
+│   │ init(), initAfterPlacement()
+│   │ movement(), draw(), calcAnim(), calcViewAndEntry()
+│   │ mActorFlags, mTranslation, mRotation, mScale
+│   │ mActorAnimKeeper, mActorShadow
+
+│   │
+│   ├── MapObjActor — Static world geometry/prop actors.
+│   │   ├── MapObjActorInitInfo
+│   │   └── [many map objects: PlanetActor, IceStepActor, etc.]
+│   │
+│   ├── MarioActor — The player. Full moveset reimplementation.
+│   │   │ mVelocity, mGravityVector, mGroundNormal
+│   │   │ mAnimName, mHatVisible, mFLUDDEquipped (unused in Galaxy)
+│   │   │ updateMove(), tryJump(), trySpinAttack()
+│   │   │ adjustGravity() ← queries GravityCreator every frame
+│   │   └── [sub-states: NormalMario, InvincibleMario, etc.]
+│   │
+│   ├── EnemyActor — Base enemy class.
+│   │   ├── Kuribo (Goomba)
+│   │   ├── Koopa
+│   │   ├── BeeActor
+│   │   └── [~80 enemy types]
+│   │
+│   ├── CameraActor — In-world camera triggers.
+
+│   └── AreaObj — Invisible area volumes (gravity zones, water, etc.)
+│       ├── GravityArea
+│       ├── WaterArea
+│       ├── SoundArea
+│       └── DeathArea
+│
+├── NameObjHolder&lt;T&gt; — Typed collection of NameObjs.
+│   ├── LiveActorGroup — Groups of LiveActors (star bit groups, etc.)
+│   └── MarioHolder — Holds the Mario instance.
+│
+└── [JSystem objects]
+    ├── JMapInfo — Parsed BCSV table. Provides row/column iteration.
+    ├── JMapInfoIter — Iterator over a JMapInfo table.
+    └── JMapLinkArray — Array of JMap object links.</div>
+        </section>
+
+        <section id="s_gravity">
+            <h2>GravityCreator Subsystem</h2>
+            <p>This is one of Galaxy's most important and distinctive subsystems. Every frame, GravityCreator samples all registered gravity fields and returns the dominant gravity vector for a given world position. Luma Engine implements this exactly.</p>
+
+            <div class="code-block">GravityCreator (singleton, manages all gravity fields)
+│
+├── PlanetGravityCreator — Sphere gravity (planet core attraction)
+│   └── Params: mGravityPoint, mGravityPower, mRange, mPriority
+│
+├── ParallelGravityCreator — Box/slab uniform-direction gravity
+│   └── Params: mBaseMatrix (OBB), mGravityPower, mRange
+│
+├── PointGravityCreator — Point attractor (black holes, warp stars)
+│   └── Params: mGravityPoint, mGravityPower, mRange, mDistanceCalc
+│
+├── DiskGravityCreator — Disk-shaped planet surface gravity
+│   └── Params: mGravityPoint, mNormal, mRadius, mGravityPower
+│
+├── CylinderGravityCreator — Cylindrical world gravity
+│   └── Params: mGravityPoint, mAxis, mRadius, mHeight, mGravityPower
+│
+├── SegmentGravityCreator — Gravity along a line segment
+└── TremorGravityCreator — Tremor/shockwave gravity effect</div>
+
+        </section>
+
+        <section id="s_scenario">
+            <h2>ScenarioHolder / Stage Loading</h2>
+            <div class="code-block">ScenarioHolder
+│ Reads [Galaxy]Scenario.arc → [Galaxy]Scenario/ScenarioData.bcsv
+│ Each row = one star mission (Scenario 1, 2, 3...)
+│ Columns: ScenarioName, PowerStarId, AppearPowerStarObj,
+│ CometTypeName, LuigiModeTimer, IsHidden
+│
+├── StageDataHolder
+│ Reads [Galaxy]Map.arc
+│ Contains: /Stage/jmp/Placement/ → ObjInfo, PlanetObj, StartInfo, etc.
+│ /Stage/jmp/MapParts/ → map-specific object tables
+│ /Stage/jmp/Camera/ → camera area data
+│
+└── ZoneHolder (one per loaded zone)
+    Reads [Zone]Zone.arc
+    Contains per-zone JMap tables (same structure as StageData)</div>
+
+        </section>
+
+        <section id="s6">
+            <h2>6. JMAP / BCSV DATA TABLE SYSTEM</h2>
+            <p>BCSV (Binary CSV) is Galaxy's primary data format. Almost all game configuration lives in BCSV files. Understanding it is essential.</p>
+            <h3>6.1 Binary Layout</h3>
+            <p>BCSV Header (big-endian):
+Offset 0x00 u32 Entry count
+Offset 0x04 u32 Field count
+Offset 0x08 u32 Entry size (bytes per row, 4-byte aligned)
+Offset 0x0C u32 Data offset (where row data starts)
+
+Field Descriptor (12 bytes each, immediately after header):
+Offset 0x00 u32 Field name hash (FNV-1a of ASCII field name)
+Offset 0x04 u32 Bitmask (for packed integer fields)
+Offset 0x06 u16 Offset within each row (in bytes)
+Offset 0x08 u8 Shift amount (for bitmask extraction)
+Offset 0x09 u8 Data type:
+    0x00 = s32 (long)
+
+    0x02 = string (offset into string table)
+    0x04 = f32 (float)
+    0x05 = s32 (long, alternate)
+    0x06 = s16 (short)
+
+Row data: Entry count × Entry size bytes
+String table: null-terminated strings referenced by offset</p>
+
+            <h3>6.2 FNV-1a Hash (field name lookup)</h3>
+            <div class="code-block"># Python reference implementation
+FNV_PRIME = 0x01000193
+FNV_OFFSET = 0x811C9DC5
+
+def bcsv_hash(name: str) -> int:
+    h = FNV_OFFSET
+    for c in name:
+        h ^= ord(c)
+        h = (h * FNV_PRIME) & 0xFFFFFFFF
+    return h</div>
+
+
+            <h3>6.3 Key BCSV Tables (Placement)</h3>
+            <p>Located in [Galaxy]Map.arc/Stage/jmp/Placement/ :</p>
+            <table>
+                <thead><tr><th>File</th><th>Key columns</th><th>Purpose</th></tr></thead>
+                <tbody>
+                    <tr><td>ObjInfo</td><td>name , objdbname , pos_x/y/z , dir_x/y/z , scale_x/y/z , l_id , Obj_arg0..7</td><td>Main object spawns</td></tr>
+                    <tr><td>PlanetObj</td><td>name , pos_x/y/z , dir_x/y/z , scale_x/y/z , LowFlag , MiddleFlag</td><td>Planet model actors</td></tr>
+                    <tr><td>StartInfo</td><td>MarioNo , pos_x/y/z , dir_x/y/z , CameraId</td><td>Mario spawn points</td></tr>
+                    <tr><td>DemoObjInfo</td><td>name , DemoName , DemoSheetName</td><td>Cutscene actors</td></tr>
+                    <tr><td>AreaObjInfo</td><td>name , pos_x/y/z , scale_x/y/z , Priority , SW_APPEAR</td><td>Area volume actors</td></tr>
+                    <tr><td>CameraInfo</td><td>id , pos_x/y/z , look_x/y/z , fovy , CamType</td><td>Camera zone configs</td></tr>
+                </tbody>
+            </table>
+            <p>Located in [Galaxy]Map.arc/Stage/jmp/Camera/ :</p>
+            <table>
+                <thead><tr><th>File</th><th>Purpose</th></tr></thead>
+                <tbody>
+                    <tr><td>CameraArea</td><td>Camera trigger zones (AABB + sphere volumes)</td></tr>
+                    <tr><td>GroupCameraInfo</td><td>Groups of camera parameters</td></tr>
+
+                </tbody>
+            </table>
+        </section>
+
+        <section id="s7">
+            <h2>7. GRAVITY SYSTEM — EXACT SPECIFICATION</h2>
+            <p>This is implemented to match Petari's documented GravityCreator::calcGravity() behavior.</p>
+            <h3>7.1 Sampling Algorithm</h3>
+            <p>Each frame, for each object that uses gravity (Mario, enemies, etc.):1. Query GravityCreator with: (worldPosition, layer, gravityFlag)2. GravityCreator iterates all registered GravityAreaObjs3. For each: check if worldPosition is within the field's range AABB/sphere4. Of all fields in range: select the one with highest mPriority5. If multiple fields share the same priority: additively combine their vectors6. Normalize the result to unit length, multiply by 1.0 (strength is per-field)7. Mario's "down" vector = returned gravity direction8. Mario's transform is realigned to this new "down" each frame</p>
+
+            <h3>7.2 Gravity Type Parameters</h3>
+
+            <p><strong>PlanetGravity:</strong>
+Range check: sphere, radius = mRange
+Direction: normalize(mGravityPoint - objectPosition)
+Power: mGravityPower (default: 1.0)
+Used by: Small Round Planet, Medium Round Planet, Large Round Planet
+
+<strong>ParallelGravity:</strong>
+Range check: OBB defined by mBaseMatrix and mRange
+Direction: mGravityDir (constant, not position-dependent)
+Power: mGravityPower
+Used by: Flat worlds, space station floors, conveyor areas
+
+<strong>DiskGravity:</strong>
+Range check: cylinder: radius = mRadius, height = mRange above/below disk
+Direction: -mNormal (toward disk surface from above) or +mNormal (from below)
+Power: mGravityPower, with falloff near edge: power *= (1 - dist/mRadius)
+Used by: Disc-shaped planets (Gusty Garden's disc sections, etc.)
+
+<strong>CylinderGravity:</strong>
+
+Range check: cylinder volume
+Direction: normalize(closestPointOnAxis - objectPosition) [inward radial]
+Power: mGravityPower
+Used by: Cylindrical rolling worlds</p>
+        </section>
+
+        <section id="s8">
+            <h2>8. MARIO ACTOR — MOVEMENT CONSTANTS</h2>
+            <p>From Petari and community documentation. These values are stored in MarioConst.arc .</p>
+            <table>
+                <thead><tr><th>Constant</th><th>Value</th><th>Notes</th></tr></thead>
+                <tbody>
+                    <tr><td>mRunSpeed</td><td>22.0</td><td>Max ground run speed (units/frame)</td></tr>
+                    <tr><td>mWalkSpeed</td><td>8.0</td><td>Walk speed</td></tr>
+                    <tr><td>mJumpPower</td><td>40.0</td><td>Jump initial Y velocity</td></tr>
+                    <tr><td>mDoubleJumpPower</td><td>52.0</td><td>Double jump Y velocity</td></tr>
+                    <tr><td>mTripleJumpPower</td><td>65.0</td><td>Triple jump Y velocity</td></tr>
+                    <tr><td>mLongJumpPower</td><td>30.0</td><td>Long jump Y velocity</td></tr>
+                    <tr><td>mBackflipPower</td><td>55.0</td><td>Backflip Y velocity</td></tr>
+
+                    <tr><td>mGravityPower</td><td>3.0</td><td>Gravity acceleration (units/frame²)</td></tr>
+                    <tr><td>mGroundFriction</td><td>0.85</td><td>Ground velocity multiplier per frame</td></tr>
+                    <tr><td>mAirFriction</td><td>0.97</td><td>Air velocity multiplier per frame</td></tr>
+                    <tr><td>mSpinAttackRadius</td><td>120.0</td><td>Spin attack hitbox radius</td></tr>
+                    <tr><td>mWaterSinkSpeed</td><td>5.0</td><td>Speed Mario sinks in water</td></tr>
+                    <tr><td>mWaterBuoyancy</td><td>1.8</td><td>Upward force in water</td></tr>
+                </tbody>
+            </table>
+        </section>
+
+        <section id="s9">
+            <h2>9. RENDERER SPEC (GX → WebGPU/WebGL2)</h2>
+            <h3>9.1 GX TEV Pipeline Translation</h3>
+            <p>Galaxy uses Nintendo's GX fixed-function pipeline with up to 8 TEV (Texture Environment Unit) stages per material. Each stage is a configurable combine operation.
+Luma Engine translates the full TEV graph to a WGSL / GLSL 3.00 ES fragment shader at material load time.
+
+TEV operation (per stage):
+result.rgb = (d OP ((1-c)*a + c*b)) * scale + bias
+result.a = (d_a OP ((1-c_a)*a_a + c_a*b_a)) * scale_a + bias_a
+
+
+Where a/b/c/d are selectable from: CPREV, APREV, C0..C2, TEXC, TEXA, RASC, RASA, ONE, HALF, KONST, ZERO .
+This is implemented in luma-engine/src/renderer/GXMaterialTranslator .</p>
+
+            <h3>9.2 BTI Texture Format Decoders</h3>
+            <p>All GC texture formats are decoded on the CPU (WASM) at load time, then uploaded as RGBA8 to the GPU.</p>
+            <table>
+                <thead><tr><th>GX Format ID</th><th>Description</th><th>Implementation</th></tr></thead>
+                <tbody>
+                    <tr><td>I4 0x00</td><td>4-bit intensity</td><td>Trivial</td></tr>
+                    <tr><td>I8 0x01</td><td>8-bit intensity</td><td>Trivial</td></tr>
+                    <tr><td>IA4 0x02</td><td>4-bit intensity + 4-bit alpha</td><td>Trivial</td></tr>
+                    <tr><td>IA8 0x03</td><td>8-bit intensity + 8-bit alpha</td><td>Trivial</td></tr>
+                    <tr><td>RGB565 0x04</td><td>16-bit RGB</td><td>Unpack 5-6-5</td></tr>
+                    <tr><td>RGB5A3 0x05</td><td>16-bit, either RGB5 or A3RGB4</td><td>MSB-select</td></tr>
+                    <tr><td>RGBA8 0x06</td><td>32-bit RGBA, tiled 4×4</td><td>De-tile AR+GB sub-blocks</td></tr>
+                    <tr><td>CI4 0x08</td><td>4-bit palette index</td><td>Palette lookup</td></tr>
+                    <tr><td>CI8 0x09</td><td>8-bit palette index</td><td>Palette lookup</td></tr>
+                    <tr><td>CMPR 0x0E</td><td>S3TC DXT1 variant, 8×8 super-tiles of 4×4 DXT1</td><td>DXT1 decode</td></tr>
+                </tbody>
+
+            </table>
+
+            <h3>9.3 Lighting Model</h3>
+            <p>Galaxy uses a per-vertex lighting model on GX (GXSetChanCtrl). Luma Engine approximates this as:
+Directional light (sun): matches GX GX_DIRLGT behavior
+Point lights: Galaxy uses up to 8 GX hardware lights per pass
+Ambient: constant per-stage, read from material's AMB0 / AMB1 registers
+No real-time shadows in Mode A (matches original game)</p>
+        </section>
+
+        <section id="s10">
+            <h2>10. AUDIO SYSTEM SPEC</h2>
+            <h3>10.1 DSP ADPCM Decoder</h3>
+            <p>The GC/Wii's DSP uses a proprietary 4-bit ADPCM codec. All game SFX and some music samples use it.
+
+DSP ADPCM frame (8 bytes = 14 samples):
+Byte 0: header (scale [3:0], predictor index [7:4])
+Bytes 1-7: 14 nibbles of 4-bit delta values
+
+
+Decode formula per sample:
+delta = sign-extend(nibble) &lt;&lt; scale
+sample = delta + coef[predictor*2]*hist1 + coef[predictor*2+1]*hist2
+sample = clamp(sample &gt;&gt; 11, -32768, 32767)
+hist2 = hist1; hist1 = sample
+
+Luma Engine decodes to 16-bit PCM in WASM, then feeds to WebAudio API via AudioWorklet.</p>
+
+            <h3>10.2 BRSTM Streaming</h3>
+            <p>BGM tracks are streamed from BRSTM files (Binary Revolution Stream):
+Header defines: sample rate, channel count, loop start/end points, ADPCM coefficient tables per channel
+Blocks: fixed-size encoded blocks (default 0x2000 bytes per block per channel)
+Loop: implemented as seamless loop by pre-decoding the loop boundary blocks</p>
+        </section>
+
+        <section id="s11">
+            <h2>11. ASSET EXTRACTOR SPEC</h2>
+            <p>The asset extractor runs once when the user provides their ISO/WBFS. It:1. Parses the ISO filesystem table (see §11.1)
+
+2. Decompresses all SZS (Yaz0) files3. Extracts all RARC archives4. Decodes all BTI textures to RGBA8 PNG5. Converts all BMD/BDL models to a Luma Engine internal format ( .lbm )6. Converts all BCSV tables to JSON for fast JS-side access7. Decodes all BRSTM/BRSAR audio to Ogg Vorbis or raw PCM8. Writes everything to Origin Private File System (OPFS) / IndexedDB9. Generates a manifest ( luma_manifest.json ) cataloguing all extracted assets
+
+The extractor is a separate WASM module ( luma-extractor.wasm ) that runs in a Web Worker to avoid blocking the main thread.</p>
+
+            <h3>11.1 ISO/WBFS Layout</h3>
+            <p>Wii ISO (plain):0x000000 WiiDisk header (0x440 bytes)0x000440 Partition table info0x0400C0 Partition entries (up to 4 partitions)
+...
+Data partition:
+Partition header (0x1C bytes)
+
+TMD (Title Metadata)
+Cert chain
+H3 hash table
+Data (encrypted 2MB blocks, Wii discs only)
+
+GameCube ISO (for reference, used in some Wii games as fallback):0x000000 Disc header (0x440 bytes)0x000440 Apploader (boot code)0x002440 DOL (main executable)
+FST offset stored at header+0x0424
+
+FST:
+Root entry (type=dir, first_child, next, name_off=0)
+File entries: [type(1), name_off(3), data_off(4), size(4)]
+Dir entries: [type(1), name_off(3), parent(4), next(4)]
+String table: null-terminated names</p>
+        </section>
+
+        <section id="s12">
+
+            <h2>12. LUMA ENGINE — MODULE LIST</h2>
+            <p>These are the implementation modules, mapped to source files:</p>
+            <table>
+                <thead><tr><th>Module</th><th>File(s)</th><th>Description</th></tr></thead>
+                <tbody>
+                    <tr><td>ISO Extractor</td><td>tools/asset-extractor/</td><td>Parses Wii ISO, extracts raw filesystem</td></tr>
+                    <tr><td>Yaz0/SZS</td><td>src/io/Yaz0.h/.cpp</td><td>Decompressor for Nintendo SZS files</td></tr>
+                    <tr><td>RARC</td><td>src/io/RARC.h/.cpp</td><td>RARC archive reader (Wii variant)</td></tr>
+                    <tr><td>U8</td><td>src/io/U8.h/.cpp</td><td>U8 archive reader (older format)</td></tr>
+                    <tr><td>BCSV/JMapInfo</td><td>src/jmap/JMapInfo.h/.cpp</td><td>BCSV parser + JMapInfoIter</td></tr>
+                    <tr><td>BTI</td><td>src/io/BTI.h/.cpp</td><td>All 10 texture format decoders → RGBA8</td></tr>
+                    <tr><td>CMPR</td><td>src/io/CMPR.h/.cpp</td><td>DXT1-variant decoder for CMPR</td></tr>
+                    <tr><td>BMD</td><td>src/io/BMD.h/.cpp</td><td>J3D model format parser</td></tr>
+                    <tr><td>BCK/BCA</td><td>src/io/BCK.h/.cpp</td><td>Bone animation parsers</td></tr>
+                    <tr><td>BTP/BTK</td><td>src/io/BTP.h/.cpp</td><td>Texture animation parsers</td></tr>
+                    <tr><td>BRSTM</td><td>src/audio/BRSTM.h/.cpp</td><td>BGM stream reader + DSP ADPCM decode</td></tr>
+                    <tr><td>BRSAR</td><td>src/audio/BRSAR.h/.cpp</td><td>SFX archive reader</td></tr>
+                    <tr><td>NameObj</td><td>src/actor/NameObj.h/.cpp</td><td>Base object class (from Petari)</td></tr>
+                    <tr><td>LiveActor</td><td>src/actor/LiveActor.h/.cpp</td><td>Base actor (from Petari)</td></tr>
+
+                    <tr><td>MarioActor</td><td>src/actor/MarioActor.h/.cpp</td><td>Player reimplementation</td></tr>
+                    <tr><td>GravityCreator</td><td>src/gravity/GravityCreator.h/.cpp</td><td>All gravity field types</td></tr>
+                    <tr><td>ScenarioHolder</td><td>src/scenario/ScenarioHolder.h/.cpp</td><td>Scenario/star loading</td></tr>
+                    <tr><td>StageDataHolder</td><td>src/scenario/StageDataHolder.h/.cpp</td><td>Stage JMap loading</td></tr>
+                    <tr><td>GXMaterialTranslator</td><td>src/renderer/GXMaterialTranslator.h/.cpp</td><td>TEV → WGSL/GLSL</td></tr>
+                    <tr><td>BMDRenderer</td><td>src/renderer/BMDRenderer.h/.cpp</td><td>BMD → WebGPU draw calls</td></tr>
+                    <tr><td>AudioManager</td><td>src/audio/AudioManager.h/.cpp</td><td>WebAudio bridge + DSP decode</td></tr>
+                    <tr><td>CollisionDetector</td><td>src/physics/CollisionDetector.h/.cpp</td><td>KCL triangle mesh collision</td></tr>
+                </tbody>
+            </table>
+        </section>
+
+        <section id="s13">
+            <h2>13. RELATIONSHIP TO PETARI</h2>
+            <p>Luma Engine uses Petari as its primary reference document. Specifically:
+• Class names and hierarchies are taken verbatim from Petari's include/ headers
+• Member variable offsets and data types are sourced from Petari's decompiled code
+• MarioConst values (jump heights, run speeds, etc.) are from Petari's documented constants
+• GravityCreator behavior is reverse-engineered from Petari's GravityCreator.cpp decomp
+
+• No compiled Petari code is used — Luma Engine is written independently in C++17/TypeScript
+
+Petari is hosted at: https://github.com/SMGCommunity/Petari
+Galaxy 2 cross-reference: https://github.com/SMGCommunity/Garigari</p>
+        </section>
+
+        <section id="s14">
+            <h2>14. KNOWN GAPS (v0.1)</h2>
+            <p>These features are planned but not yet implemented:
+• Full boss AI (Bowser, Kamella, Bouldergeist, etc.)
+• MBus / MSBF cutscene dialogue flow
+• Multi-player (Luigi co-star, pointer controls)
+• Comet Observatory hub full logic
+• Grand Stars / Power Star unlock sequencing
+• Trial galaxies
+• All 80+ enemy actor types (10 implemented in v0.1)
+
+Luma Engine is part of Project Starshine. Companion specs: Delfino Engine (SMS) · Constellation Engine (original games)</p>
+        </section>
+
+    </main>
+</div>
+
+</body>
+</html>
+
+
