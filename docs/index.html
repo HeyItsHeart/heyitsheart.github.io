@@ -1,856 +1,1073 @@
 <!DOCTYPE html>
 <html lang="en">
-<link rel="icon" type="image/x-icon" href="https://static.vecteezy.com/system/resources/thumbnails/077/801/401/small/pixel-art-retro-glowing-cross-star-graphic-element-png.png">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Project Starshine | Luma Engine Specs</title>
-    <style>
-        :root {
-            --primary-purple: #7c3aed;
-            --dark-purple: #4c1d95;
-            --medium-purple: #8b5cf6;
-            --light-purple: #f5f3ff;
-            --accent-purple: #ddd6fe;
-            --sidebar-bg: #faf9ff;
-            --text-main: #1e1b4b;
-            --text-light: #4b5563;
-            --border-color: #e5e7eb;
-        }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Project Starshine — Documentation</title>
+<style>
+/* ── Reset & Base ─────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --bg:       #09090f;
+  --surface:  #111118;
+  --surface2: #16161f;
+  --border:   rgba(255,255,255,0.07);
+  --border2:  rgba(255,255,255,0.12);
+  --text:     #e8e6de;
+  --muted:    #7a7870;
+  --muted2:   #555450;
+  --purple:   #a07aff;
+  --purple-dk:#7c5cfa;
+  --teal:     #4ecfb3;
+  --amber:    #f0a832;
+  --coral:    #ff7a50;
+  --blue:     #5a8eff;
+  --green:    #50c878;
+  --luma:     #ff7a50;
+  --delfino:  #4fc3f7;
+  --constel:  #a07aff;
+  --wonder:   #50c878;
+  --nav-w:    260px;
+  --header-h: 52px;
+  font-size: 15px;
+}
+html { scroll-behavior: smooth; }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  line-height: 1.65;
+  min-height: 100vh;
+}
 
+/* ── Scrollbar ────────────────────────────────────────────────── */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.12); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.2); }
 
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            scroll-behavior: smooth;
-        }
+/* ── Top header ───────────────────────────────────────────────── */
+#topbar {
+  position: fixed; top: 0; left: 0; right: 0; height: var(--header-h);
+  background: rgba(9,9,15,0.92); backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; gap: 0;
+  z-index: 200; padding: 0 20px;
+}
+.topbar-logo {
+  display: flex; align-items: center; gap: 10px;
+  font-size: 13px; font-weight: 700; letter-spacing: 2px;
+  text-transform: uppercase; color: var(--text);
+  text-decoration: none; margin-right: auto;
+}
+.topbar-logo .star { color: var(--purple); font-size: 18px; }
+.topbar-logo em { color: var(--purple); font-style: normal; }
+.topbar-logo small { font-size: 9px; letter-spacing: 3px; color: var(--muted);
+  font-weight: 400; text-transform: uppercase; margin-left: 2px; }
 
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            background-color: white;
-            color: var(--text-main);
-            line-height: 1.6;
-            display: flex;
-            flex-direction: column;
-            height: 100vh;
-        }
+.topbar-actions {
+  display: flex; align-items: center; gap: 10px;
+}
+.btn-pdf {
+  display: flex; align-items: center; gap: 6px;
+  background: var(--purple-dk); color: #fff;
+  border: none; border-radius: 7px; padding: 7px 14px;
+  font-size: 12px; font-weight: 600; cursor: pointer;
+  text-decoration: none; transition: opacity 0.15s;
+  letter-spacing: 0.3px;
+}
+.btn-pdf:hover { opacity: 0.85; }
+.btn-pdf svg { width: 13px; height: 13px; flex-shrink: 0; }
 
-        header {
-            background-color: var(--dark-purple);
+#search-box {
+  background: var(--surface2); border: 1px solid var(--border2);
+  border-radius: 7px; padding: 6px 12px;
+  color: var(--text); font-size: 13px; width: 220px;
+  outline: none; transition: border-color 0.15s;
+}
+#search-box::placeholder { color: var(--muted); }
+#search-box:focus { border-color: rgba(160,122,255,0.4); }
 
-            color: white;
-            padding: 1rem 2rem;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            position: sticky;
-            top: 0;
-            z-index: 100;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
+/* ── Side navigation ─────────────────────────────────────────── */
+#sidenav {
+  position: fixed; top: var(--header-h); left: 0; bottom: 0;
+  width: var(--nav-w);
+  background: var(--surface);
+  border-right: 1px solid var(--border);
+  overflow-y: auto; z-index: 100;
+  padding: 16px 0 40px;
+}
 
-        .logo {
-            font-size: 1.25rem;
-            font-weight: 800;
-            letter-spacing: -0.025em;
-        }
+.nav-group { margin-bottom: 4px; }
 
-        .nav-buttons {
-            display: flex;
+/* Section header in nav (Luma Engine, Delfino, etc.) */
+.nav-section {
+  display: flex; align-items: center; gap: 8px;
+  padding: 8px 16px 8px 14px;
+  font-size: 11px; font-weight: 700; letter-spacing: 1.5px;
+  text-transform: uppercase; color: var(--text);
+  cursor: pointer; user-select: none;
+  transition: background 0.1s; border-left: 3px solid transparent;
+  text-decoration: none;
+}
+.nav-section:hover { background: rgba(255,255,255,0.04); }
+.nav-section.active { background: rgba(255,255,255,0.06); }
+.nav-section .nav-dot {
+  width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0;
+}
+.nav-section .nav-num {
+  background: rgba(255,255,255,0.08); border-radius: 4px;
+  padding: 1px 6px; font-size: 9px; color: var(--muted);
+  margin-left: auto; letter-spacing: 0;
+}
+.nav-section .chevron {
+  margin-left: 4px; font-size: 9px; color: var(--muted2);
+  transition: transform 0.2s; transform: rotate(0deg);
+}
+.nav-section.open .chevron { transform: rotate(90deg); }
 
-            gap: 1rem;
-        }
+/* Unit items in nav (4.1, 4.2, etc.) */
+.nav-units { overflow: hidden; max-height: 0; transition: max-height 0.25s ease; }
+.nav-units.open { max-height: 600px; }
 
-        .nav-btn {
-            padding: 0.5rem 1rem;
-            border-radius: 6px;
-            text-decoration: none;
-            font-weight: 600;
-            font-size: 0.9rem;
-            transition: all 0.2s;
-        }
+.nav-unit {
+  display: flex; align-items: center; gap: 8px;
+  padding: 5px 16px 5px 26px;
+  font-size: 12px; color: var(--muted);
+  cursor: pointer; text-decoration: none;
+  transition: color 0.1s, background 0.1s;
+  border-left: 3px solid transparent;
+}
+.nav-unit:hover { color: var(--text); background: rgba(255,255,255,0.03); }
+.nav-unit.active {
+  color: var(--text);
+  background: rgba(255,255,255,0.05);
+}
+.nav-unit .unit-num {
+  font-size: 10px; color: var(--muted2); font-family: 'Courier New', monospace;
+  min-width: 28px; flex-shrink: 0;
+}
+.nav-unit.active .unit-num { color: var(--purple); }
 
-        .btn-active {
-            background-color: var(--medium-purple);
-            color: white;
-        }
+/* Nav section accent colors */
+.nav-section[data-section="overview"]    .nav-dot { background: var(--purple); }
+.nav-section[data-section="luma"]        .nav-dot { background: var(--luma); }
+.nav-section[data-section="delfino"]     .nav-dot { background: var(--delfino); }
+.nav-section[data-section="constellation"].nav-dot { background: var(--constel); }
+.nav-section[data-section="wondermod"]   .nav-dot { background: var(--wonder); }
+.nav-section[data-section="renderer"]    .nav-dot { background: var(--blue); }
+.nav-section[data-section="roadmap"]     .nav-dot { background: var(--muted); }
 
-        .btn-disabled {
-            background-color: #312e81;
+/* Nav section active borders */
+.nav-section[data-section="overview"].active    { border-left-color: var(--purple); }
+.nav-section[data-section="luma"].active        { border-left-color: var(--luma); }
+.nav-section[data-section="delfino"].active     { border-left-color: var(--delfino); }
+.nav-section[data-section="constellation"].active { border-left-color: var(--constel); }
+.nav-section[data-section="wondermod"].active   { border-left-color: var(--wonder); }
+.nav-section[data-section="renderer"].active    { border-left-color: var(--blue); }
+.nav-section[data-section="roadmap"].active     { border-left-color: var(--muted); }
 
-            color: #9ca3af;
-            cursor: not-allowed;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            font-size: 0.85rem;
-            padding: 0.2rem 1rem;
-        }
+/* ── Main content ────────────────────────────────────────────── */
+#content {
+  margin-left: var(--nav-w);
+  padding-top: calc(var(--header-h) + 40px);
+  padding-bottom: 80px;
+  min-height: 100vh;
+}
+#content-inner {
+  max-width: 820px;
+  margin: 0 auto;
+  padding: 0 40px;
+}
 
-        .btn-disabled span {
-            font-size: 0.65rem;
-            text-transform: uppercase;
-        }
+/* ── Loading / PDF viewer state ──────────────────────────────── */
+#loading {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  padding: 80px 40px; text-align: center; gap: 16px;
+}
+.spinner {
+  width: 36px; height: 36px; border: 3px solid rgba(160,122,255,0.2);
+  border-top-color: var(--purple); border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+.loading-label { font-size: 13px; color: var(--muted); }
 
-        .layout-body {
-            display: flex;
-            flex: 1;
-            overflow: hidden;
-        }
+/* ── PDF drop zone ───────────────────────────────────────────── */
+#drop-zone {
+  border: 2px dashed rgba(160,122,255,0.3); border-radius: 14px;
+  padding: 52px 32px; text-align: center; cursor: pointer;
+  transition: border-color 0.2s, background 0.2s; margin: 0;
+  position: relative;
+}
+#drop-zone input[type=file] {
+  position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%;
+}
+#drop-zone:hover, #drop-zone.drag-over {
+  border-color: rgba(160,122,255,0.6); background: rgba(160,122,255,0.04);
+}
+.drop-icon { font-size: 36px; margin-bottom: 12px; }
+.drop-title { font-size: 16px; font-weight: 600; color: var(--text); margin-bottom: 6px; }
+.drop-hint { font-size: 13px; color: var(--muted); }
+.drop-hint strong { color: var(--purple); }
+.drop-hint-sub { font-size: 11px; color: var(--muted2); margin-top: 6px; }
 
+/* ── Section banner ──────────────────────────────────────────── */
+.section-banner {
+  border-radius: 10px; padding: 20px 24px;
+  margin: 36px 0 20px;
+  display: flex; align-items: flex-start; gap: 18px;
+  scroll-margin-top: calc(var(--header-h) + 24px);
+}
+.section-banner-num {
+  font-size: 28px; font-weight: 800; opacity: 0.25;
+  line-height: 1; min-width: 36px; flex-shrink: 0;
+}
+.section-banner-body { flex: 1; min-width: 0; }
+.section-banner-title {
+  font-size: 22px; font-weight: 700; line-height: 1.2; margin-bottom: 4px;
+}
+.section-banner-sub {
+  font-size: 12px; opacity: 0.6; letter-spacing: 0.5px;
+}
 
-        aside {
-            width: 300px;
-            background-color: var(--sidebar-bg);
-            border-right: 1px solid var(--border-color);
-            padding: 2rem 1.5rem;
-            overflow-y: auto;
-        }
+/* Section color themes */
+.section-banner.overview    { background: rgba(160,122,255,0.10); border: 1px solid rgba(160,122,255,0.2); }
+.section-banner.overview    .section-banner-num { color: var(--purple); }
+.section-banner.luma        { background: rgba(255,122,80,0.10); border: 1px solid rgba(255,122,80,0.2); }
+.section-banner.luma        .section-banner-num { color: var(--luma); }
+.section-banner.delfino     { background: rgba(79,195,247,0.10); border: 1px solid rgba(79,195,247,0.2); }
+.section-banner.delfino     .section-banner-num { color: var(--delfino); }
+.section-banner.constellation { background: rgba(160,122,255,0.10); border: 1px solid rgba(160,122,255,0.2); }
+.section-banner.constellation .section-banner-num { color: var(--constel); }
+.section-banner.wondermod   { background: rgba(80,200,120,0.10); border: 1px solid rgba(80,200,120,0.2); }
+.section-banner.wondermod   .section-banner-num { color: var(--wonder); }
+.section-banner.renderer    { background: rgba(90,142,255,0.10); border: 1px solid rgba(90,142,255,0.2); }
+.section-banner.renderer    .section-banner-num { color: var(--blue); }
+.section-banner.roadmap     { background: rgba(122,120,112,0.10); border: 1px solid rgba(122,120,112,0.2); }
+.section-banner.roadmap     .section-banner-num { color: var(--muted); }
 
-        aside h2 {
-            font-size: 0.75rem;
-            text-transform: uppercase;
-            color: var(--primary-purple);
-            letter-spacing: 0.1em;
-            margin-bottom: 1rem;
-        }
+/* ── Unit header ─────────────────────────────────────────────── */
+.unit-header {
+  display: flex; align-items: center; gap: 10px;
+  margin: 28px 0 12px;
+  scroll-margin-top: calc(var(--header-h) + 20px);
+}
+.unit-num-badge {
+  font-size: 10px; font-weight: 700; padding: 3px 8px;
+  border-radius: 5px; font-family: 'Courier New', monospace;
+  flex-shrink: 0; letter-spacing: 0.3px;
+}
+.unit-title { font-size: 16px; font-weight: 700; color: var(--text); }
 
-        aside ul {
-            list-style: none;
-        }
+/* Unit badge colors per section */
+[data-section="overview"]     .unit-num-badge { background: rgba(160,122,255,0.2); color: var(--purple); }
+[data-section="luma"]         .unit-num-badge { background: rgba(255,122,80,0.2);  color: var(--luma); }
+[data-section="delfino"]      .unit-num-badge { background: rgba(79,195,247,0.2);  color: var(--delfino); }
+[data-section="constellation"].unit-num-badge { background: rgba(160,122,255,0.2); color: var(--constel); }
+[data-section="wondermod"]    .unit-num-badge { background: rgba(80,200,120,0.2);  color: var(--wonder); }
+[data-section="renderer"]     .unit-num-badge { background: rgba(90,142,255,0.2);  color: var(--blue); }
+[data-section="roadmap"]      .unit-num-badge { background: rgba(122,120,112,0.2); color: var(--muted); }
 
+/* ── Sub-heading ─────────────────────────────────────────────── */
+.sub-head {
+  font-size: 12px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 1px; color: var(--purple); margin: 18px 0 8px;
+}
 
-        aside li {
-            margin-bottom: 0.3rem;
-        }
+/* ── Body text ───────────────────────────────────────────────── */
+.body-text {
+  font-size: 14px; color: rgba(232,230,222,0.85); line-height: 1.75;
+  margin-bottom: 14px;
+}
 
-        aside a {
-            text-decoration: none;
-            color: var(--text-light);
-            font-size: 0.85rem;
-            display: block;
-            padding: 0.4rem 0.8rem;
-            border-radius: 4px;
-            transition: 0.2s;
-        }
+/* ── Code block ──────────────────────────────────────────────── */
+.code-block {
+  background: #0d0d1a; border: 1px solid rgba(90,142,255,0.15);
+  border-radius: 8px; padding: 14px 16px; margin: 10px 0 14px;
+  font-family: 'Courier New', 'Cascadia Code', monospace;
+  font-size: 12px; line-height: 1.65;
+  color: #c0d8ff; overflow-x: auto;
+  white-space: pre;
+}
 
-        aside a:hover {
-            background-color: var(--accent-purple);
-            color: var(--dark-purple);
-        }
+/* ── Tables ──────────────────────────────────────────────────── */
+.doc-table {
+  width: 100%; border-collapse: collapse;
+  font-size: 13px; margin: 10px 0 18px;
+  overflow: hidden; border-radius: 8px;
+  border: 1px solid rgba(255,255,255,0.07);
+}
+.doc-table thead { background: #1a1a2e; }
+.doc-table th {
+  text-align: left; padding: 9px 12px;
+  font-size: 12px; font-weight: 700; color: var(--text);
+  border-bottom: 1px solid rgba(255,255,255,0.1);
+}
+.doc-table td {
+  padding: 8px 12px; border-bottom: 1px solid rgba(255,255,255,0.04);
+  color: rgba(232,230,222,0.8); vertical-align: top;
+}
+.doc-table tr:last-child td { border-bottom: none; }
+.doc-table tr:nth-child(odd)  td { background: rgba(15,15,26,0.6); }
+.doc-table tr:nth-child(even) td { background: rgba(19,19,31,0.6); }
+.doc-table code { font-family: 'Courier New', monospace; font-size: 11.5px;
+  color: #9ab8f0; background: rgba(90,142,255,0.1);
+  padding: 1px 5px; border-radius: 3px; }
 
+/* Status badges in tables */
+.status { display: inline-flex; align-items: center; gap: 4px;
+  font-size: 11px; font-weight: 600; padding: 2px 8px;
+  border-radius: 4px; white-space: nowrap; }
+.status.done    { background: rgba(80,200,120,0.15); color: #50c878; }
+.status.partial { background: rgba(240,168,50,0.15); color: #f0a832; }
+.status.stub    { background: rgba(240,96,80,0.15);  color: #f06050; }
+.status.planned { background: rgba(160,122,255,0.15);color: #a07aff; }
+.status.shared  { background: rgba(79,195,247,0.15); color: #4fc3f7; }
 
-        main {
-            flex: 1;
-            padding: 3rem 4rem;
-            overflow-y: auto;
-            max-width: 1000px;
-            margin: 0 auto;
-        }
+/* ── Divider ─────────────────────────────────────────────────── */
+.hr { height: 1px; background: var(--border); margin: 32px 0; }
 
-        .doc-header {
-            margin-bottom: 3rem;
-            border-bottom: 2px solid var(--light-purple);
-            padding-bottom: 2rem;
-        }
+/* ── Progress bar (roadmap) ──────────────────────────────────── */
+.version-block {
+  background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 10px; padding: 16px 20px; margin: 8px 0;
+}
+.version-label {
+  font-size: 11px; font-weight: 700; letter-spacing: 1px;
+  color: var(--purple); text-transform: uppercase; margin-bottom: 4px;
+}
+.version-focus { font-size: 15px; font-weight: 700; color: var(--text); margin-bottom: 6px; }
+.version-desc { font-size: 13px; color: var(--muted); line-height: 1.6; }
 
-        .doc-header h1 {
-            font-size: 2.2rem;
-            color: var(--dark-purple);
-            margin-bottom: 0.5rem;
-            text-transform: uppercase;
+/* ── Search highlight ────────────────────────────────────────── */
+mark { background: rgba(160,122,255,0.3); color: inherit; border-radius: 2px; }
 
-        }
+/* ── PDF notice bar ──────────────────────────────────────────── */
+#pdf-notice {
+  background: rgba(160,122,255,0.08); border: 1px solid rgba(160,122,255,0.2);
+  border-radius: 8px; padding: 12px 16px; margin-bottom: 24px;
+  font-size: 12px; color: var(--muted); display: flex; align-items: center; gap: 10px;
+}
+#pdf-notice strong { color: var(--purple); }
 
-        .metadata {
-            font-family: monospace;
-            color: var(--text-light);
-            font-size: 0.85rem;
-            white-space: pre-wrap;
-        }
-
-        section {
-            margin-bottom: 4rem;
-        }
-
-        h2 {
-            color: var(--dark-purple);
-            font-size: 1.5rem;
-            margin-bottom: 1.5rem;
-            border-left: 4px solid var(--primary-purple);
-            padding-left: 1rem;
-
-            text-transform: uppercase;
-        }
-
-        h3 {
-            margin: 2rem 0 1rem 0;
-            color: var(--primary-purple);
-            font-size: 1.2rem;
-        }
-
-        p {
-            margin-bottom: 1rem;
-            white-space: pre-wrap;
-        }
-
-        .code-block {
-            background: #1e1e1e;
-            color: #d4d4d4;
-            padding: 1.5rem;
-            border-radius: 8px;
-
-            font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
-            font-size: 0.85rem;
-            line-height: 1.4;
-            overflow-x: auto;
-            white-space: pre;
-            margin: 1.5rem 0;
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin: 1.5rem 0;
-            font-size: 0.85rem;
-        }
-
-        th, td {
-            text-align: left;
-            padding: 0.75rem;
-            border: 1px solid var(--border-color);
-
-            vertical-align: top;
-        }
-
-        th {
-            background-color: var(--light-purple);
-            color: var(--dark-purple);
-            font-weight: 600;
-        }
-
-        .status-implemented { color: #059669; font-weight: bold; }
-        .status-partial { color: #d97706; font-weight: bold; }
-        .status-stubbed { color: #dc2626; font-weight: bold; }
-
-        @media (max-width: 768px) {
-            .layout-body { flex-direction: column; }
-            aside { width: 100%; height: auto; border-right: none; border-bottom: 1px solid var(--border-color); }
-            main { padding: 2rem; }
-        }
-    </style>
+/* ── Responsive ──────────────────────────────────────────────── */
+@media (max-width: 800px) {
+  :root { --nav-w: 0px; }
+  #sidenav { transform: translateX(-260px); transition: transform 0.25s; width: 260px; }
+  #sidenav.open { transform: translateX(0); }
+  #content { margin-left: 0; }
+  #content-inner { padding: 0 20px; }
+  #menu-toggle { display: flex !important; }
+}
+#menu-toggle {
+  display: none; align-items: center; justify-content: center;
+  width: 36px; height: 36px; border: 1px solid var(--border2);
+  border-radius: 7px; background: transparent; cursor: pointer;
+  color: var(--text); margin-right: 8px;
+}
+</style>
 </head>
 <body>
 
-<header>
-
-    <div class="logo">PROJECT STARSHINE</div>
-    <div class="nav-buttons">
-        <a href="#" class="nav-btn btn-active">LUMA</a>
-        <div class="nav-btn btn-disabled">
-            DELFINO
-            <span>Coming Soon</span>
-        </div>
+<!-- Top bar -->
+<header id="topbar">
+  <button id="menu-toggle" aria-label="Toggle nav">
+    <svg width="16" height="12" viewBox="0 0 16 12" fill="none">
+      <rect y="0" width="16" height="1.5" rx="0.75" fill="currentColor"/>
+      <rect y="5.25" width="16" height="1.5" rx="0.75" fill="currentColor"/>
+      <rect y="10.5" width="16" height="1.5" rx="0.75" fill="currentColor"/>
+    </svg>
+  </button>
+  <a class="topbar-logo" href="#">
+    <span class="star">★</span>
+    <div>
+      <div>PROJECT <em>STARSHINE</em></div>
+      <small>Technical Documentation</small>
     </div>
+  </a>
+  <div class="topbar-actions">
+    <input type="search" id="search-box" placeholder="Search docs…" autocomplete="off" />
+    <a class="btn-pdf" id="pdf-link" href="#" download="project-starshine-docs.pdf">
+      <svg viewBox="0 0 16 16" fill="currentColor">
+        <path d="M8 10.5L4.5 7H7V2h2v5h2.5L8 10.5z"/>
+        <path d="M2 12h12v2H2z"/>
+      </svg>
+      Download PDF
+    </a>
+  </div>
 </header>
 
-<div class="layout-body">
-    <aside>
-        <h2>Luma Engine Specs</h2>
-        <ul>
-            <li><a href="#s1">1. OVERVIEW</a></li>
-            <li><a href="#s2">2. ARCHITECTURE</a></li>
-            <li><a href="#s3">3. SOURCE FIDELITY POLICY</a></li>
-            <li><a href="#s4">4. FILE FORMAT SUPPORT</a></li>
-            <li><a href="#s46">4.6 STAGE / SCENARIO</a></li>
-
-            <li><a href="#s47">4.7 AUDIO FORMATS</a></li>
-            <li><a href="#s5">5. CLASS HIERARCHY</a></li>
-            <li><a href="#s_gravity">GRAVITY SUBSYSTEM</a></li>
-            <li><a href="#s_scenario">SCENARIO / STAGE LOADING</a></li>
-            <li><a href="#s6">6. JMAP / BCSV SYSTEM</a></li>
-            <li><a href="#s7">7. GRAVITY SYSTEM SPEC</a></li>
-            <li><a href="#s8">8. MARIO ACTOR CONSTANTS</a></li>
-            <li><a href="#s9">9. RENDERER SPEC</a></li>
-            <li><a href="#s10">10. AUDIO SYSTEM SPEC</a></li>
-            <li><a href="#s11">11. ASSET EXTRACTOR SPEC</a></li>
-            <li><a href="#s12">12. MODULE LIST</a></li>
-            <li><a href="#s13">13. RELATIONSHIP TO PETARI</a></li>
-            <li><a href="#s14">14. KNOWN GAPS</a></li>
-        </ul>
-    </aside>
-
-    <main>
-        <div class="doc-header">
-            <h1>LUMA ENGINE — Technical Specification</h1>
-
-            <div class="metadata">Project Starshine · Component 1 of 3
-Version 0.1.0-draft | Based on Petari (SMGCommunity/Petari) decomp of Super Mario Galaxy 1</div>
-        </div>
-
-        <section id="s1">
-            <h2>1. OVERVIEW</h2>
-            <p>Luma Engine is the Galaxy-compatible runtime layer of Project Starshine. It is a faithful re-implementation of Super Mario Galaxy 1's engine subsystems, informed directly by the Petari decompilation project and the SMGCommunity's accumulated reverse-engineering work on both Galaxy games.
-
-Its goal is to accept a user-supplied Galaxy 1 or Galaxy 2 ISO, extract assets on first run, and then execute the game's logic using re-implemented native subsystems — compiled to WebAssembly — with the GX render pipeline replaced by a WebGPU/WebGL2 backend.
-
-It is not a PC port. It is a clean-room re-implementation of documented behavior, in the same tradition as Ship of Harkinian for Ocarina of Time. No copyrighted code is included.</p>
-            
-            <h3>What Luma Engine covers</h3>
-            <p>Super Mario Galaxy 1 (RMGE01 / RMGK01 / RMGP01 — all regions)
-Super Mario Galaxy 2 (RMGE01 / RMGK01 — all regions, via Garigari decomp cross-reference)
-Delfino Engine (separate component) covers Super Mario Sunshine.</p>
-        </section>
-
-        <section id="s2">
-
-            <h2>2. ARCHITECTURE</h2>
-            <div class="code-block">┌─────────────────────────────────────────────────────────────┐
-│ LUMA ENGINE                                                 │
-│                                                             │
-│ ┌──────────────┐ ┌──────────────┐ ┌───────────────────┐     │
-│ │ ISO / WBFS   │ │ WonderMod    │ │ Constellation     │     │
-│ │ Extractor    │ │ (.wondermod) │ │ Editor Bridge     │     │
-│ └──────┬───────┘ └──────┬───────┘ └─────────┬─────────┘     │
-│        └─────────────────┼──────────────────┘               │
-│                          │                                  │
-│              ┌───────────▼────────────┐                     │
-│              │ Asset Layer            │                     │
-│              │ SZS/Yaz0 decompressor  │                     │
-│              │ RARC archive reader    │                     │
-│              │ BCSV / JMapInfo parser │                     │
-│              │ BTI texture decoder    │                     │
-│              │ BMD/BDL model reader   │                     │
-│              │ BCK/BCA/BTP anim reader│                     │
-│              │ BRSTM audio reader     │                     │
-
-│              └────────────┬───────────┘                     │
-│                           │                                 │
-│ ┌─────────────────────────▼─────────────────────────────┐   │
-│ │ Game Subsystems                                       │   │
-│ │                                                       │   │
-│ │ NameObj      LiveActor       GravityCreator           │   │
-│ │ hierarchy    system          (sphere/box/disk/cyl)    │   │
-│ │                                                       │   │
-│ │ ScenarioHolder     StageDataHolder    ZoneHolder      │   │
-│ │ (JMapInfo-driven scenario loading)                    │   │
-│ │                                                       │   │
-│ │ MarioActor         CameraController   EffectSystem    │   │
-│ │ (full move-        (GalaxyCam exact)  (JPA particles) │   │
-│ │ set reimpl)                                           │   │
-│ │                                                       │   │
-│ │ PhysicsHolder      CollisionDetector  WaterHolder     │   │
-│ │                                                       │   │
-│ │ AudioSystem (DSP ADPCM → WebAudio)                    │   │
-│ └────────────────────────┬──────────────────────────────┘   │
-
-│                          │                                 │
-│              ┌───────────▼────────────┐                     │
-│              │ Render Backend         │                     │
-│              │ GX TEV → WebGPU/WebGL2 │                     │
-│              │ BMD → GPU mesh upload  │                     │
-│              │ BTI → texture upload   │                     │
-│              │ Shadow/bloom/DoF       │                     │
-│              └────────────────────────┘                     │
-└─────────────────────────────────────────────────────────────┘</div>
-        </section>
-
-        <section id="s3">
-            <h2>3. SOURCE FIDELITY POLICY</h2>
-            <p>Luma Engine subsystems are implemented in priority order of fidelity:</p>
-            <table>
-                <thead>
-                    <tr><th>Priority</th><th>Behavior</th></tr>
-                </thead>
-                <tbody>
-
-                    <tr>
-                        <td>1 — Exact match</td>
-                        <td>Physics integration, gravity sampling, collision response, actor movement speeds, jump arcs. These are bit-for-bit matched against documented Petari values.</td>
-                    </tr>
-                    <tr>
-                        <td>2 — Behavioral match</td>
-                        <td>Camera follow curves, audio playback timing, particle emission. Correct feel, not necessarily identical floating-point math.</td>
-                    </tr>
-                    <tr>
-                        <td>3 — Approximated</td>
-                        <td>Lighting/shading (GX TEV → PBR approximation), texture filtering, post-processing. Visually similar, not identical.</td>
-                    </tr>
-                    <tr>
-                        <td>4 — Stubbed</td>
-                        <td>Features not yet fully reverse-engineered (certain NPC AI, some boss phases). Stubs log warnings.</td>
-                    </tr>
-                </tbody>
-            </table>
-        </section>
-
-
-        <section id="s4">
-            <h2>4. FILE FORMAT SUPPORT</h2>
-            <p>All formats are big-endian (PowerPC byte order). The asset extractor converts to little-endian native format on first run and caches to IndexedDB / OPFS.</p>
-            
-            <h3>4.1 Archive Formats</h3>
-            <table>
-                <thead><tr><th>Format</th><th>Extension</th><th>Description</th><th>Status</th></tr></thead>
-                <tbody>
-                    <tr><td>Yaz0</td><td>.szs</td><td>LZ-family compression wrapper. Nearly all game files are Yaz0-compressed.</td><td class="status-implemented">Implemented</td></tr>
-                    <tr><td>RARC</td><td>.arc inside .szs</td><td>Nintendo Revolution Archive. Hierarchical file container.</td><td class="status-implemented">Implemented</td></tr>
-                    <tr><td>U8</td><td>.arc</td><td>Older GameCube archive format (some Galaxy 1 files).</td><td class="status-implemented">Implemented</td></tr>
-                </tbody>
-            </table>
-
-            <h3>4.2 Model / Geometry</h3>
-            <table>
-                <thead><tr><th>Format</th><th>Extension</th><th>Description</th><th>Status</th></tr></thead>
-                <tbody>
-                    <tr><td>BMD</td><td>.bmd</td><td>J3D Binary Model. Contains geometry, material data (TEV stages), vertex attributes.</td><td class="status-partial">Core implemented</td></tr>
-
-                    <tr><td>BDL</td><td>.bdl</td><td>BMD + precomputed display list data.</td><td class="status-implemented">Implemented</td></tr>
-                    <tr><td>KCL</td><td>.kcl</td><td>Collision mesh. Triangle-soup with surface type attributes (ice, sand, water, etc.).</td><td class="status-implemented">Implemented</td></tr>
-                    <tr><td>PA</td><td>.pa</td><td>Path data (splines for cameras and moving objects).</td><td class="status-partial">Partial</td></tr>
-                </tbody>
-            </table>
-
-            <h3>4.3 Animation</h3>
-            <table>
-                <thead><tr><th>Format</th><th>Extension</th><th>Description</th><th>Status</th></tr></thead>
-                <tbody>
-                    <tr><td>BCK</td><td>.bck</td><td>J3D Bone (joint) animation. Used for skeletal animation.</td><td class="status-implemented">Implemented</td></tr>
-                    <tr><td>BCA</td><td>.bca</td><td>J3D Character animation (alternate bone format).</td><td class="status-implemented">Implemented</td></tr>
-                    <tr><td>BTP</td><td>.btp</td><td>J3D Texture pattern animation (frame-by-frame texture swap).</td><td class="status-implemented">Implemented</td></tr>
-                    <tr><td>BTK</td><td>.btk</td><td>J3D Texture SRT animation (UV scrolling, scaling).</td><td class="status-implemented">Implemented</td></tr>
-                    <tr><td>BRK</td><td>.brk</td><td>J3D Color register animation (material color over time).</td><td class="status-partial">Partial</td></tr>
-                    <tr><td>BPK</td><td>.bpk</td><td>J3D Palette animation.</td><td class="status-stubbed">Stubbed</td></tr>
-                    <tr><td>BVA</td><td>.bva</td><td>J3D Mesh visibility animation.</td><td class="status-partial">Partial</td></tr>
-                </tbody>
-            </table>
-
-
-            <h3>4.4 Texture</h3>
-            <table>
-                <thead><tr><th>Format</th><th>Extension</th><th>Description</th><th>Status</th></tr></thead>
-                <tbody>
-                    <tr><td>BTI</td><td>.bti</td><td>Binary Texture Image. Embedded in BMD or standalone. Supports: CMPR (DXT1 variant), RGB5A3, RGBA8, I4, I8, IA4, IA8, CI4, CI8, RGB565.</td><td class="status-implemented">All formats</td></tr>
-                </tbody>
-            </table>
-
-            <h3>4.5 Data Tables</h3>
-            <table>
-                <thead><tr><th>Format</th><th>Extension</th><th>Description</th><th>Status</th></tr></thead>
-                <tbody>
-                    <tr><td>BCSV</td><td>.bcsv</td><td>Binary CSV. JMap data tables. Fixed-width rows, FNV-1a hashed column names. Used for everything — object placement, scenario config, galaxy lists, camera zones, sound cues.</td><td class="status-implemented">Implemented</td></tr>
-                    <tr><td>MSBT</td><td>.msbt</td><td>Message Studio Binary Text. Game dialogue/UI text.</td><td class="status-implemented">Implemented</td></tr>
-                    <tr><td>MSBF</td><td>.msbf</td><td>Message Studio Binary Flow. Text branching logic.</td><td class="status-partial">Partial</td></tr>
-                </tbody>
-            </table>
-        </section>
-
-
-        <section id="s46">
-            <h2>4.6 STAGE / SCENARIO</h2>
-            <table>
-                <thead><tr><th>File Path</th><th>Description</th></tr></thead>
-                <tbody>
-                    <tr><td>*Map.arc StageData/[Galaxy]/</td><td>Main stage geometry, object placement JMap tables</td></tr>
-                    <tr><td>*Scenario.arc StageData/[Galaxy]/</td><td>Per-scenario (star mission) configuration</td></tr>
-                    <tr><td>*Zone.arc StageData/[Galaxy]/</td><td>Sub-zone data (areas within a galaxy)</td></tr>
-                    <tr><td>GalaxyDataTable.bcsv SystemData/</td><td>Master galaxy list with world assignments</td></tr>
-                    <tr><td>ObjInfo.bcsv ObjectData/SystemDataTable.arc</td><td>Actor class → model mapping</td></tr>
-                    <tr><td>PlanetMapDataTable.bcsv ObjectData/</td><td>Planet LOD model assignments</td></tr>
-                </tbody>
-            </table>
-        </section>
-
-        <section id="s47">
-            <h2>4.7 AUDIO</h2>
-            <table>
-                <thead><tr><th>Format</th><th>Extension</th><th>Description</th><th>Status</th></tr></thead>
-
-                <tbody>
-                    <tr><td>BRSTM</td><td>.brstm</td><td>Binary Revolution Stream. Looping BGM. Stereo/multi-channel PCM.</td><td class="status-implemented">Implemented</td></tr>
-                    <tr><td>BRSAR</td><td>.brsar</td><td>Binary Revolution Sound ARchive. SFX container.</td><td class="status-partial">Partial</td></tr>
-                    <tr><td>BRWAV</td><td>.brwav</td><td>Binary Revolution WAV. Individual sound effect.</td><td class="status-implemented">Implemented</td></tr>
-                    <tr><td>DSP ADPCM embedded in BRSAR</td><td>—</td><td>GC DSP 4-bit ADPCM codec. Decodes to 16-bit PCM.</td><td class="status-implemented">Implemented</td></tr>
-                </tbody>
-            </table>
-        </section>
-
-        <section id="s5">
-            <h2>5. CLASS HIERARCHY (from Petari)</h2>
-            <p>These class names are taken directly from Petari's decompilation and the SMG1 Korean symbol map. Luma Engine reimplements each.</p>
-            <div class="code-block">NameObj — Base object. Has name, flags, executor index.
-│
-├── LiveActor — Base for all in-world objects (actors).
-│   │ init(), initAfterPlacement()
-│   │ movement(), draw(), calcAnim(), calcViewAndEntry()
-│   │ mActorFlags, mTranslation, mRotation, mScale
-│   │ mActorAnimKeeper, mActorShadow
-
-│   │
-│   ├── MapObjActor — Static world geometry/prop actors.
-│   │   ├── MapObjActorInitInfo
-│   │   └── [many map objects: PlanetActor, IceStepActor, etc.]
-│   │
-│   ├── MarioActor — The player. Full moveset reimplementation.
-│   │   │ mVelocity, mGravityVector, mGroundNormal
-│   │   │ mAnimName, mHatVisible, mFLUDDEquipped (unused in Galaxy)
-│   │   │ updateMove(), tryJump(), trySpinAttack()
-│   │   │ adjustGravity() ← queries GravityCreator every frame
-│   │   └── [sub-states: NormalMario, InvincibleMario, etc.]
-│   │
-│   ├── EnemyActor — Base enemy class.
-│   │   ├── Kuribo (Goomba)
-│   │   ├── Koopa
-│   │   ├── BeeActor
-│   │   └── [~80 enemy types]
-│   │
-│   ├── CameraActor — In-world camera triggers.
-
-│   └── AreaObj — Invisible area volumes (gravity zones, water, etc.)
-│       ├── GravityArea
-│       ├── WaterArea
-│       ├── SoundArea
-│       └── DeathArea
-│
-├── NameObjHolder&lt;T&gt; — Typed collection of NameObjs.
-│   ├── LiveActorGroup — Groups of LiveActors (star bit groups, etc.)
-│   └── MarioHolder — Holds the Mario instance.
-│
-└── [JSystem objects]
-    ├── JMapInfo — Parsed BCSV table. Provides row/column iteration.
-    ├── JMapInfoIter — Iterator over a JMapInfo table.
-    └── JMapLinkArray — Array of JMap object links.</div>
-        </section>
-
-        <section id="s_gravity">
-            <h2>GravityCreator Subsystem</h2>
-            <p>This is one of Galaxy's most important and distinctive subsystems. Every frame, GravityCreator samples all registered gravity fields and returns the dominant gravity vector for a given world position. Luma Engine implements this exactly.</p>
-
-            <div class="code-block">GravityCreator (singleton, manages all gravity fields)
-│
-├── PlanetGravityCreator — Sphere gravity (planet core attraction)
-│   └── Params: mGravityPoint, mGravityPower, mRange, mPriority
-│
-├── ParallelGravityCreator — Box/slab uniform-direction gravity
-│   └── Params: mBaseMatrix (OBB), mGravityPower, mRange
-│
-├── PointGravityCreator — Point attractor (black holes, warp stars)
-│   └── Params: mGravityPoint, mGravityPower, mRange, mDistanceCalc
-│
-├── DiskGravityCreator — Disk-shaped planet surface gravity
-│   └── Params: mGravityPoint, mNormal, mRadius, mGravityPower
-│
-├── CylinderGravityCreator — Cylindrical world gravity
-│   └── Params: mGravityPoint, mAxis, mRadius, mHeight, mGravityPower
-│
-├── SegmentGravityCreator — Gravity along a line segment
-└── TremorGravityCreator — Tremor/shockwave gravity effect</div>
-
-        </section>
-
-        <section id="s_scenario">
-            <h2>ScenarioHolder / Stage Loading</h2>
-            <div class="code-block">ScenarioHolder
-│ Reads [Galaxy]Scenario.arc → [Galaxy]Scenario/ScenarioData.bcsv
-│ Each row = one star mission (Scenario 1, 2, 3...)
-│ Columns: ScenarioName, PowerStarId, AppearPowerStarObj,
-│ CometTypeName, LuigiModeTimer, IsHidden
-│
-├── StageDataHolder
-│ Reads [Galaxy]Map.arc
-│ Contains: /Stage/jmp/Placement/ → ObjInfo, PlanetObj, StartInfo, etc.
-│ /Stage/jmp/MapParts/ → map-specific object tables
-│ /Stage/jmp/Camera/ → camera area data
-│
-└── ZoneHolder (one per loaded zone)
-    Reads [Zone]Zone.arc
-    Contains per-zone JMap tables (same structure as StageData)</div>
-
-        </section>
-
-        <section id="s6">
-            <h2>6. JMAP / BCSV DATA TABLE SYSTEM</h2>
-            <p>BCSV (Binary CSV) is Galaxy's primary data format. Almost all game configuration lives in BCSV files. Understanding it is essential.</p>
-            <h3>6.1 Binary Layout</h3>
-            <p>BCSV Header (big-endian):
-Offset 0x00 u32 Entry count
-Offset 0x04 u32 Field count
-Offset 0x08 u32 Entry size (bytes per row, 4-byte aligned)
-Offset 0x0C u32 Data offset (where row data starts)
-
-Field Descriptor (12 bytes each, immediately after header):
-Offset 0x00 u32 Field name hash (FNV-1a of ASCII field name)
-Offset 0x04 u32 Bitmask (for packed integer fields)
-Offset 0x06 u16 Offset within each row (in bytes)
-Offset 0x08 u8 Shift amount (for bitmask extraction)
-Offset 0x09 u8 Data type:
-    0x00 = s32 (long)
-
-    0x02 = string (offset into string table)
-    0x04 = f32 (float)
-    0x05 = s32 (long, alternate)
-    0x06 = s16 (short)
-
-Row data: Entry count × Entry size bytes
-String table: null-terminated strings referenced by offset</p>
-
-            <h3>6.2 FNV-1a Hash (field name lookup)</h3>
-            <div class="code-block"># Python reference implementation
-FNV_PRIME = 0x01000193
-FNV_OFFSET = 0x811C9DC5
-
-def bcsv_hash(name: str) -> int:
-    h = FNV_OFFSET
-    for c in name:
-        h ^= ord(c)
-        h = (h * FNV_PRIME) & 0xFFFFFFFF
-    return h</div>
-
-
-            <h3>6.3 Key BCSV Tables (Placement)</h3>
-            <p>Located in [Galaxy]Map.arc/Stage/jmp/Placement/ :</p>
-            <table>
-                <thead><tr><th>File</th><th>Key columns</th><th>Purpose</th></tr></thead>
-                <tbody>
-                    <tr><td>ObjInfo</td><td>name , objdbname , pos_x/y/z , dir_x/y/z , scale_x/y/z , l_id , Obj_arg0..7</td><td>Main object spawns</td></tr>
-                    <tr><td>PlanetObj</td><td>name , pos_x/y/z , dir_x/y/z , scale_x/y/z , LowFlag , MiddleFlag</td><td>Planet model actors</td></tr>
-                    <tr><td>StartInfo</td><td>MarioNo , pos_x/y/z , dir_x/y/z , CameraId</td><td>Mario spawn points</td></tr>
-                    <tr><td>DemoObjInfo</td><td>name , DemoName , DemoSheetName</td><td>Cutscene actors</td></tr>
-                    <tr><td>AreaObjInfo</td><td>name , pos_x/y/z , scale_x/y/z , Priority , SW_APPEAR</td><td>Area volume actors</td></tr>
-                    <tr><td>CameraInfo</td><td>id , pos_x/y/z , look_x/y/z , fovy , CamType</td><td>Camera zone configs</td></tr>
-                </tbody>
-            </table>
-            <p>Located in [Galaxy]Map.arc/Stage/jmp/Camera/ :</p>
-            <table>
-                <thead><tr><th>File</th><th>Purpose</th></tr></thead>
-                <tbody>
-                    <tr><td>CameraArea</td><td>Camera trigger zones (AABB + sphere volumes)</td></tr>
-                    <tr><td>GroupCameraInfo</td><td>Groups of camera parameters</td></tr>
-
-                </tbody>
-            </table>
-        </section>
-
-        <section id="s7">
-            <h2>7. GRAVITY SYSTEM — EXACT SPECIFICATION</h2>
-            <p>This is implemented to match Petari's documented GravityCreator::calcGravity() behavior.</p>
-            <h3>7.1 Sampling Algorithm</h3>
-            <p>Each frame, for each object that uses gravity (Mario, enemies, etc.):1. Query GravityCreator with: (worldPosition, layer, gravityFlag)2. GravityCreator iterates all registered GravityAreaObjs3. For each: check if worldPosition is within the field's range AABB/sphere4. Of all fields in range: select the one with highest mPriority5. If multiple fields share the same priority: additively combine their vectors6. Normalize the result to unit length, multiply by 1.0 (strength is per-field)7. Mario's "down" vector = returned gravity direction8. Mario's transform is realigned to this new "down" each frame</p>
-
-            <h3>7.2 Gravity Type Parameters</h3>
-
-            <p><strong>PlanetGravity:</strong>
-Range check: sphere, radius = mRange
-Direction: normalize(mGravityPoint - objectPosition)
-Power: mGravityPower (default: 1.0)
-Used by: Small Round Planet, Medium Round Planet, Large Round Planet
-
-<strong>ParallelGravity:</strong>
-Range check: OBB defined by mBaseMatrix and mRange
-Direction: mGravityDir (constant, not position-dependent)
-Power: mGravityPower
-Used by: Flat worlds, space station floors, conveyor areas
-
-<strong>DiskGravity:</strong>
-Range check: cylinder: radius = mRadius, height = mRange above/below disk
-Direction: -mNormal (toward disk surface from above) or +mNormal (from below)
-Power: mGravityPower, with falloff near edge: power *= (1 - dist/mRadius)
-Used by: Disc-shaped planets (Gusty Garden's disc sections, etc.)
-
-<strong>CylinderGravity:</strong>
-
-Range check: cylinder volume
-Direction: normalize(closestPointOnAxis - objectPosition) [inward radial]
-Power: mGravityPower
-Used by: Cylindrical rolling worlds</p>
-        </section>
-
-        <section id="s8">
-            <h2>8. MARIO ACTOR — MOVEMENT CONSTANTS</h2>
-            <p>From Petari and community documentation. These values are stored in MarioConst.arc .</p>
-            <table>
-                <thead><tr><th>Constant</th><th>Value</th><th>Notes</th></tr></thead>
-                <tbody>
-                    <tr><td>mRunSpeed</td><td>22.0</td><td>Max ground run speed (units/frame)</td></tr>
-                    <tr><td>mWalkSpeed</td><td>8.0</td><td>Walk speed</td></tr>
-                    <tr><td>mJumpPower</td><td>40.0</td><td>Jump initial Y velocity</td></tr>
-                    <tr><td>mDoubleJumpPower</td><td>52.0</td><td>Double jump Y velocity</td></tr>
-                    <tr><td>mTripleJumpPower</td><td>65.0</td><td>Triple jump Y velocity</td></tr>
-                    <tr><td>mLongJumpPower</td><td>30.0</td><td>Long jump Y velocity</td></tr>
-                    <tr><td>mBackflipPower</td><td>55.0</td><td>Backflip Y velocity</td></tr>
-
-                    <tr><td>mGravityPower</td><td>3.0</td><td>Gravity acceleration (units/frame²)</td></tr>
-                    <tr><td>mGroundFriction</td><td>0.85</td><td>Ground velocity multiplier per frame</td></tr>
-                    <tr><td>mAirFriction</td><td>0.97</td><td>Air velocity multiplier per frame</td></tr>
-                    <tr><td>mSpinAttackRadius</td><td>120.0</td><td>Spin attack hitbox radius</td></tr>
-                    <tr><td>mWaterSinkSpeed</td><td>5.0</td><td>Speed Mario sinks in water</td></tr>
-                    <tr><td>mWaterBuoyancy</td><td>1.8</td><td>Upward force in water</td></tr>
-                </tbody>
-            </table>
-        </section>
-
-        <section id="s9">
-            <h2>9. RENDERER SPEC (GX → WebGPU/WebGL2)</h2>
-            <h3>9.1 GX TEV Pipeline Translation</h3>
-            <p>Galaxy uses Nintendo's GX fixed-function pipeline with up to 8 TEV (Texture Environment Unit) stages per material. Each stage is a configurable combine operation.
-Luma Engine translates the full TEV graph to a WGSL / GLSL 3.00 ES fragment shader at material load time.
-
-TEV operation (per stage):
-result.rgb = (d OP ((1-c)*a + c*b)) * scale + bias
-result.a = (d_a OP ((1-c_a)*a_a + c_a*b_a)) * scale_a + bias_a
-
-
-Where a/b/c/d are selectable from: CPREV, APREV, C0..C2, TEXC, TEXA, RASC, RASA, ONE, HALF, KONST, ZERO .
-This is implemented in luma-engine/src/renderer/GXMaterialTranslator .</p>
-
-            <h3>9.2 BTI Texture Format Decoders</h3>
-            <p>All GC texture formats are decoded on the CPU (WASM) at load time, then uploaded as RGBA8 to the GPU.</p>
-            <table>
-                <thead><tr><th>GX Format ID</th><th>Description</th><th>Implementation</th></tr></thead>
-                <tbody>
-                    <tr><td>I4 0x00</td><td>4-bit intensity</td><td>Trivial</td></tr>
-                    <tr><td>I8 0x01</td><td>8-bit intensity</td><td>Trivial</td></tr>
-                    <tr><td>IA4 0x02</td><td>4-bit intensity + 4-bit alpha</td><td>Trivial</td></tr>
-                    <tr><td>IA8 0x03</td><td>8-bit intensity + 8-bit alpha</td><td>Trivial</td></tr>
-                    <tr><td>RGB565 0x04</td><td>16-bit RGB</td><td>Unpack 5-6-5</td></tr>
-                    <tr><td>RGB5A3 0x05</td><td>16-bit, either RGB5 or A3RGB4</td><td>MSB-select</td></tr>
-                    <tr><td>RGBA8 0x06</td><td>32-bit RGBA, tiled 4×4</td><td>De-tile AR+GB sub-blocks</td></tr>
-                    <tr><td>CI4 0x08</td><td>4-bit palette index</td><td>Palette lookup</td></tr>
-                    <tr><td>CI8 0x09</td><td>8-bit palette index</td><td>Palette lookup</td></tr>
-                    <tr><td>CMPR 0x0E</td><td>S3TC DXT1 variant, 8×8 super-tiles of 4×4 DXT1</td><td>DXT1 decode</td></tr>
-                </tbody>
-
-            </table>
-
-            <h3>9.3 Lighting Model</h3>
-            <p>Galaxy uses a per-vertex lighting model on GX (GXSetChanCtrl). Luma Engine approximates this as:
-Directional light (sun): matches GX GX_DIRLGT behavior
-Point lights: Galaxy uses up to 8 GX hardware lights per pass
-Ambient: constant per-stage, read from material's AMB0 / AMB1 registers
-No real-time shadows in Mode A (matches original game)</p>
-        </section>
-
-        <section id="s10">
-            <h2>10. AUDIO SYSTEM SPEC</h2>
-            <h3>10.1 DSP ADPCM Decoder</h3>
-            <p>The GC/Wii's DSP uses a proprietary 4-bit ADPCM codec. All game SFX and some music samples use it.
-
-DSP ADPCM frame (8 bytes = 14 samples):
-Byte 0: header (scale [3:0], predictor index [7:4])
-Bytes 1-7: 14 nibbles of 4-bit delta values
-
-
-Decode formula per sample:
-delta = sign-extend(nibble) &lt;&lt; scale
-sample = delta + coef[predictor*2]*hist1 + coef[predictor*2+1]*hist2
-sample = clamp(sample &gt;&gt; 11, -32768, 32767)
-hist2 = hist1; hist1 = sample
-
-Luma Engine decodes to 16-bit PCM in WASM, then feeds to WebAudio API via AudioWorklet.</p>
-
-            <h3>10.2 BRSTM Streaming</h3>
-            <p>BGM tracks are streamed from BRSTM files (Binary Revolution Stream):
-Header defines: sample rate, channel count, loop start/end points, ADPCM coefficient tables per channel
-Blocks: fixed-size encoded blocks (default 0x2000 bytes per block per channel)
-Loop: implemented as seamless loop by pre-decoding the loop boundary blocks</p>
-        </section>
-
-        <section id="s11">
-            <h2>11. ASSET EXTRACTOR SPEC</h2>
-            <p>The asset extractor runs once when the user provides their ISO/WBFS. It:1. Parses the ISO filesystem table (see §11.1)
-
-2. Decompresses all SZS (Yaz0) files3. Extracts all RARC archives4. Decodes all BTI textures to RGBA8 PNG5. Converts all BMD/BDL models to a Luma Engine internal format ( .lbm )6. Converts all BCSV tables to JSON for fast JS-side access7. Decodes all BRSTM/BRSAR audio to Ogg Vorbis or raw PCM8. Writes everything to Origin Private File System (OPFS) / IndexedDB9. Generates a manifest ( luma_manifest.json ) cataloguing all extracted assets
-
-The extractor is a separate WASM module ( luma-extractor.wasm ) that runs in a Web Worker to avoid blocking the main thread.</p>
-
-            <h3>11.1 ISO/WBFS Layout</h3>
-            <p>Wii ISO (plain):0x000000 WiiDisk header (0x440 bytes)0x000440 Partition table info0x0400C0 Partition entries (up to 4 partitions)
-...
-Data partition:
-Partition header (0x1C bytes)
-
-TMD (Title Metadata)
-Cert chain
-H3 hash table
-Data (encrypted 2MB blocks, Wii discs only)
-
-GameCube ISO (for reference, used in some Wii games as fallback):0x000000 Disc header (0x440 bytes)0x000440 Apploader (boot code)0x002440 DOL (main executable)
-FST offset stored at header+0x0424
-
-FST:
-Root entry (type=dir, first_child, next, name_off=0)
-File entries: [type(1), name_off(3), data_off(4), size(4)]
-Dir entries: [type(1), name_off(3), parent(4), next(4)]
-String table: null-terminated names</p>
-        </section>
-
-        <section id="s12">
-
-            <h2>12. LUMA ENGINE — MODULE LIST</h2>
-            <p>These are the implementation modules, mapped to source files:</p>
-            <table>
-                <thead><tr><th>Module</th><th>File(s)</th><th>Description</th></tr></thead>
-                <tbody>
-                    <tr><td>ISO Extractor</td><td>tools/asset-extractor/</td><td>Parses Wii ISO, extracts raw filesystem</td></tr>
-                    <tr><td>Yaz0/SZS</td><td>src/io/Yaz0.h/.cpp</td><td>Decompressor for Nintendo SZS files</td></tr>
-                    <tr><td>RARC</td><td>src/io/RARC.h/.cpp</td><td>RARC archive reader (Wii variant)</td></tr>
-                    <tr><td>U8</td><td>src/io/U8.h/.cpp</td><td>U8 archive reader (older format)</td></tr>
-                    <tr><td>BCSV/JMapInfo</td><td>src/jmap/JMapInfo.h/.cpp</td><td>BCSV parser + JMapInfoIter</td></tr>
-                    <tr><td>BTI</td><td>src/io/BTI.h/.cpp</td><td>All 10 texture format decoders → RGBA8</td></tr>
-                    <tr><td>CMPR</td><td>src/io/CMPR.h/.cpp</td><td>DXT1-variant decoder for CMPR</td></tr>
-                    <tr><td>BMD</td><td>src/io/BMD.h/.cpp</td><td>J3D model format parser</td></tr>
-                    <tr><td>BCK/BCA</td><td>src/io/BCK.h/.cpp</td><td>Bone animation parsers</td></tr>
-                    <tr><td>BTP/BTK</td><td>src/io/BTP.h/.cpp</td><td>Texture animation parsers</td></tr>
-                    <tr><td>BRSTM</td><td>src/audio/BRSTM.h/.cpp</td><td>BGM stream reader + DSP ADPCM decode</td></tr>
-                    <tr><td>BRSAR</td><td>src/audio/BRSAR.h/.cpp</td><td>SFX archive reader</td></tr>
-                    <tr><td>NameObj</td><td>src/actor/NameObj.h/.cpp</td><td>Base object class (from Petari)</td></tr>
-                    <tr><td>LiveActor</td><td>src/actor/LiveActor.h/.cpp</td><td>Base actor (from Petari)</td></tr>
-
-                    <tr><td>MarioActor</td><td>src/actor/MarioActor.h/.cpp</td><td>Player reimplementation</td></tr>
-                    <tr><td>GravityCreator</td><td>src/gravity/GravityCreator.h/.cpp</td><td>All gravity field types</td></tr>
-                    <tr><td>ScenarioHolder</td><td>src/scenario/ScenarioHolder.h/.cpp</td><td>Scenario/star loading</td></tr>
-                    <tr><td>StageDataHolder</td><td>src/scenario/StageDataHolder.h/.cpp</td><td>Stage JMap loading</td></tr>
-                    <tr><td>GXMaterialTranslator</td><td>src/renderer/GXMaterialTranslator.h/.cpp</td><td>TEV → WGSL/GLSL</td></tr>
-                    <tr><td>BMDRenderer</td><td>src/renderer/BMDRenderer.h/.cpp</td><td>BMD → WebGPU draw calls</td></tr>
-                    <tr><td>AudioManager</td><td>src/audio/AudioManager.h/.cpp</td><td>WebAudio bridge + DSP decode</td></tr>
-                    <tr><td>CollisionDetector</td><td>src/physics/CollisionDetector.h/.cpp</td><td>KCL triangle mesh collision</td></tr>
-                </tbody>
-            </table>
-        </section>
-
-        <section id="s13">
-            <h2>13. RELATIONSHIP TO PETARI</h2>
-            <p>Luma Engine uses Petari as its primary reference document. Specifically:
-• Class names and hierarchies are taken verbatim from Petari's include/ headers
-• Member variable offsets and data types are sourced from Petari's decompiled code
-• MarioConst values (jump heights, run speeds, etc.) are from Petari's documented constants
-• GravityCreator behavior is reverse-engineered from Petari's GravityCreator.cpp decomp
-
-• No compiled Petari code is used — Luma Engine is written independently in C++17/TypeScript
-
-Petari is hosted at: https://github.com/SMGCommunity/Petari
-Galaxy 2 cross-reference: https://github.com/SMGCommunity/Garigari</p>
-        </section>
-
-        <section id="s14">
-            <h2>14. KNOWN GAPS (v0.1)</h2>
-            <p>These features are planned but not yet implemented:
-• Full boss AI (Bowser, Kamella, Bouldergeist, etc.)
-• MBus / MSBF cutscene dialogue flow
-• Multi-player (Luigi co-star, pointer controls)
-• Comet Observatory hub full logic
-• Grand Stars / Power Star unlock sequencing
-• Trial galaxies
-• All 80+ enemy actor types (10 implemented in v0.1)
-
-Luma Engine is part of Project Starshine. Companion specs: Delfino Engine (SMS) · Constellation Engine (original games)</p>
-        </section>
-
-    </main>
-</div>
-
+<!-- Side navigation (built dynamically) -->
+<nav id="sidenav"></nav>
+
+<!-- Main content -->
+<main id="content">
+  <div id="content-inner">
+    <!-- Upload zone shown initially if no PDF is loaded -->
+    <div id="drop-zone">
+      <input type="file" id="pdf-file-input" accept=".pdf" />
+      <div class="drop-icon">📄</div>
+      <div class="drop-title">Load the Starshine documentation PDF</div>
+      <div class="drop-hint">Drop <strong>project-starshine-docs.pdf</strong> here, or click to browse</div>
+      <div class="drop-hint-sub">The PDF is parsed locally — nothing is uploaded</div>
+    </div>
+
+    <div id="loading" style="display:none">
+      <div class="spinner"></div>
+      <div class="loading-label" id="loading-label">Parsing PDF…</div>
+    </div>
+
+    <div id="doc-content" style="display:none"></div>
+  </div>
+</main>
+
+<!-- PDF.js from CDN -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script>
+// ── Config ────────────────────────────────────────────────────────
+const PDFJS_WORKER = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+pdfjsLib.GlobalWorkerOptions.workerSrc = PDFJS_WORKER;
+
+// ── Section metadata ──────────────────────────────────────────────
+const SECTION_META = {
+  '1': { key: 'overview',       label: 'Overview & Architecture', color: '#a07aff' },
+  '2': { key: 'luma',           label: 'Luma Engine',             color: '#ff7a50' },
+  '3': { key: 'delfino',        label: 'Delfino Engine',          color: '#4fc3f7' },
+  '4': { key: 'constellation',  label: 'Constellation Engine',    color: '#a07aff' },
+  '5': { key: 'wondermod',      label: 'WonderMod Framework',     color: '#50c878' },
+  '6': { key: 'renderer',       label: 'Renderer',                color: '#5a8eff' },
+  '7': { key: 'roadmap',        label: 'Project Roadmap',         color: '#7a7870' },
+};
+
+// Detect if number is a section (e.g. "1", "2") vs unit (e.g. "1.1", "2.3")
+function classifyHeading(num) {
+  if (!num) return null;
+  const parts = num.split('.');
+  if (parts.length === 1 && /^\d+$/.test(parts[0])) return 'section';
+  if (parts.length === 2) return 'unit';
+  if (parts.length >= 3) return 'sub';
+  return null;
+}
+
+function getSectionNum(num) {
+  return num ? num.split('.')[0] : '';
+}
+
+// ── PDF Loading ───────────────────────────────────────────────────
+const dropZone = document.getElementById('drop-zone');
+const fileInput = document.getElementById('pdf-file-input');
+const loading   = document.getElementById('loading');
+const loadingLabel = document.getElementById('loading-label');
+const docContent= document.getElementById('doc-content');
+
+// Try to auto-load if a PDF was provided via URL param
+const urlParam = new URLSearchParams(location.search).get('pdf');
+if (urlParam) loadPDFFromURL(urlParam);
+
+dropZone.addEventListener('dragover', e => {
+  e.preventDefault();
+  dropZone.classList.add('drag-over');
+});
+dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));
+dropZone.addEventListener('drop', e => {
+  e.preventDefault();
+  dropZone.classList.remove('drag-over');
+  const f = e.dataTransfer.files[0];
+  if (f && f.name.endsWith('.pdf')) loadPDFFromFile(f);
+});
+fileInput.addEventListener('change', e => {
+  const f = e.target.files[0];
+  if (f) loadPDFFromFile(f);
+});
+
+async function loadPDFFromFile(file) {
+  const url = URL.createObjectURL(file);
+  document.getElementById('pdf-link').href = url;
+  document.getElementById('pdf-link').download = file.name;
+  await parsePDF(url);
+}
+async function loadPDFFromURL(url) {
+  document.getElementById('pdf-link').href = url;
+  await parsePDF(url);
+}
+
+// ── PDF Text Extraction ───────────────────────────────────────────
+async function parsePDF(url) {
+  dropZone.style.display = 'none';
+  loading.style.display  = 'flex';
+
+  try {
+    loadingLabel.textContent = 'Loading PDF…';
+    const pdf = await pdfjsLib.getDocument(url).promise;
+    const totalPages = pdf.numPages;
+    const allLines = [];
+
+    for (let p = 1; p <= totalPages; p++) {
+      loadingLabel.textContent = `Extracting text… page ${p}/${totalPages}`;
+      const page = await pdf.getPage(p);
+      const content = await page.getTextContent();
+
+      // Group items by Y position (same line = within 3px)
+      const lineMap = new Map();
+      for (const item of content.items) {
+        if (!item.str?.trim()) continue;
+        const y = Math.round(item.transform[5] / 3) * 3;
+        if (!lineMap.has(y)) lineMap.set(y, []);
+        lineMap.get(y).push({ str: item.str, x: item.transform[4], fontSize: item.height });
+      }
+
+      // Sort lines top-to-bottom (descending Y in PDF coords)
+      const sortedY = [...lineMap.keys()].sort((a, b) => b - a);
+      for (const y of sortedY) {
+        const items = lineMap.get(y).sort((a, b) => a.x - b.x);
+        const text  = items.map(i => i.str).join(' ').replace(/\s+/g, ' ').trim();
+        const fontSize = Math.max(...items.map(i => i.fontSize));
+        if (text) allLines.push({ text, fontSize, page: p });
+      }
+    }
+
+    loadingLabel.textContent = 'Parsing structure…';
+    const doc = parseDocStructure(allLines);
+    renderDoc(doc);
+
+  } catch (err) {
+    loading.style.display = 'none';
+    dropZone.style.display = '';
+    alert('Failed to parse PDF: ' + err.message);
+    console.error(err);
+  }
+}
+
+// ── Structure Parser ──────────────────────────────────────────────
+// Detects headings by font size and numbering patterns.
+// Returns a structured document object.
+function parseDocStructure(lines) {
+  const sections = [];
+  let currentSection = null;
+  let currentUnit    = null;
+  let currentContent = [];
+
+  // Compute font size stats for heading detection
+  const fontSizes = lines.map(l => l.fontSize).filter(s => s > 0);
+  const maxFont = Math.max(...fontSizes);
+  const medFont = fontSizes.sort((a,b)=>a-b)[Math.floor(fontSizes.length*0.7)];
+
+  function isLargHeading(line) {
+    return line.fontSize > medFont * 1.5 && line.text.length < 60;
+  }
+  function isMedHeading(line) {
+    return line.fontSize > medFont * 1.15 && line.text.length < 80;
+  }
+
+  // Numbering pattern detectors
+  const RE_SECTION = /^(\d+)\s+(.+)$/;
+  const RE_UNIT    = /^(\d+\.\d+)\s+(.+)$/;
+  const RE_COVER   = /^(project\s+starshine|technical\s+doc|table\s+of\s+contents)/i;
+
+  function flushContent() {
+    return currentContent.splice(0);
+  }
+
+  for (const line of lines) {
+    const { text } = line;
+
+    // Skip cover page artifacts
+    if (RE_COVER.test(text)) continue;
+    if (/^page\s+\d+$/i.test(text)) continue;
+    if (/^project\s+starshine\s*$/i.test(text)) continue;
+    if (/^technical\s+doc/i.test(text)) continue;
+
+    // Check for section heading: "2 Luma Engine"
+    const secMatch = text.match(RE_SECTION);
+    if (secMatch && isLargHeading(line) && SECTION_META[secMatch[1]]) {
+      const num   = secMatch[1];
+      const title = secMatch[2].trim();
+      currentSection = {
+        num, title,
+        meta: SECTION_META[num],
+        subtitle: '',
+        units: [],
+        intro: [],
+      };
+      currentUnit = null;
+      currentContent = currentSection.intro;
+      sections.push(currentSection);
+      continue;
+    }
+
+    // Check for unit heading: "2.3 Class Hierarchy"
+    const unitMatch = text.match(RE_UNIT);
+    if (unitMatch && isMedHeading(line) && currentSection) {
+      const num   = unitMatch[1];
+      const title = unitMatch[2].trim();
+      if (getSectionNum(num) === currentSection.num) {
+        currentUnit = { num, title, blocks: [] };
+        currentSection.units.push(currentUnit);
+        currentContent = currentUnit.blocks;
+        continue;
+      }
+    }
+
+    // Accumulate content
+    if (currentContent !== null) {
+      currentContent.push({ text, fontSize: line.fontSize, page: line.page });
+    }
+  }
+
+  return sections;
+}
+
+// ── Content Block Classifier ──────────────────────────────────────
+// Given raw text lines, classify them into typed blocks:
+// paragraph, code, table-row, sub-heading
+function classifyBlocks(rawLines) {
+  const blocks = [];
+  let codeBuffer = [];
+  let tableBuffer = [];
+  let inCode = false;
+  let paraBuffer = [];
+
+  const CODE_CHARS = /[{}()\[\];:=<>\/\\|#@]/;
+  const LOOKS_CODE = line =>
+    line.fontSize < 9 &&
+    (CODE_CHARS.test(line.text) || /^\s{2,}/.test(line.text) || line.text.startsWith('//'));
+
+  function flushPara() {
+    if (paraBuffer.length) {
+      blocks.push({ type: 'paragraph', text: paraBuffer.map(l=>l.text).join(' ') });
+      paraBuffer = [];
+    }
+  }
+  function flushCode() {
+    if (codeBuffer.length) {
+      blocks.push({ type: 'code', text: codeBuffer.map(l=>l.text).join('\n') });
+      codeBuffer = [];
+    }
+  }
+
+  for (const line of rawLines) {
+    const { text, fontSize } = line;
+    if (!text.trim()) continue;
+
+    // Sub-heading detection (e.g. "BTI Binary Layout", "TEV Stage Formula")
+    if (fontSize > 10 && fontSize < 13 && text.length < 60 && /^[A-Z]/.test(text)) {
+      flushPara(); flushCode();
+      blocks.push({ type: 'subhead', text });
+      continue;
+    }
+
+    // Code-like lines
+    if (LOOKS_CODE(line)) {
+      flushPara();
+      codeBuffer.push(line);
+      continue;
+    }
+
+    // Normal text
+    flushCode();
+
+    // Table row detection: lines with lots of column-like separators
+    if (/\|/.test(text) || (text.split(/\s{3,}/).length >= 3)) {
+      flushPara();
+      blocks.push({ type: 'table-row', text });
+      continue;
+    }
+
+    paraBuffer.push(line);
+  }
+
+  flushPara();
+  flushCode();
+
+  // Merge adjacent table-rows into tables
+  const merged = [];
+  for (const block of blocks) {
+    if (block.type === 'table-row' && merged.length && merged[merged.length-1].type === 'table') {
+      merged[merged.length-1].rows.push(block.text);
+    } else if (block.type === 'table-row') {
+      merged.push({ type: 'table', rows: [block.text] });
+    } else {
+      merged.push(block);
+    }
+  }
+  return merged;
+}
+
+// ── Renderer ──────────────────────────────────────────────────────
+function renderDoc(sections) {
+  loading.style.display  = 'none';
+  docContent.style.display = '';
+
+  // Build nav
+  buildNav(sections);
+
+  // Render content
+  const frag = document.createDocumentFragment();
+
+  // PDF notice
+  const notice = document.createElement('div');
+  notice.id = 'pdf-notice';
+  notice.innerHTML = '<strong>📄 PDF parsed</strong> — this page is generated from the Starshine documentation PDF. ' +
+    'Download the PDF using the button above for the full formatted document.';
+  frag.appendChild(notice);
+
+  for (const section of sections) {
+    frag.appendChild(renderSection(section));
+  }
+
+  docContent.innerHTML = '';
+  docContent.appendChild(frag);
+
+  // Set up scroll spy
+  setupScrollSpy();
+}
+
+function renderSection(section) {
+  const { num, title, meta, units, intro } = section;
+  const el = document.createElement('div');
+  el.dataset.section = meta.key;
+  el.dataset.sectionNum = num;
+
+  // Section banner
+  const banner = document.createElement('div');
+  banner.className = `section-banner ${meta.key}`;
+  banner.id = `section-${num}`;
+  banner.innerHTML = `
+    <div class="section-banner-num">${num}</div>
+    <div class="section-banner-body">
+      <div class="section-banner-title">${escHtml(title)}</div>
+      ${meta.subtitle ? `<div class="section-banner-sub">${escHtml(meta.subtitle || '')}</div>` : ''}
+    </div>
+  `;
+  el.appendChild(banner);
+
+  // Intro blocks
+  const introBlocks = classifyBlocks(intro);
+  for (const block of introBlocks) {
+    el.appendChild(renderBlock(block));
+  }
+
+  // Units
+  for (const unit of units) {
+    el.appendChild(renderUnit(unit, meta.key));
+  }
+
+  // Divider
+  const hr = document.createElement('div');
+  hr.className = 'hr';
+  el.appendChild(hr);
+
+  return el;
+}
+
+function renderUnit(unit, sectionKey) {
+  const { num, title, blocks } = unit;
+  const el = document.createElement('div');
+  el.dataset.unit = num;
+
+  // Unit header
+  const header = document.createElement('div');
+  header.className = 'unit-header';
+  header.id = `unit-${num.replace('.', '-')}`;
+  header.dataset.section = sectionKey;
+  header.innerHTML = `
+    <span class="unit-num-badge">${escHtml(num)}</span>
+    <span class="unit-title">${escHtml(title)}</span>
+  `;
+  el.appendChild(header);
+
+  // Content blocks
+  const classified = classifyBlocks(blocks);
+  for (const block of classified) {
+    el.appendChild(renderBlock(block));
+  }
+
+  return el;
+}
+
+function renderBlock(block) {
+  switch (block.type) {
+    case 'paragraph': {
+      const p = document.createElement('p');
+      p.className = 'body-text';
+      p.textContent = block.text;
+      return p;
+    }
+    case 'code': {
+      const pre = document.createElement('pre');
+      pre.className = 'code-block';
+      pre.textContent = block.text;
+      return pre;
+    }
+    case 'subhead': {
+      const h = document.createElement('div');
+      h.className = 'sub-head';
+      h.textContent = block.text;
+      return h;
+    }
+    case 'table': {
+      return renderTable(block.rows);
+    }
+    default: {
+      const p = document.createElement('p');
+      p.className = 'body-text';
+      p.textContent = block.text || '';
+      return p;
+    }
+  }
+}
+
+function renderTable(rows) {
+  const wrapper = document.createElement('div');
+  wrapper.style.overflowX = 'auto';
+  wrapper.style.margin = '10px 0 18px';
+
+  const tbl = document.createElement('table');
+  tbl.className = 'doc-table';
+
+  // Heuristic: first row is header if it has fewer columns or is short
+  let startRow = 0;
+  if (rows.length > 1) {
+    const thead = document.createElement('thead');
+    const tr = document.createElement('tr');
+    const cols = splitTableRow(rows[0]);
+    for (const col of cols) {
+      const th = document.createElement('th');
+      th.textContent = col;
+      tr.appendChild(th);
+    }
+    thead.appendChild(tr);
+    tbl.appendChild(thead);
+    startRow = 1;
+  }
+
+  const tbody = document.createElement('tbody');
+  for (let i = startRow; i < rows.length; i++) {
+    const tr = document.createElement('tr');
+    const cols = splitTableRow(rows[i]);
+    for (const col of cols) {
+      const td = document.createElement('td');
+      td.innerHTML = formatTableCell(col);
+      tr.appendChild(td);
+    }
+    tbody.appendChild(tr);
+  }
+  tbl.appendChild(tbody);
+  wrapper.appendChild(tbl);
+  return wrapper;
+}
+
+function splitTableRow(row) {
+  // Split on 3+ spaces or pipe
+  if (row.includes('|')) return row.split('|').map(s => s.trim()).filter(Boolean);
+  return row.split(/\s{3,}/).map(s => s.trim()).filter(Boolean);
+}
+
+function formatTableCell(text) {
+  // Status badges
+  if (/^✅/.test(text) || /^implemented$/i.test(text) || /complete/i.test(text)) {
+    return `<span class="status done">${escHtml(text)}</span>`;
+  }
+  if (/^🔶/.test(text) || /^partial/i.test(text)) {
+    return `<span class="status partial">${escHtml(text)}</span>`;
+  }
+  if (/^⬜/.test(text) || /^stub/i.test(text)) {
+    return `<span class="status stub">${escHtml(text)}</span>`;
+  }
+  if (/^planned$/i.test(text)) {
+    return `<span class="status planned">${escHtml(text)}</span>`;
+  }
+  if (/^✅ shared/i.test(text)) {
+    return `<span class="status shared">${escHtml(text)}</span>`;
+  }
+  // Code-like fields (camelCase, snake_case, or starts with m)
+  if (/^m[A-Z]/.test(text) || /^[a-z][A-Za-z_]+\(/.test(text) ||
+      /_/.test(text) || /^\.[a-z]{2,6}$/.test(text)) {
+    return `<code>${escHtml(text)}</code>`;
+  }
+  return escHtml(text);
+}
+
+// ── Nav Builder ───────────────────────────────────────────────────
+function buildNav(sections) {
+  const nav = document.getElementById('sidenav');
+  nav.innerHTML = '';
+
+  for (const section of sections) {
+    const { num, title, meta, units } = section;
+    const group = document.createElement('div');
+    group.className = 'nav-group';
+
+    // Section entry
+    const secEl = document.createElement('a');
+    secEl.className = 'nav-section';
+    secEl.dataset.section = meta.key;
+    secEl.href = `#section-${num}`;
+    secEl.innerHTML = `
+      <span class="nav-dot"></span>
+      <span style="flex:1">${escHtml(title)}</span>
+      <span class="nav-num">${num}</span>
+      ${units.length ? '<span class="chevron">▶</span>' : ''}
+    `;
+    secEl.addEventListener('click', e => {
+      if (units.length) {
+        e.preventDefault();
+        const isOpen = secEl.classList.contains('open');
+        // Close all
+        document.querySelectorAll('.nav-section').forEach(s => s.classList.remove('open'));
+        document.querySelectorAll('.nav-units').forEach(u => u.classList.remove('open'));
+        if (!isOpen) {
+          secEl.classList.add('open');
+          unitsEl.classList.add('open');
+        }
+        // Still scroll
+        document.getElementById(`section-${num}`)?.scrollIntoView({behavior:'smooth'});
+      }
+    });
+    group.appendChild(secEl);
+
+    // Units
+    if (units.length) {
+      const unitsEl = document.createElement('div');
+      unitsEl.className = 'nav-units';
+      for (const unit of units) {
+        const uEl = document.createElement('a');
+        uEl.className = 'nav-unit';
+        uEl.dataset.unit = unit.num;
+        uEl.href = `#unit-${unit.num.replace('.', '-')}`;
+        uEl.innerHTML = `<span class="unit-num">${unit.num}</span>${escHtml(unit.title)}`;
+        unitsEl.appendChild(uEl);
+      }
+      group.appendChild(unitsEl);
+
+      // Auto-open first section
+      if (num === '1') {
+        secEl.classList.add('open');
+        unitsEl.classList.add('open');
+      }
+    }
+
+    nav.appendChild(group);
+  }
+}
+
+// ── Scroll spy ────────────────────────────────────────────────────
+function setupScrollSpy() {
+  const observer = new IntersectionObserver(entries => {
+    for (const entry of entries) {
+      if (!entry.isIntersecting) continue;
+      const id = entry.target.id;
+
+      if (id.startsWith('section-')) {
+        const num = id.replace('section-', '');
+        activateSection(num);
+      } else if (id.startsWith('unit-')) {
+        const num = id.replace('unit-', '').replace('-', '.');
+        activateUnit(num);
+      }
+    }
+  }, { rootMargin: `-${52}px 0px -70% 0px`, threshold: 0 });
+
+  document.querySelectorAll('[id^="section-"], [id^="unit-"]').forEach(el => {
+    observer.observe(el);
+  });
+}
+
+function activateSection(num) {
+  document.querySelectorAll('.nav-section').forEach(el => el.classList.remove('active'));
+  const el = document.querySelector(`.nav-section[href="#section-${num}"]`);
+  if (el) {
+    el.classList.add('active');
+    // Open its units
+    const group = el.closest('.nav-group');
+    const unitsEl = group?.querySelector('.nav-units');
+    if (unitsEl && !unitsEl.classList.contains('open')) {
+      document.querySelectorAll('.nav-section').forEach(s => s.classList.remove('open'));
+      document.querySelectorAll('.nav-units').forEach(u => u.classList.remove('open'));
+      el.classList.add('open');
+      unitsEl.classList.add('open');
+    }
+  }
+}
+
+function activateUnit(num) {
+  document.querySelectorAll('.nav-unit').forEach(el => el.classList.remove('active'));
+  const el = document.querySelector(`.nav-unit[data-unit="${num}"]`);
+  if (el) el.classList.add('active');
+}
+
+// ── Search ────────────────────────────────────────────────────────
+const searchBox = document.getElementById('search-box');
+let searchTimeout;
+
+searchBox.addEventListener('input', () => {
+  clearTimeout(searchTimeout);
+  searchTimeout = setTimeout(doSearch, 200);
+});
+
+function doSearch() {
+  const q = searchBox.value.trim().toLowerCase();
+  // Remove existing highlights
+  document.querySelectorAll('mark').forEach(m => {
+    m.replaceWith(m.textContent);
+  });
+  if (!q || q.length < 2) return;
+
+  // Walk text nodes and highlight
+  const walker = document.createTreeWalker(
+    document.getElementById('doc-content'),
+    NodeFilter.SHOW_TEXT,
+    null
+  );
+  const nodes = [];
+  let node;
+  while (node = walker.nextNode()) nodes.push(node);
+
+  for (const n of nodes) {
+    const idx = n.textContent.toLowerCase().indexOf(q);
+    if (idx === -1) continue;
+    const before = document.createTextNode(n.textContent.slice(0, idx));
+    const mark = document.createElement('mark');
+    mark.textContent = n.textContent.slice(idx, idx + q.length);
+    const after = document.createTextNode(n.textContent.slice(idx + q.length));
+    n.parentNode.replaceChild(after, n);
+    n.parentNode.insertBefore(mark, after);
+    n.parentNode.insertBefore(before, mark);
+  }
+
+  // Scroll to first result
+  const first = document.querySelector('mark');
+  if (first) first.scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+
+// ── Mobile nav toggle ─────────────────────────────────────────────
+document.getElementById('menu-toggle').addEventListener('click', () => {
+  document.getElementById('sidenav').classList.toggle('open');
+});
+
+// ── Utilities ─────────────────────────────────────────────────────
+function escHtml(s) {
+  return String(s)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
+// ── Auto-load if PDF is in same directory ─────────────────────────
+// Try to fetch project-starshine-docs.pdf from same origin
+(async () => {
+  try {
+    const res = await fetch('project-starshine-docs.pdf', { method: 'HEAD' });
+    if (res.ok) {
+      document.getElementById('pdf-link').href = 'project-starshine-docs.pdf';
+      await parsePDF('project-starshine-docs.pdf');
+    }
+  } catch (e) {
+    // No auto-load — user must drop the PDF
+  }
+})();
+</script>
 </body>
 </html>
-
-
