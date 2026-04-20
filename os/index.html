@@ -526,6 +526,115 @@
     border: 1px solid var(--border);
   }
 
+  /* ── SCREENSAVER MODAL ── */
+  #ss-overlay {
+    position: fixed; inset: 0;
+    z-index: 350;
+    background: rgba(5,6,10,0.88);
+    backdrop-filter: blur(14px);
+    display: flex; align-items: center; justify-content: center;
+    opacity: 0; pointer-events: none;
+    transition: opacity 0.25s ease;
+  }
+  #ss-overlay.active { opacity: 1; pointer-events: all; }
+  #ss-modal {
+    width: 620px;
+    max-height: 88vh;
+    border-radius: 22px;
+    background: rgba(11,13,18,0.97);
+    border: 1px solid var(--border-hover);
+    box-shadow: 0 30px 80px rgba(0,0,0,0.65), 0 0 0 1px rgba(255,255,255,0.03);
+    display: flex; flex-direction: column;
+    overflow: hidden;
+    transform: scale(0.95) translateY(12px);
+    transition: transform 0.25s ease;
+  }
+  #ss-overlay.active #ss-modal { transform: scale(1) translateY(0); }
+  .ss-header {
+    padding: 20px 22px 16px;
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .ss-title {
+    font-size: 14px; font-weight: 700; letter-spacing: 0.05em;
+    display: flex; align-items: center; gap: 9px;
+  }
+  .ss-title-icon {
+    width: 30px; height: 30px; border-radius: 9px;
+    background: rgba(192,132,252,0.12);
+    border: 1px solid rgba(192,132,252,0.22);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px;
+  }
+  .ss-body {
+    padding: 20px 22px;
+    overflow-y: auto; flex: 1;
+    display: flex; flex-direction: column; gap: 16px;
+  }
+  .ss-presets {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px;
+  }
+  .ss-preset-btn {
+    padding: 10px 8px;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--text);
+    font-family: var(--font-display);
+    font-size: 11px; font-weight: 500;
+    letter-spacing: 0.04em;
+    cursor: pointer;
+    display: flex; flex-direction: column; align-items: center; gap: 5px;
+    transition: all 0.18s ease;
+  }
+  .ss-preset-btn:hover {
+    background: var(--surface-hover);
+    border-color: var(--border-hover);
+  }
+  .ss-preset-btn.active {
+    background: rgba(192,132,252,0.12);
+    border-color: rgba(192,132,252,0.4);
+    color: var(--purple);
+    box-shadow: 0 0 14px rgba(192,132,252,0.1);
+  }
+  .ss-preset-icon { font-size: 18px; }
+  .ss-footer {
+    padding: 14px 22px 18px;
+    border-top: 1px solid var(--border);
+    display: flex; gap: 8px; justify-content: space-between; align-items: center;
+  }
+  .ss-hint {
+    font-size: 10px; font-family: var(--font-mono);
+    color: var(--text-muted); letter-spacing: 0.05em;
+  }
+  .ss-footer-btns { display: flex; gap: 8px; }
+
+  /* ── SCREENSAVER FULLSCREEN ── */
+  #ss-run-overlay {
+    position: fixed; inset: 0;
+    z-index: 500;
+    background: #000;
+    opacity: 0; pointer-events: none;
+    transition: opacity 0.5s ease;
+    cursor: none;
+  }
+  #ss-run-overlay.active { opacity: 1; pointer-events: all; }
+  #ss-run-iframe {
+    position: absolute; inset: 0;
+    width: 100%; height: 100%; border: none;
+  }
+  #ss-exit-hint {
+    position: absolute;
+    bottom: 24px; left: 50%;
+    transform: translateX(-50%);
+    font-size: 10px; font-family: var(--font-mono);
+    color: rgba(255,255,255,0.2);
+    letter-spacing: 0.1em;
+    pointer-events: none;
+    animation: fadeHint 4s ease forwards;
+  }
+  @keyframes fadeHint { 0%,60%{opacity:1} 100%{opacity:0} }
+
   /* ── SCROLLBAR ── */
   ::-webkit-scrollbar { width: 4px; }
   ::-webkit-scrollbar-track { background: transparent; }
@@ -581,6 +690,7 @@
   <div class="topbar-actions">
     <span id="pulse-count">0 pulses</span>
     <button class="btn btn-ghost" id="btn-reset">↺ Reset View</button>
+    <button class="btn btn-ghost" id="btn-screensaver" style="color:var(--purple);border-color:rgba(192,132,252,0.2);background:rgba(192,132,252,0.06);">✦ Screensaver</button>
     <button class="btn btn-primary" id="btn-new">⚡ New Pulse</button>
   </div>
 </div>
@@ -648,6 +758,61 @@
       <button class="btn btn-primary" id="btn-create-pulse">⚡ Create Pulse</button>
     </div>
   </div>
+</div>
+
+<!-- SCREENSAVER MODAL -->
+<div id="ss-overlay">
+  <div id="ss-modal">
+    <div class="ss-header">
+      <div class="ss-title">
+        <div class="ss-title-icon">✦</div>
+        Screensaver
+      </div>
+      <button class="btn btn-ghost" id="btn-close-ss" style="padding:5px 10px;">✕</button>
+    </div>
+    <div class="ss-body">
+      <div class="forge-field">
+        <label>Preset</label>
+        <div class="ss-presets" id="ss-presets">
+          <button class="ss-preset-btn active" data-preset="matrix">
+            <span class="ss-preset-icon">🟩</span>Matrix Rain
+          </button>
+          <button class="ss-preset-btn" data-preset="rain">
+            <span class="ss-preset-icon">🌧️</span>Neon Rain
+          </button>
+          <button class="ss-preset-btn" data-preset="stars">
+            <span class="ss-preset-icon">⭐</span>Starfield
+          </button>
+          <button class="ss-preset-btn" data-preset="plasma">
+            <span class="ss-preset-icon">🌈</span>Plasma
+          </button>
+          <button class="ss-preset-btn" data-preset="fireflies">
+            <span class="ss-preset-icon">✨</span>Fireflies
+          </button>
+          <button class="ss-preset-btn" data-preset="custom">
+            <span class="ss-preset-icon">✏️</span>Custom
+          </button>
+        </div>
+      </div>
+      <div class="forge-field" style="flex:1;">
+        <label>Code — edit to customize</label>
+        <textarea class="forge-textarea" id="ss-code" style="min-height:200px;"></textarea>
+      </div>
+    </div>
+    <div class="ss-footer">
+      <span class="ss-hint">Click anywhere to exit screensaver · ESC also works</span>
+      <div class="ss-footer-btns">
+        <button class="btn btn-ghost" id="btn-cancel-ss">Cancel</button>
+        <button class="btn" id="btn-launch-ss" style="background:rgba(192,132,252,0.14);border-color:rgba(192,132,252,0.35);color:var(--purple);">✦ Launch</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SCREENSAVER FULLSCREEN RUNNER -->
+<div id="ss-run-overlay">
+  <iframe id="ss-run-iframe" sandbox="allow-scripts allow-same-origin"></iframe>
+  <div id="ss-exit-hint">CLICK ANYWHERE OR PRESS ESC TO EXIT</div>
 </div>
 
 <div id="confirm-overlay">
@@ -1211,10 +1376,14 @@ document.addEventListener('keydown', e => {
     }
   }
   if (e.key === 'Escape') {
-    if (document.getElementById('launch-overlay').classList.contains('active')) {
+    if (document.getElementById('ss-run-overlay').classList.contains('active')) {
+      exitScreensaver();
+    } else if (document.getElementById('launch-overlay').classList.contains('active')) {
       document.getElementById('btn-close-launch').click();
     } else if (document.getElementById('forge-overlay').classList.contains('active')) {
       closeForge();
+    } else if (document.getElementById('ss-overlay').classList.contains('active')) {
+      closeSSModal();
     } else if (document.getElementById('confirm-overlay').classList.contains('active')) {
       document.getElementById('confirm-overlay').classList.remove('active');
     }
@@ -1235,6 +1404,197 @@ function toast(msg) {
   document.getElementById('toast-container').appendChild(el);
   setTimeout(() => el.remove(), 2200);
 }
+
+// ── SCREENSAVER ──
+const SS_PRESETS = {
+  matrix: `<!DOCTYPE html><html><head><style>*{margin:0;padding:0}body{background:#000;overflow:hidden}canvas{display:block}</style></head><body><canvas id="c"></canvas><script>
+const c=document.getElementById('c'),ctx=c.getContext('2d');
+c.width=window.innerWidth;c.height=window.innerHeight;
+const cols=Math.floor(c.width/16),drops=Array(cols).fill(1);
+const chars='アイウエオカキクケコサシスセソタチツテトナニヌネノハヒフヘホマミムメモヤユヨラリルレロワヲン0123456789ABCDEF';
+function draw(){
+  ctx.fillStyle='rgba(0,0,0,0.05)';ctx.fillRect(0,0,c.width,c.height);
+  ctx.fillStyle='#0f0';ctx.font='14px monospace';
+  drops.forEach((y,i)=>{
+    const ch=chars[Math.floor(Math.random()*chars.length)];
+    const bright=Math.random()>0.95;
+    ctx.fillStyle=bright?'#afffaf':'#00cc00';
+    ctx.fillText(ch,i*16,y*16);
+    if(y*16>c.height&&Math.random()>0.975)drops[i]=0;
+    drops[i]++;
+  });
+}
+setInterval(draw,45);
+<\/script></body></html>`,
+
+  rain: `<!DOCTYPE html><html><head><style>*{margin:0;padding:0}body{background:#050010;overflow:hidden}canvas{display:block}</style></head><body><canvas id="c"></canvas><script>
+const c=document.getElementById('c'),ctx=c.getContext('2d');
+c.width=window.innerWidth;c.height=window.innerHeight;
+const drops=[];
+for(let i=0;i<220;i++)drops.push({x:Math.random()*c.width,y:Math.random()*c.height,len:30+Math.random()*80,speed:6+Math.random()*10,w:Math.random()*1.5+0.5,hue:180+Math.random()*80,o:0.4+Math.random()*0.6});
+function draw(){
+  ctx.fillStyle='rgba(5,0,16,0.18)';ctx.fillRect(0,0,c.width,c.height);
+  drops.forEach(d=>{
+    const g=ctx.createLinearGradient(d.x,d.y-d.len,d.x,d.y);
+    g.addColorStop(0,'transparent');
+    g.addColorStop(1,'hsla('+d.hue+',100%,70%,'+d.o+')');
+    ctx.strokeStyle=g;ctx.lineWidth=d.w;ctx.lineCap='round';
+    ctx.beginPath();ctx.moveTo(d.x,d.y-d.len);ctx.lineTo(d.x,d.y);ctx.stroke();
+    d.y+=d.speed;if(d.y-d.len>c.height){d.y=-d.len;d.x=Math.random()*c.width;}
+  });
+}
+setInterval(draw,16);
+<\/script></body></html>`,
+
+  stars: `<!DOCTYPE html><html><head><style>*{margin:0;padding:0}body{background:#000;overflow:hidden}canvas{display:block}</style></head><body><canvas id="c"></canvas><script>
+const c=document.getElementById('c'),ctx=c.getContext('2d');
+c.width=window.innerWidth;c.height=window.innerHeight;
+const cx=c.width/2,cy=c.height/2,N=500;
+const stars=Array.from({length:N},()=>({x:(Math.random()-0.5)*c.width*3,y:(Math.random()-0.5)*c.height*3,z:Math.random()*c.width,pz:0}));
+stars.forEach(s=>s.pz=s.z);
+function draw(){
+  ctx.fillStyle='rgba(0,0,0,0.2)';ctx.fillRect(0,0,c.width,c.height);
+  stars.forEach(s=>{
+    s.pz=s.z;s.z-=3;if(s.z<=0){s.z=c.width;s.x=(Math.random()-0.5)*c.width*3;s.y=(Math.random()-0.5)*c.height*3;s.pz=s.z;}
+    const sx=cx+(s.x/s.z)*cx,sy=cy+(s.y/s.z)*cy;
+    const px=cx+(s.x/s.pz)*cx,py=cy+(s.y/s.pz)*cy;
+    const r=Math.max(0.3,(1-s.z/c.width)*2.5);
+    ctx.beginPath();ctx.moveTo(px,py);ctx.lineTo(sx,sy);
+    const b=Math.floor((1-s.z/c.width)*255);
+    ctx.strokeStyle='rgb('+b+','+Math.floor(b*0.85)+',255)';
+    ctx.lineWidth=r;ctx.stroke();
+  });
+}
+setInterval(draw,16);
+<\/script></body></html>`,
+
+  plasma: `<!DOCTYPE html><html><head><style>*{margin:0;padding:0}body{overflow:hidden}canvas{display:block}</style></head><body><canvas id="c"></canvas><script>
+const c=document.getElementById('c'),ctx=c.getContext('2d');
+c.width=window.innerWidth;c.height=window.innerHeight;
+let t=0;
+function draw(){
+  const img=ctx.createImageData(c.width,c.height);
+  for(let y=0;y<c.height;y+=2)for(let x=0;x<c.width;x+=2){
+    const v=Math.sin(x*0.012+t)+Math.sin(y*0.012+t)+Math.sin((x+y)*0.008+t)+Math.sin(Math.sqrt(x*x+y*y)*0.008-t);
+    const hue=(v+4)*45;
+    const [r,g,b]=hslToRgb(hue/360,0.8,0.5+v*0.1);
+    const i=(y*c.width+x)*4;
+    for(let dy=0;dy<2;dy++)for(let dx=0;dx<2;dx++){const j=((y+dy)*c.width+(x+dx))*4;img.data[j]=r;img.data[j+1]=g;img.data[j+2]=b;img.data[j+3]=255;}
+  }
+  ctx.putImageData(img,0,0);t+=0.025;requestAnimationFrame(draw);
+}
+function hslToRgb(h,s,l){let r,g,b;if(!s){r=g=b=l;}else{const q=l<0.5?l*(1+s):l+s-l*s,p=2*l-q;r=hue2rgb(p,q,h+1/3);g=hue2rgb(p,q,h);b=hue2rgb(p,q,h-1/3);}return[Math.round(r*255),Math.round(g*255),Math.round(b*255)];}
+function hue2rgb(p,q,t){if(t<0)t+=1;if(t>1)t-=1;if(t<1/6)return p+(q-p)*6*t;if(t<1/2)return q;if(t<2/3)return p+(q-p)*(2/3-t)*6;return p;}
+draw();
+<\/script></body></html>`,
+
+  fireflies: `<!DOCTYPE html><html><head><style>*{margin:0;padding:0}body{background:#010508;overflow:hidden}canvas{display:block}</style></head><body><canvas id="c"></canvas><script>
+const c=document.getElementById('c'),ctx=c.getContext('2d');
+c.width=window.innerWidth;c.height=window.innerHeight;
+const N=80;
+const flies=Array.from({length:N},()=>({
+  x:Math.random()*c.width,y:Math.random()*c.height,
+  vx:(Math.random()-0.5)*0.8,vy:(Math.random()-0.5)*0.8,
+  r:2+Math.random()*3,phase:Math.random()*Math.PI*2,
+  speed:0.01+Math.random()*0.02,
+  hue:60+Math.random()*60,trail:[]
+}));
+function draw(){
+  ctx.fillStyle='rgba(1,5,8,0.15)';ctx.fillRect(0,0,c.width,c.height);
+  flies.forEach(f=>{
+    f.phase+=f.speed;
+    const glow=0.4+0.6*Math.sin(f.phase);
+    f.x+=f.vx+(Math.random()-0.5)*0.4;f.y+=f.vy+(Math.random()-0.5)*0.4;
+    if(f.x<0)f.x=c.width;if(f.x>c.width)f.x=0;
+    if(f.y<0)f.y=c.height;if(f.y>c.height)f.y=0;
+    f.trail.push({x:f.x,y:f.y,o:glow});
+    if(f.trail.length>18)f.trail.shift();
+    f.trail.forEach((p,i)=>{
+      const to=p.o*(i/f.trail.length)*0.4;
+      ctx.beginPath();ctx.arc(p.x,p.y,f.r*0.5,0,Math.PI*2);
+      ctx.fillStyle='hsla('+f.hue+',90%,65%,'+to+')';ctx.fill();
+    });
+    const g=ctx.createRadialGradient(f.x,f.y,0,f.x,f.y,f.r*4);
+    g.addColorStop(0,'hsla('+f.hue+',100%,80%,'+(glow*0.9)+')');
+    g.addColorStop(0.4,'hsla('+f.hue+',90%,60%,'+(glow*0.4)+')');
+    g.addColorStop(1,'transparent');
+    ctx.beginPath();ctx.arc(f.x,f.y,f.r*4,0,Math.PI*2);ctx.fillStyle=g;ctx.fill();
+    ctx.beginPath();ctx.arc(f.x,f.y,f.r*0.7,0,Math.PI*2);
+    ctx.fillStyle='hsla('+f.hue+',100%,95%,'+glow+')';ctx.fill();
+  });
+}
+setInterval(draw,16);
+<\/script></body></html>`,
+
+  custom: ''
+};
+
+let ssSelectedPreset = 'matrix';
+
+function loadSSPreset(key) {
+  ssSelectedPreset = key;
+  document.querySelectorAll('.ss-preset-btn').forEach(b => b.classList.toggle('active', b.dataset.preset === key));
+  if (key !== 'custom') {
+    document.getElementById('ss-code').value = SS_PRESETS[key];
+  } else {
+    const saved = localStorage.getItem('heartos_ss_custom') || '';
+    document.getElementById('ss-code').value = saved || '<!-- Write your custom screensaver here -->\n<!DOCTYPE html><html><head><style>body{margin:0;background:#000;overflow:hidden}</style></head><body></body></html>';
+  }
+}
+
+function openSSModal() {
+  const saved = localStorage.getItem('heartos_ss_preset') || 'matrix';
+  loadSSPreset(saved);
+  document.getElementById('ss-overlay').classList.add('active');
+}
+function closeSSModal() {
+  document.getElementById('ss-overlay').classList.remove('active');
+}
+
+document.getElementById('btn-screensaver').addEventListener('click', openSSModal);
+document.getElementById('btn-close-ss').addEventListener('click', closeSSModal);
+document.getElementById('btn-cancel-ss').addEventListener('click', closeSSModal);
+
+document.querySelectorAll('.ss-preset-btn').forEach(btn => {
+  btn.addEventListener('click', () => loadSSPreset(btn.dataset.preset));
+});
+
+document.getElementById('ss-code').addEventListener('input', () => {
+  if (ssSelectedPreset === 'custom') {
+    localStorage.setItem('heartos_ss_custom', document.getElementById('ss-code').value);
+  }
+});
+
+document.getElementById('btn-launch-ss').addEventListener('click', () => {
+  const code = document.getElementById('ss-code').value.trim();
+  if (!code) { toast('No screensaver code to run'); return; }
+  localStorage.setItem('heartos_ss_preset', ssSelectedPreset);
+  if (ssSelectedPreset === 'custom') localStorage.setItem('heartos_ss_custom', code);
+  closeSSModal();
+  launchScreensaver(code);
+});
+
+function launchScreensaver(code) {
+  const overlay = document.getElementById('ss-run-overlay');
+  const iframe = document.getElementById('ss-run-iframe');
+  // Refresh hint element
+  const old = document.getElementById('ss-exit-hint');
+  if (old) old.remove();
+  const hint = document.createElement('div');
+  hint.id = 'ss-exit-hint';
+  hint.textContent = 'CLICK ANYWHERE OR PRESS ESC TO EXIT';
+  overlay.appendChild(hint);
+  iframe.srcdoc = code;
+  overlay.classList.add('active');
+}
+
+function exitScreensaver() {
+  const overlay = document.getElementById('ss-run-overlay');
+  overlay.classList.remove('active');
+  setTimeout(() => { document.getElementById('ss-run-iframe').srcdoc = ''; }, 500);
+}
+
+document.getElementById('ss-run-overlay').addEventListener('click', exitScreensaver);
 
 // ── PARTICLES ──
 (function() {
