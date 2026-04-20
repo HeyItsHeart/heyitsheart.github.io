@@ -1,0 +1,1282 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HeartOS</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,300&family=Syne:wght@400;500;600;700;800&display=swap');
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #090b0f;
+    --surface: rgba(255,255,255,0.04);
+    --surface-hover: rgba(255,255,255,0.07);
+    --border: rgba(255,255,255,0.08);
+    --border-hover: rgba(255,255,255,0.15);
+    --text: #e8eaf0;
+    --text-muted: rgba(232,234,240,0.45);
+    --red: #ff4d6d;
+    --blue: #4db8ff;
+    --purple: #c084fc;
+    --amber: #fbbf24;
+    --green: #34d399;
+    --font-display: 'Syne', sans-serif;
+    --font-mono: 'DM Mono', monospace;
+  }
+
+  html, body {
+    width: 100%; height: 100%;
+    overflow: hidden;
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-display);
+    cursor: default;
+    user-select: none;
+  }
+
+  /* ── CANVAS PARTICLES ── */
+  #particles-canvas {
+    position: fixed; inset: 0;
+    pointer-events: none;
+    z-index: 0;
+    opacity: 0.5;
+  }
+
+  /* ── DESKTOP ── */
+  #desktop {
+    position: fixed; inset: 0;
+    overflow: hidden;
+    z-index: 1;
+  }
+
+  #workspace {
+    position: absolute;
+    width: 4000px; height: 4000px;
+    top: 0; left: 0;
+    will-change: transform;
+  }
+
+  /* ── TOP BAR ── */
+  #topbar {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    height: 52px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 20px;
+    background: rgba(9,11,15,0.85);
+    backdrop-filter: blur(20px);
+    border-bottom: 1px solid var(--border);
+    z-index: 100;
+  }
+
+  .topbar-logo {
+    display: flex; align-items: center; gap: 9px;
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: 15px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+  }
+  .logo-heart {
+    width: 20px; height: 20px;
+    position: relative;
+    animation: heartbeat 2.4s ease-in-out infinite;
+  }
+  .logo-heart svg { width: 100%; height: 100%; }
+  @keyframes heartbeat {
+    0%,100% { transform: scale(1); }
+    14% { transform: scale(1.15); }
+    28% { transform: scale(1); }
+    42% { transform: scale(1.08); }
+    56% { transform: scale(1); }
+  }
+  .logo-os {
+    color: var(--text-muted);
+    font-weight: 400;
+  }
+
+  .topbar-actions {
+    display: flex; align-items: center; gap: 8px;
+  }
+
+  .btn {
+    display: flex; align-items: center; gap: 6px;
+    padding: 7px 14px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--text);
+    font-family: var(--font-display);
+    font-size: 12px;
+    font-weight: 500;
+    letter-spacing: 0.04em;
+    cursor: pointer;
+    transition: all 0.18s ease;
+    white-space: nowrap;
+  }
+  .btn:hover {
+    background: var(--surface-hover);
+    border-color: var(--border-hover);
+  }
+  .btn-primary {
+    background: rgba(77,184,255,0.12);
+    border-color: rgba(77,184,255,0.3);
+    color: var(--blue);
+  }
+  .btn-primary:hover {
+    background: rgba(77,184,255,0.2);
+    border-color: rgba(77,184,255,0.5);
+    box-shadow: 0 0 18px rgba(77,184,255,0.15);
+  }
+  .btn-ghost {
+    background: transparent;
+    border-color: transparent;
+    color: var(--text-muted);
+    font-size: 11px;
+  }
+  .btn-ghost:hover {
+    color: var(--text);
+    background: var(--surface);
+    border-color: var(--border);
+  }
+
+  /* ── PULSE CARDS ── */
+  .pulse {
+    position: absolute;
+    width: 200px;
+    border-radius: 16px;
+    background: rgba(13,15,20,0.75);
+    backdrop-filter: blur(24px);
+    border: 1px solid var(--border);
+    padding: 0;
+    cursor: pointer;
+    transition: box-shadow 0.25s ease, border-color 0.25s ease, transform 0.2s ease;
+    will-change: transform;
+    overflow: hidden;
+  }
+  .pulse:hover {
+    border-color: var(--glow);
+    box-shadow: 0 0 0 1px var(--glow-20), 0 8px 40px var(--glow-15), 0 2px 8px rgba(0,0,0,0.5);
+    transform: translateY(-2px);
+  }
+  .pulse.dragging {
+    cursor: grabbing;
+    box-shadow: 0 0 0 1px var(--glow-30), 0 20px 60px var(--glow-20), 0 8px 24px rgba(0,0,0,0.6);
+    transform: scale(1.03) translateY(-4px);
+    transition: box-shadow 0.1s ease, transform 0.1s ease;
+    z-index: 50 !important;
+  }
+
+  .pulse-header {
+    padding: 14px 14px 10px;
+    position: relative;
+  }
+  .pulse-glow-line {
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, var(--glow), transparent);
+    opacity: 0.7;
+  }
+  .pulse-type-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 3px 8px;
+    border-radius: 5px;
+    font-size: 9px;
+    font-family: var(--font-mono);
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    background: var(--glow-10);
+    color: var(--glow);
+    border: 1px solid var(--glow-20);
+    margin-bottom: 8px;
+  }
+  .pulse-title {
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+    line-height: 1.35;
+    color: var(--text);
+  }
+  .pulse-footer {
+    padding: 8px 14px 12px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-top: 1px solid var(--border);
+    margin-top: 8px;
+  }
+  .pulse-launch-hint {
+    font-size: 9px;
+    font-family: var(--font-mono);
+    color: var(--text-muted);
+    letter-spacing: 0.06em;
+  }
+  .pulse-launch-btn {
+    width: 24px; height: 24px;
+    border-radius: 6px;
+    background: var(--glow-15);
+    border: 1px solid var(--glow-25);
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.18s ease;
+  }
+  .pulse:hover .pulse-launch-btn {
+    background: var(--glow-25);
+    box-shadow: 0 0 10px var(--glow-20);
+  }
+  .pulse-launch-btn svg {
+    width: 10px; height: 10px;
+    stroke: var(--glow);
+    fill: none;
+  }
+
+  /* ── LAUNCH OVERLAY ── */
+  #launch-overlay {
+    position: fixed; inset: 0;
+    z-index: 200;
+    display: flex;
+    flex-direction: column;
+    background: #05060a;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+  }
+  #launch-overlay.active {
+    opacity: 1;
+    pointer-events: all;
+  }
+  #launch-topbar {
+    height: 48px;
+    display: flex; align-items: center;
+    justify-content: space-between;
+    padding: 0 16px;
+    background: rgba(5,6,10,0.9);
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+  }
+  #launch-title {
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+  }
+  #launch-frame-wrap {
+    flex: 1;
+    position: relative;
+    overflow: hidden;
+  }
+  #launch-iframe {
+    position: absolute; inset: 0;
+    width: 100%; height: 100%;
+    border: none;
+    background: #fff;
+    opacity: 0;
+    transform: scale(0.97);
+    transition: opacity 0.3s ease 0.1s, transform 0.3s ease 0.1s;
+  }
+  #launch-overlay.active #launch-iframe {
+    opacity: 1;
+    transform: scale(1);
+  }
+
+  /* ── FORGE MODAL ── */
+  #forge-overlay {
+    position: fixed; inset: 0;
+    z-index: 300;
+    background: rgba(5,6,10,0.85);
+    backdrop-filter: blur(12px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.25s ease;
+  }
+  #forge-overlay.active {
+    opacity: 1;
+    pointer-events: all;
+  }
+  #forge-modal {
+    width: 560px;
+    max-height: 85vh;
+    border-radius: 20px;
+    background: rgba(13,15,20,0.96);
+    border: 1px solid var(--border-hover);
+    box-shadow: 0 30px 80px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.04);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    transform: scale(0.95) translateY(10px);
+    transition: transform 0.25s ease;
+  }
+  #forge-overlay.active #forge-modal {
+    transform: scale(1) translateY(0);
+  }
+  .forge-header {
+    padding: 20px 22px 16px;
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .forge-title {
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .forge-title-icon {
+    width: 28px; height: 28px;
+    border-radius: 8px;
+    background: rgba(77,184,255,0.12);
+    border: 1px solid rgba(77,184,255,0.2);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 13px;
+  }
+  .forge-body {
+    padding: 20px 22px;
+    overflow-y: auto;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+  .forge-field label {
+    display: block;
+    font-size: 10px;
+    font-family: var(--font-mono);
+    font-weight: 500;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 6px;
+  }
+  .forge-input, .forge-select, .forge-textarea {
+    width: 100%;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 10px 12px;
+    color: var(--text);
+    font-family: var(--font-display);
+    font-size: 13px;
+    outline: none;
+    transition: border-color 0.18s ease, box-shadow 0.18s ease;
+    appearance: none;
+  }
+  .forge-input:focus, .forge-select:focus, .forge-textarea:focus {
+    border-color: rgba(77,184,255,0.4);
+    box-shadow: 0 0 0 3px rgba(77,184,255,0.08);
+  }
+  .forge-select {
+    cursor: pointer;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='rgba(232,234,240,0.4)' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    padding-right: 32px;
+  }
+  .forge-textarea {
+    font-family: var(--font-mono);
+    font-size: 11.5px;
+    line-height: 1.6;
+    resize: vertical;
+    min-height: 160px;
+    tab-size: 2;
+  }
+  .forge-colors {
+    display: flex; gap: 8px;
+  }
+  .forge-color-opt {
+    width: 28px; height: 28px;
+    border-radius: 7px;
+    border: 2px solid transparent;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    position: relative;
+  }
+  .forge-color-opt.selected {
+    border-color: rgba(255,255,255,0.6);
+    transform: scale(1.1);
+  }
+  .forge-color-opt::after {
+    content: '';
+    position: absolute; inset: 0;
+    border-radius: 5px;
+    opacity: 0.4;
+  }
+  .forge-footer {
+    padding: 14px 22px 18px;
+    border-top: 1px solid var(--border);
+    display: flex; gap: 8px; justify-content: flex-end;
+  }
+
+  /* ── CONFIRM MODAL ── */
+  #confirm-overlay {
+    position: fixed; inset: 0;
+    z-index: 400;
+    background: rgba(5,6,10,0.7);
+    backdrop-filter: blur(6px);
+    display: flex; align-items: center; justify-content: center;
+    opacity: 0; pointer-events: none;
+    transition: opacity 0.2s ease;
+  }
+  #confirm-overlay.active { opacity: 1; pointer-events: all; }
+  #confirm-modal {
+    width: 340px;
+    border-radius: 16px;
+    background: rgba(13,15,20,0.97);
+    border: 1px solid var(--border-hover);
+    padding: 24px;
+    text-align: center;
+    transform: scale(0.95);
+    transition: transform 0.2s ease;
+  }
+  #confirm-overlay.active #confirm-modal { transform: scale(1); }
+  #confirm-modal h3 { font-size: 15px; font-weight: 700; margin-bottom: 8px; }
+  #confirm-modal p { font-size: 12px; color: var(--text-muted); line-height: 1.5; margin-bottom: 20px; font-family: var(--font-mono); }
+  .confirm-btns { display: flex; gap: 8px; justify-content: center; }
+
+  /* ── TOAST ── */
+  #toast-container {
+    position: fixed;
+    bottom: 24px; left: 50%;
+    transform: translateX(-50%);
+    z-index: 500;
+    display: flex; flex-direction: column; gap: 8px;
+    align-items: center;
+    pointer-events: none;
+  }
+  .toast {
+    padding: 10px 18px;
+    border-radius: 10px;
+    background: rgba(20,22,28,0.95);
+    border: 1px solid var(--border-hover);
+    font-size: 11px;
+    font-family: var(--font-mono);
+    color: var(--text);
+    backdrop-filter: blur(12px);
+    animation: toastIn 0.25s ease, toastOut 0.25s ease 1.8s forwards;
+  }
+  @keyframes toastIn { from { opacity:0; transform: translateY(8px); } to { opacity:1; transform:none; } }
+  @keyframes toastOut { to { opacity:0; transform: translateY(-4px); } }
+
+  /* ── EMPTY STATE ── */
+  #empty-state {
+    position: fixed;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+    pointer-events: none;
+    z-index: 2;
+    opacity: 0;
+    transition: opacity 0.4s ease;
+  }
+  #empty-state.visible { opacity: 1; }
+  .empty-icon {
+    font-size: 40px;
+    margin-bottom: 14px;
+    animation: pulse-float 3s ease-in-out infinite;
+  }
+  @keyframes pulse-float {
+    0%,100% { transform: translateY(0); }
+    50% { transform: translateY(-6px); }
+  }
+  .empty-title {
+    font-size: 16px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    margin-bottom: 6px;
+  }
+  .empty-sub {
+    font-size: 11px;
+    font-family: var(--font-mono);
+    color: var(--text-muted);
+    line-height: 1.6;
+  }
+
+  /* ── ZOOM INDICATOR ── */
+  #zoom-indicator {
+    position: fixed;
+    bottom: 18px; right: 18px;
+    font-size: 10px;
+    font-family: var(--font-mono);
+    color: var(--text-muted);
+    background: rgba(13,15,20,0.8);
+    border: 1px solid var(--border);
+    padding: 5px 10px;
+    border-radius: 6px;
+    z-index: 99;
+    pointer-events: none;
+    backdrop-filter: blur(8px);
+    transition: opacity 0.3s ease;
+  }
+
+  /* ── PULSE COUNT ── */
+  #pulse-count {
+    font-size: 10px;
+    font-family: var(--font-mono);
+    color: var(--text-muted);
+    padding: 4px 10px;
+    background: var(--surface);
+    border-radius: 6px;
+    border: 1px solid var(--border);
+  }
+
+  /* ── SCROLLBAR ── */
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 4px; }
+
+  /* ── CONTEXT MENU ── */
+  #ctx-menu {
+    position: fixed;
+    z-index: 999;
+    background: rgba(13,15,20,0.97);
+    border: 1px solid var(--border-hover);
+    border-radius: 10px;
+    padding: 5px;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+    backdrop-filter: blur(16px);
+    display: none;
+    min-width: 150px;
+  }
+  #ctx-menu.active { display: block; }
+  .ctx-item {
+    padding: 8px 12px;
+    border-radius: 6px;
+    font-size: 12px;
+    cursor: pointer;
+    display: flex; align-items: center; gap: 8px;
+    transition: background 0.15s ease;
+    color: var(--text);
+  }
+  .ctx-item:hover { background: var(--surface-hover); }
+  .ctx-item.danger { color: var(--red); }
+  .ctx-item.danger:hover { background: rgba(255,77,109,0.1); }
+  .ctx-sep { height: 1px; background: var(--border); margin: 4px 0; }
+  .ctx-icon { font-size: 13px; opacity: 0.7; }
+</style>
+</head>
+<body>
+
+<canvas id="particles-canvas"></canvas>
+
+<div id="desktop">
+  <div id="workspace" id="workspace"></div>
+</div>
+
+<div id="topbar">
+  <div class="topbar-logo">
+    <div class="logo-heart">
+      <svg viewBox="0 0 20 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M10 16.5S1.5 11 1.5 5.5A4.5 4.5 0 0 1 10 3.2 4.5 4.5 0 0 1 18.5 5.5C18.5 11 10 16.5 10 16.5Z" fill="#ff4d6d" opacity="0.9"/>
+      </svg>
+    </div>
+    Heart<span class="logo-os">OS</span>
+  </div>
+  <div class="topbar-actions">
+    <span id="pulse-count">0 pulses</span>
+    <button class="btn btn-ghost" id="btn-reset">↺ Reset View</button>
+    <button class="btn btn-primary" id="btn-new">⚡ New Pulse</button>
+  </div>
+</div>
+
+<div id="empty-state">
+  <div class="empty-icon">⚡</div>
+  <div class="empty-title">Your workspace is quiet.</div>
+  <div class="empty-sub">Press N or click "New Pulse"<br>to forge your first creation.</div>
+</div>
+
+<div id="launch-overlay">
+  <div id="launch-topbar">
+    <div id="launch-title"></div>
+    <div style="display:flex;align-items:center;gap:8px;">
+      <button class="btn btn-ghost" id="btn-close-launch" style="font-size:11px;">✕ Close</button>
+    </div>
+  </div>
+  <div id="launch-frame-wrap">
+    <iframe id="launch-iframe" sandbox="allow-scripts allow-same-origin allow-forms allow-modals"></iframe>
+  </div>
+</div>
+
+<div id="forge-overlay">
+  <div id="forge-modal">
+    <div class="forge-header">
+      <div class="forge-title">
+        <div class="forge-title-icon">⚡</div>
+        Forge a Pulse
+      </div>
+      <button class="btn btn-ghost" id="btn-close-forge" style="padding:5px 10px;">✕</button>
+    </div>
+    <div class="forge-body">
+      <div class="forge-field">
+        <label>Title</label>
+        <input class="forge-input" id="forge-title-input" placeholder="My Awesome Project" type="text">
+      </div>
+      <div class="forge-field">
+        <label>Type</label>
+        <select class="forge-select" id="forge-type-select">
+          <option value="game">Game</option>
+          <option value="experiment">Experiment</option>
+          <option value="tool">Tool</option>
+          <option value="visual">Visual</option>
+          <option value="demo">Demo</option>
+          <option value="utility">Utility</option>
+        </select>
+      </div>
+      <div class="forge-field">
+        <label>Color Theme</label>
+        <div class="forge-colors" id="forge-colors">
+          <div class="forge-color-opt selected" data-color="blue" style="background:#4db8ff;" title="Blue"></div>
+          <div class="forge-color-opt" data-color="red" style="background:#ff4d6d;" title="Red"></div>
+          <div class="forge-color-opt" data-color="purple" style="background:#c084fc;" title="Purple"></div>
+          <div class="forge-color-opt" data-color="amber" style="background:#fbbf24;" title="Amber"></div>
+          <div class="forge-color-opt" data-color="green" style="background:#34d399;" title="Green"></div>
+        </div>
+      </div>
+      <div class="forge-field" style="flex:1;">
+        <label>Code (HTML / CSS / JS)</label>
+        <textarea class="forge-textarea" id="forge-code-input" placeholder="<!-- Paste your HTML here -->\n<h1>Hello World!</h1>"></textarea>
+      </div>
+    </div>
+    <div class="forge-footer">
+      <button class="btn btn-ghost" id="btn-cancel-forge">Cancel</button>
+      <button class="btn btn-primary" id="btn-create-pulse">⚡ Create Pulse</button>
+    </div>
+  </div>
+</div>
+
+<div id="confirm-overlay">
+  <div id="confirm-modal">
+    <h3>Reset Workspace?</h3>
+    <p>This will delete all pulses and restore<br>the default demos. Cannot be undone.</p>
+    <div class="confirm-btns">
+      <button class="btn btn-ghost" id="btn-confirm-cancel">Cancel</button>
+      <button class="btn" id="btn-confirm-ok" style="background:rgba(255,77,109,0.15);border-color:rgba(255,77,109,0.35);color:var(--red);">Reset</button>
+    </div>
+  </div>
+</div>
+
+<div id="ctx-menu">
+  <div class="ctx-item" id="ctx-launch"><span class="ctx-icon">🚀</span> Launch</div>
+  <div class="ctx-item" id="ctx-edit"><span class="ctx-icon">✏️</span> Edit</div>
+  <div class="ctx-sep"></div>
+  <div class="ctx-item danger" id="ctx-delete"><span class="ctx-icon">🗑</span> Delete</div>
+</div>
+
+<div id="zoom-indicator">100%</div>
+<div id="toast-container"></div>
+
+<script>
+// ════════════════════════════════════════════
+//  HEARTOS CORE
+// ════════════════════════════════════════════
+
+const COLORS = {
+  red:    { hex: '#ff4d6d', glow: 'rgba(255,77,109,{a})', label: 'red' },
+  blue:   { hex: '#4db8ff', glow: 'rgba(77,184,255,{a})',  label: 'blue' },
+  purple: { hex: '#c084fc', glow: 'rgba(192,132,252,{a})', label: 'purple' },
+  amber:  { hex: '#fbbf24', glow: 'rgba(251,191,36,{a})',  label: 'amber' },
+  green:  { hex: '#34d399', glow: 'rgba(52,211,153,{a})',  label: 'green' },
+};
+
+function glow(color, a) {
+  return COLORS[color]?.glow.replace('{a}', a) || `rgba(77,184,255,${a})`;
+}
+
+const TYPE_ICONS = {
+  game: '🎮', experiment: '🧪', tool: '🔧', visual: '✨', demo: '🎯', utility: '⚙️'
+};
+
+// ── STATE ──
+let pulses = [];
+let wsX = 0, wsY = 0, wsScale = 1;
+let isPanning = false, panStartX = 0, panStartY = 0;
+let dragPulse = null, dragOffX = 0, dragOffY = 0;
+let editingPulseId = null;
+let ctxTargetId = null;
+let zIndicatorTimeout = null;
+
+const ws = document.getElementById('workspace');
+
+// ── STORAGE ──
+function save() {
+  localStorage.setItem('heartos_pulses', JSON.stringify(pulses));
+  localStorage.setItem('heartos_view', JSON.stringify({ x: wsX, y: wsY, scale: wsScale }));
+}
+function load() {
+  try {
+    const p = localStorage.getItem('heartos_pulses');
+    if (p) pulses = JSON.parse(p);
+    const v = localStorage.getItem('heartos_view');
+    if (v) { const vv = JSON.parse(v); wsX = vv.x; wsY = vv.y; wsScale = vv.scale; }
+  } catch(e) {}
+}
+
+// ── DEFAULT PULSES ──
+const DEFAULT_PULSES = [
+  {
+    id: uid(), title: 'Particle Rain', type: 'visual', color: 'purple',
+    x: 180, y: 160,
+    code: `<!DOCTYPE html><html><head><style>body{margin:0;overflow:hidden;background:#0a0010}canvas{display:block}</style></head><body><canvas id="c"></canvas><script>
+const c=document.getElementById('c'),ctx=c.getContext('2d');
+c.width=innerWidth;c.height=innerHeight;
+const N=200,ps=[];
+for(let i=0;i<N;i++)ps.push({x:Math.random()*c.width,y:Math.random()*c.height,vy:1+Math.random()*3,r:Math.random()*2+0.5,o:Math.random()});
+function draw(){
+  ctx.fillStyle='rgba(10,0,16,0.15)';ctx.fillRect(0,0,c.width,c.height);
+  ps.forEach(p=>{
+    const hue=260+Math.sin(p.x*0.01)*40;
+    ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,Math.PI*2);
+    ctx.fillStyle='hsla('+hue+',80%,70%,'+p.o+')';ctx.fill();
+    p.y+=p.vy;if(p.y>c.height){p.y=-5;p.x=Math.random()*c.width;}
+  });
+  requestAnimationFrame(draw);
+}
+draw();
+<\/script></body></html>`
+  },
+  {
+    id: uid(), title: 'Sine Wave Lab', type: 'experiment', color: 'blue',
+    x: 420, y: 120,
+    code: `<!DOCTYPE html><html><head><style>body{margin:0;background:#050a14;display:flex;align-items:center;justify-content:center;height:100vh;flex-direction:column;font-family:monospace;color:#4db8ff}canvas{border:1px solid rgba(77,184,255,0.15);border-radius:8px}label{font-size:11px;opacity:0.6;margin-top:12px}input[type=range]{accent-color:#4db8ff}</style></head><body>
+<canvas id="c" width="600" height="260"></canvas>
+<label>FREQUENCY <input type="range" id="freq" min="1" max="20" value="4" step="0.1"></label>
+<label>AMPLITUDE <input type="range" id="amp" min="10" max="120" value="60" step="1"></label>
+<script>
+const c=document.getElementById('c'),ctx=c.getContext('2d');
+const freqEl=document.getElementById('freq'),ampEl=document.getElementById('amp');
+let t=0;
+function draw(){
+  ctx.clearRect(0,0,c.width,c.height);
+  ctx.strokeStyle='rgba(77,184,255,0.15)';ctx.lineWidth=1;
+  ctx.beginPath();ctx.moveTo(0,c.height/2);ctx.lineTo(c.width,c.height/2);ctx.stroke();
+  const f=parseFloat(freqEl.value),a=parseFloat(ampEl.value);
+  ctx.beginPath();ctx.lineWidth=2;
+  const grad=ctx.createLinearGradient(0,0,c.width,0);
+  grad.addColorStop(0,'#4db8ff');grad.addColorStop(0.5,'#c084fc');grad.addColorStop(1,'#4db8ff');
+  ctx.strokeStyle=grad;
+  for(let x=0;x<c.width;x++){
+    const y=c.height/2+Math.sin((x/c.width*f*Math.PI*2)+t)*a;
+    x===0?ctx.moveTo(x,y):ctx.lineTo(x,y);
+  }
+  ctx.stroke();t+=0.04;requestAnimationFrame(draw);
+}
+draw();
+<\/script></body></html>`
+  },
+  {
+    id: uid(), title: 'Breakout Clone', type: 'game', color: 'red',
+    x: 660, y: 200,
+    code: `<!DOCTYPE html><html><head><style>body{margin:0;background:#0f0005;display:flex;justify-content:center;align-items:center;height:100vh;overflow:hidden}canvas{border-radius:4px}#msg{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);font-family:monospace;font-size:20px;color:#ff4d6d;text-align:center;pointer-events:none;display:none}</style></head><body>
+<canvas id="c"></canvas><div id="msg" id="msg"></div>
+<script>
+const c=document.getElementById('c'),ctx=c.getContext('2d'),msg=document.getElementById('msg');
+c.width=480;c.height=400;
+const rows=5,cols=9,bW=44,bH=14,bPad=5;
+let bx=200,by=330,bW2=70,bH2=10,bSpeed=0;
+let ballX=240,ballY=300,ballVX=3.5,ballVY=-3.5,ballR=7;
+let score=0,lives=3,running=true;
+const blocks=[];
+const colors=['#ff4d6d','#ff8c69','#fbbf24','#34d399','#4db8ff'];
+for(let r=0;r<rows;r++)for(let c2=0;c2<cols;c2++)blocks.push({x:c2*(bW+bPad)+30,y:r*(bH+bPad)+40,alive:true,color:colors[r]});
+document.addEventListener('mousemove',e=>{const r=c.getBoundingClientRect();bx=e.clientX-r.left-bW2/2;bx=Math.max(0,Math.min(c.width-bW2,bx));});
+document.addEventListener('keydown',e=>{if(e.key==='ArrowLeft')bSpeed=-6;if(e.key==='ArrowRight')bSpeed=6;});
+document.addEventListener('keyup',()=>bSpeed=0);
+function draw(){
+  if(!running)return;
+  ctx.fillStyle='#0f0005';ctx.fillRect(0,0,c.width,c.height);
+  bx+=bSpeed;bx=Math.max(0,Math.min(c.width-bW2,bx));
+  ballX+=ballVX;ballY+=ballVY;
+  if(ballX-ballR<0||ballX+ballR>c.width)ballVX*=-1;
+  if(ballY-ballR<0)ballVY*=-1;
+  if(ballY+ballR>by&&ballY+ballR<by+bH2+8&&ballX>bx-ballR&&ballX<bx+bW2+ballR){ballVY=-Math.abs(ballVY);ballVX+=bSpeed*0.3;}
+  if(ballY>c.height){lives--;if(lives<=0){running=false;msg.textContent='GAME OVER\nScore: '+score;msg.style.display='block';return;}ballX=240;ballY=300;ballVX=3.5;ballVY=-3.5;}
+  blocks.forEach(b=>{if(!b.alive)return;if(ballX+ballR>b.x&&ballX-ballR<b.x+bW&&ballY+ballR>b.y&&ballY-ballR<b.y+bH){b.alive=false;ballVY*=-1;score+=10;}});
+  if(blocks.every(b=>!b.alive)){running=false;msg.textContent='YOU WIN!\nScore: '+score;msg.style.display='block';return;}
+  blocks.forEach(b=>{if(!b.alive)return;ctx.fillStyle=b.color;ctx.beginPath();ctx.roundRect(b.x,b.y,bW,bH,3);ctx.fill();});
+  const g=ctx.createLinearGradient(bx,0,bx+bW2,0);g.addColorStop(0,'#ff4d6d');g.addColorStop(1,'#ff8c69');
+  ctx.fillStyle=g;ctx.beginPath();ctx.roundRect(bx,by,bW2,bH2,5);ctx.fill();
+  ctx.beginPath();ctx.arc(ballX,ballY,ballR,0,Math.PI*2);ctx.fillStyle='#fff';ctx.fill();
+  ctx.fillStyle='rgba(255,255,255,0.6)';ctx.font='11px monospace';ctx.fillText('Score: '+score+'   Lives: '+lives,10,c.height-10);
+  requestAnimationFrame(draw);
+}
+draw();
+<\/script></body></html>`
+  },
+  {
+    id: uid(), title: 'Color Picker', type: 'utility', color: 'amber',
+    x: 240, y: 360,
+    code: `<!DOCTYPE html><html><head><style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#0d0f14;display:flex;align-items:center;justify-content:center;min-height:100vh;font-family:monospace;color:#e8eaf0}
+.wrap{width:300px;padding:24px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:16px}
+h2{font-size:13px;letter-spacing:0.1em;text-transform:uppercase;opacity:0.5;margin-bottom:16px}
+.preview{width:100%;height:90px;border-radius:10px;border:1px solid rgba(255,255,255,0.1);margin-bottom:16px;transition:background 0.15s}
+input[type=range]{width:100%;accent-color:#fbbf24;margin:6px 0 14px}
+label{font-size:10px;opacity:0.5;letter-spacing:0.08em;display:block}
+.val{font-size:20px;font-weight:bold;margin:12px 0;letter-spacing:0.05em}
+.copy-btn{width:100%;padding:10px;background:rgba(251,191,36,0.12);border:1px solid rgba(251,191,36,0.3);color:#fbbf24;border-radius:8px;font-family:monospace;cursor:pointer;font-size:12px;transition:all 0.15s}
+.copy-btn:hover{background:rgba(251,191,36,0.22)}
+</style></head><body><div class="wrap">
+<h2>Color Forge</h2>
+<div class="preview" id="prev"></div>
+<label>HUE</label><input type="range" id="h" min="0" max="360" value="40">
+<label>SATURATION</label><input type="range" id="s" min="0" max="100" value="85">
+<label>LIGHTNESS</label><input type="range" id="l" min="5" max="95" value="60">
+<div class="val" id="val"></div>
+<button class="copy-btn" id="copy">Copy HEX</button>
+</div>
+<script>
+function hslToHex(h,s,l){s/=100;l/=100;const a=s*Math.min(l,1-l);const f=n=>{const k=(n+h/30)%12;const color=l-a*Math.max(Math.min(k-3,9-k,1),-1);return Math.round(255*color).toString(16).padStart(2,'0')};return '#'+f(0)+f(8)+f(4);}
+function upd(){const h=+document.getElementById('h').value,s=+document.getElementById('s').value,l=+document.getElementById('l').value;const hsl='hsl('+h+','+s+'%,'+l+'%)';document.getElementById('prev').style.background=hsl;const hex=hslToHex(h,s,l);document.getElementById('val').textContent=hex;}
+['h','s','l'].forEach(id=>document.getElementById(id).addEventListener('input',upd));
+document.getElementById('copy').addEventListener('click',()=>{const t=document.getElementById('val').textContent;navigator.clipboard.writeText(t).then(()=>{document.getElementById('copy').textContent='Copied!';setTimeout(()=>document.getElementById('copy').textContent='Copy HEX',1500);});});
+upd();
+<\/script></body></html>`
+  },
+  {
+    id: uid(), title: 'Clock Pulse', type: 'tool', color: 'green',
+    x: 500, y: 360,
+    code: `<!DOCTYPE html><html><head><style>
+body{margin:0;background:#030f08;display:flex;align-items:center;justify-content:center;height:100vh;overflow:hidden}
+canvas{display:block}
+</style></head><body><canvas id="c"></canvas>
+<script>
+const c=document.getElementById('c'),ctx=c.getContext('2d');
+c.width=380;c.height=380;
+const cx=190,cy=190,r=150;
+function draw(){
+  ctx.clearRect(0,0,c.width,c.height);
+  ctx.save();
+  const grad=ctx.createRadialGradient(cx,cy,0,cx,cy,r);
+  grad.addColorStop(0,'rgba(52,211,153,0.05)');grad.addColorStop(1,'rgba(52,211,153,0)');
+  ctx.fillStyle=grad;ctx.beginPath();ctx.arc(cx,cy,r+30,0,Math.PI*2);ctx.fill();
+  ctx.strokeStyle='rgba(52,211,153,0.15)';ctx.lineWidth=1;
+  ctx.beginPath();ctx.arc(cx,cy,r,0,Math.PI*2);ctx.stroke();
+  for(let i=0;i<60;i++){
+    const a=i/60*Math.PI*2-Math.PI/2;
+    const isHour=i%5===0;
+    const len=isHour?12:6;
+    const rin=r-(isHour?18:10);
+    ctx.strokeStyle=isHour?'rgba(52,211,153,0.8)':'rgba(52,211,153,0.3)';
+    ctx.lineWidth=isHour?2:1;
+    ctx.beginPath();ctx.moveTo(cx+rin*Math.cos(a),cy+rin*Math.sin(a));ctx.lineTo(cx+r*Math.cos(a),cy+r*Math.sin(a));ctx.stroke();
+  }
+  const now=new Date();
+  const s=now.getSeconds()+now.getMilliseconds()/1000;
+  const m=now.getMinutes()+s/60;
+  const h=now.getHours()%12+m/60;
+  function hand(angle,len,w,col,glow){
+    ctx.save();ctx.strokeStyle=col;ctx.lineWidth=w;ctx.lineCap='round';
+    if(glow){ctx.shadowBlur=15;ctx.shadowColor=col;}
+    ctx.beginPath();ctx.moveTo(cx,cy);ctx.lineTo(cx+len*Math.cos(angle-Math.PI/2),cy+len*Math.sin(angle-Math.PI/2));ctx.stroke();ctx.restore();
+  }
+  hand(h/12*Math.PI*2,r*0.55,5,'rgba(52,211,153,0.9)',true);
+  hand(m/60*Math.PI*2,r*0.78,3,'rgba(52,211,153,0.75)',true);
+  hand(s/60*Math.PI*2,r*0.88,1.5,'rgba(200,255,230,0.95)',true);
+  ctx.beginPath();ctx.arc(cx,cy,5,0,Math.PI*2);ctx.fillStyle='#34d399';ctx.fill();
+  ctx.fillStyle='rgba(52,211,153,0.6)';ctx.font='12px monospace';ctx.textAlign='center';
+  ctx.fillText(now.toLocaleTimeString(),cx,cy+r*0.55);
+  ctx.restore();
+  requestAnimationFrame(draw);
+}
+draw();
+<\/script></body></html>`
+  }
+];
+
+function uid() {
+  return Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+}
+
+// ── INIT ──
+load();
+if (pulses.length === 0) {
+  pulses = DEFAULT_PULSES;
+  save();
+}
+renderAll();
+applyWorkspaceTransform();
+updateEmptyState();
+updatePulseCount();
+
+// ── WORKSPACE TRANSFORM ──
+function applyWorkspaceTransform(animate) {
+  ws.style.transition = animate ? 'transform 0.35s cubic-bezier(0.22,1,0.36,1)' : 'none';
+  ws.style.transform = `translate(${wsX}px, ${wsY}px) scale(${wsScale})`;
+  ws.style.transformOrigin = '0 0';
+  showZoom();
+}
+
+function showZoom() {
+  const el = document.getElementById('zoom-indicator');
+  el.textContent = Math.round(wsScale * 100) + '%';
+  el.style.opacity = '1';
+  clearTimeout(zIndicatorTimeout);
+  zIndicatorTimeout = setTimeout(() => el.style.opacity = '0', 1600);
+}
+
+// ── RENDER ──
+function renderAll() {
+  ws.innerHTML = '';
+  pulses.forEach(p => ws.appendChild(createPulseEl(p)));
+}
+
+function createPulseEl(p) {
+  const col = COLORS[p.color] || COLORS.blue;
+  const el = document.createElement('div');
+  el.className = 'pulse';
+  el.dataset.id = p.id;
+  el.style.left = p.x + 'px';
+  el.style.top = p.y + 'px';
+  el.style.setProperty('--glow', col.hex);
+  el.style.setProperty('--glow-10', glow(p.color, 0.10));
+  el.style.setProperty('--glow-15', glow(p.color, 0.15));
+  el.style.setProperty('--glow-20', glow(p.color, 0.20));
+  el.style.setProperty('--glow-25', glow(p.color, 0.25));
+  el.style.setProperty('--glow-30', glow(p.color, 0.30));
+  el.style.zIndex = p.z || 1;
+  el.innerHTML = `
+    <div class="pulse-glow-line"></div>
+    <div class="pulse-header">
+      <div class="pulse-type-tag">${TYPE_ICONS[p.type] || '⚡'} ${p.type}</div>
+      <div class="pulse-title">${escHtml(p.title)}</div>
+    </div>
+    <div class="pulse-footer">
+      <span class="pulse-launch-hint">click to launch</span>
+      <div class="pulse-launch-btn">
+        <svg viewBox="0 0 10 10" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M2 8 L8 2 M4 2 H8 V6"/>
+        </svg>
+      </div>
+    </div>
+  `;
+  setupPulseDrag(el, p);
+  el.addEventListener('click', e => { if (!e._wasDragged) launchPulse(p); });
+  el.addEventListener('contextmenu', e => { e.preventDefault(); showCtxMenu(e, p.id); });
+  return el;
+}
+
+function escHtml(s) {
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+// ── DRAG PULSES ──
+function setupPulseDrag(el, p) {
+  let startX, startY, startPX, startPY, moved;
+  el.addEventListener('mousedown', e => {
+    if (e.button !== 0) return;
+    e.stopPropagation();
+    moved = false;
+    startX = e.clientX; startY = e.clientY;
+    startPX = p.x; startPY = p.y;
+    dragPulse = { el, p, startX, startY, startPX, startPY };
+    el.classList.add('dragging');
+    bringToFront(p.id);
+  });
+  el.addEventListener('mouseup', e => {
+    if (moved) e._wasDragged = true;
+  });
+}
+
+let maxZ = 10;
+function bringToFront(id) {
+  maxZ++;
+  const p = pulses.find(p => p.id === id);
+  if (p) { p.z = maxZ; document.querySelector(`.pulse[data-id="${id}"]`)?.style.setProperty('z-index', maxZ); }
+}
+
+window.addEventListener('mousemove', e => {
+  if (dragPulse) {
+    const dx = (e.clientX - dragPulse.startX) / wsScale;
+    const dy = (e.clientY - dragPulse.startY) / wsScale;
+    if (Math.abs(dx) + Math.abs(dy) > 3) {
+      dragPulse.el._isDragging = true;
+    }
+    dragPulse.p.x = dragPulse.startPX + dx;
+    dragPulse.p.y = dragPulse.startPY + dy;
+    dragPulse.el.style.left = dragPulse.p.x + 'px';
+    dragPulse.el.style.top = dragPulse.p.y + 'px';
+    return;
+  }
+  if (isPanning) {
+    wsX = panStartX + (e.clientX - panMouseX);
+    wsY = panStartY + (e.clientY - panMouseY);
+    applyWorkspaceTransform();
+  }
+});
+
+let panMouseX, panMouseY;
+window.addEventListener('mouseup', () => {
+  if (dragPulse) {
+    dragPulse.el.classList.remove('dragging');
+    save();
+    dragPulse = null;
+  }
+  isPanning = false;
+  document.body.style.cursor = '';
+});
+
+// ── PAN DESKTOP ──
+document.getElementById('desktop').addEventListener('mousedown', e => {
+  if (e.target !== document.getElementById('desktop') && e.target !== ws) return;
+  if (e.button === 0) {
+    isPanning = true;
+    panMouseX = e.clientX;
+    panMouseY = e.clientY;
+    panStartX = wsX;
+    panStartY = wsY;
+    document.body.style.cursor = 'grabbing';
+  }
+});
+
+// ── ZOOM ──
+document.getElementById('desktop').addEventListener('wheel', e => {
+  e.preventDefault();
+  const delta = e.deltaY > 0 ? 0.92 : 1.08;
+  const newScale = Math.max(0.3, Math.min(2.5, wsScale * delta));
+  const rect = document.getElementById('desktop').getBoundingClientRect();
+  const mx = e.clientX - rect.left;
+  const my = e.clientY - rect.top;
+  wsX = mx - (mx - wsX) * (newScale / wsScale);
+  wsY = my - (my - wsY) * (newScale / wsScale);
+  wsScale = newScale;
+  applyWorkspaceTransform();
+  save();
+}, { passive: false });
+
+// ── LAUNCH ──
+function launchPulse(p) {
+  const overlay = document.getElementById('launch-overlay');
+  const iframe = document.getElementById('launch-iframe');
+  const title = document.getElementById('launch-title');
+  const col = COLORS[p.color] || COLORS.blue;
+  title.innerHTML = `<span style="color:${col.hex};margin-right:6px;">${TYPE_ICONS[p.type]||'⚡'}</span>${escHtml(p.title)}`;
+  iframe.srcdoc = p.code;
+  overlay.classList.add('active');
+}
+
+document.getElementById('btn-close-launch').addEventListener('click', () => {
+  const overlay = document.getElementById('launch-overlay');
+  overlay.classList.remove('active');
+  setTimeout(() => { document.getElementById('launch-iframe').srcdoc = ''; }, 300);
+});
+
+// ── FORGE ──
+let selectedColor = 'blue';
+
+document.getElementById('btn-new').addEventListener('click', openForge);
+
+function openForge(pulseId) {
+  editingPulseId = pulseId || null;
+  const overlay = document.getElementById('forge-overlay');
+  const titleEl = document.querySelector('.forge-title');
+
+  if (editingPulseId) {
+    const p = pulses.find(p => p.id === editingPulseId);
+    if (!p) return;
+    document.getElementById('forge-title-input').value = p.title;
+    document.getElementById('forge-type-select').value = p.type;
+    document.getElementById('forge-code-input').value = p.code;
+    selectedColor = p.color;
+    titleEl.innerHTML = `<div class="forge-title-icon">✏️</div> Edit Pulse`;
+  } else {
+    document.getElementById('forge-title-input').value = '';
+    document.getElementById('forge-type-select').value = 'experiment';
+    document.getElementById('forge-code-input').value = '';
+    selectedColor = 'blue';
+    titleEl.innerHTML = `<div class="forge-title-icon">⚡</div> Forge a Pulse`;
+  }
+
+  document.querySelectorAll('.forge-color-opt').forEach(el => {
+    el.classList.toggle('selected', el.dataset.color === selectedColor);
+  });
+  overlay.classList.add('active');
+  setTimeout(() => document.getElementById('forge-title-input').focus(), 50);
+}
+
+document.querySelectorAll('.forge-color-opt').forEach(el => {
+  el.addEventListener('click', () => {
+    selectedColor = el.dataset.color;
+    document.querySelectorAll('.forge-color-opt').forEach(e => e.classList.remove('selected'));
+    el.classList.add('selected');
+  });
+});
+
+function closeForge() {
+  document.getElementById('forge-overlay').classList.remove('active');
+  editingPulseId = null;
+}
+
+document.getElementById('btn-close-forge').addEventListener('click', closeForge);
+document.getElementById('btn-cancel-forge').addEventListener('click', closeForge);
+
+document.getElementById('btn-create-pulse').addEventListener('click', () => {
+  const title = document.getElementById('forge-title-input').value.trim();
+  const type = document.getElementById('forge-type-select').value;
+  const code = document.getElementById('forge-code-input').value;
+  if (!title) { document.getElementById('forge-title-input').focus(); toast('Title required'); return; }
+
+  if (editingPulseId) {
+    const p = pulses.find(p => p.id === editingPulseId);
+    if (p) { p.title = title; p.type = type; p.code = code; p.color = selectedColor; }
+    renderAll(); save();
+    toast('Pulse updated');
+  } else {
+    const viewCX = (-wsX + window.innerWidth / 2) / wsScale;
+    const viewCY = (-wsY + window.innerHeight / 2) / wsScale;
+    const newP = {
+      id: uid(), title, type, color: selectedColor, code,
+      x: viewCX - 100 + (Math.random() - 0.5) * 80,
+      y: viewCY - 80 + (Math.random() - 0.5) * 80,
+      z: ++maxZ
+    };
+    pulses.push(newP);
+    ws.appendChild(createPulseEl(newP));
+    save();
+    toast('Pulse created ⚡');
+  }
+
+  updateEmptyState();
+  updatePulseCount();
+  closeForge();
+});
+
+// ── CONTEXT MENU ──
+function showCtxMenu(e, id) {
+  ctxTargetId = id;
+  const menu = document.getElementById('ctx-menu');
+  menu.classList.add('active');
+  let x = e.clientX, y = e.clientY;
+  if (x + 160 > window.innerWidth) x -= 160;
+  if (y + 120 > window.innerHeight) y -= 120;
+  menu.style.left = x + 'px';
+  menu.style.top = y + 'px';
+}
+
+document.getElementById('ctx-launch').addEventListener('click', () => {
+  const p = pulses.find(p => p.id === ctxTargetId);
+  if (p) launchPulse(p);
+  hideCtxMenu();
+});
+document.getElementById('ctx-edit').addEventListener('click', () => {
+  openForge(ctxTargetId);
+  hideCtxMenu();
+});
+document.getElementById('ctx-delete').addEventListener('click', () => {
+  pulses = pulses.filter(p => p.id !== ctxTargetId);
+  document.querySelector(`.pulse[data-id="${ctxTargetId}"]`)?.remove();
+  save(); updateEmptyState(); updatePulseCount();
+  toast('Pulse deleted');
+  hideCtxMenu();
+});
+
+function hideCtxMenu() {
+  document.getElementById('ctx-menu').classList.remove('active');
+}
+document.addEventListener('click', () => hideCtxMenu());
+document.addEventListener('contextmenu', e => { if (e.target.closest('.pulse')) return; hideCtxMenu(); });
+
+// ── RESET ──
+document.getElementById('btn-reset').addEventListener('click', () => {
+  document.getElementById('confirm-overlay').classList.add('active');
+});
+document.getElementById('btn-confirm-cancel').addEventListener('click', () => {
+  document.getElementById('confirm-overlay').classList.remove('active');
+});
+document.getElementById('btn-confirm-ok').addEventListener('click', () => {
+  document.getElementById('confirm-overlay').classList.remove('active');
+  pulses = DEFAULT_PULSES.map(p => ({ ...p, id: uid() }));
+  wsX = 0; wsY = 0; wsScale = 1;
+  save(); renderAll(); applyWorkspaceTransform(true); updateEmptyState(); updatePulseCount();
+  toast('Workspace reset');
+});
+
+// Reset view button (not workspace)
+document.getElementById('btn-reset').addEventListener('click', e => {
+  // replaced by confirm dialog above
+});
+
+// ── KEYBOARD ──
+document.addEventListener('keydown', e => {
+  if (e.key === 'n' || e.key === 'N') {
+    if (!document.getElementById('forge-overlay').classList.contains('active') &&
+        !document.activeElement.matches('input, textarea, select')) {
+      openForge();
+    }
+  }
+  if (e.key === 'Escape') {
+    if (document.getElementById('launch-overlay').classList.contains('active')) {
+      document.getElementById('btn-close-launch').click();
+    } else if (document.getElementById('forge-overlay').classList.contains('active')) {
+      closeForge();
+    } else if (document.getElementById('confirm-overlay').classList.contains('active')) {
+      document.getElementById('confirm-overlay').classList.remove('active');
+    }
+  }
+});
+
+// ── UTILS ──
+function updateEmptyState() {
+  document.getElementById('empty-state').classList.toggle('visible', pulses.length === 0);
+}
+function updatePulseCount() {
+  document.getElementById('pulse-count').textContent = pulses.length + ' pulse' + (pulses.length !== 1 ? 's' : '');
+}
+function toast(msg) {
+  const el = document.createElement('div');
+  el.className = 'toast';
+  el.textContent = msg;
+  document.getElementById('toast-container').appendChild(el);
+  setTimeout(() => el.remove(), 2200);
+}
+
+// ── PARTICLES ──
+(function() {
+  const canvas = document.getElementById('particles-canvas');
+  const ctx = canvas.getContext('2d');
+  let W, H, particles = [];
+  const N = 80;
+
+  function resize() {
+    W = canvas.width = window.innerWidth;
+    H = canvas.height = window.innerHeight;
+  }
+  resize();
+  window.addEventListener('resize', resize);
+
+  for (let i = 0; i < N; i++) {
+    particles.push({
+      x: Math.random() * 2000,
+      y: Math.random() * 1200,
+      r: Math.random() * 1.2 + 0.3,
+      vx: (Math.random() - 0.5) * 0.3,
+      vy: (Math.random() - 0.5) * 0.3,
+      o: Math.random() * 0.4 + 0.05,
+      hue: Math.random() * 60 + 200
+    });
+  }
+
+  function drawParticles() {
+    ctx.clearRect(0, 0, W, H);
+    particles.forEach(p => {
+      p.x += p.vx; p.y += p.vy;
+      if (p.x < 0) p.x = W; if (p.x > W) p.x = 0;
+      if (p.y < 0) p.y = H; if (p.y > H) p.y = 0;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+      ctx.fillStyle = `hsla(${p.hue}, 60%, 70%, ${p.o})`;
+      ctx.fill();
+    });
+    requestAnimationFrame(drawParticles);
+  }
+  drawParticles();
+})();
+</script>
+</body>
+</html>
